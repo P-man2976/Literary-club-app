@@ -70,35 +70,29 @@ export default function Home() {
   const handleLike = async (postId: string, e: React.MouseEvent) => {
     e.stopPropagation();
 
-    const isLiked = likedPosts.includes(postId);
-    const userId = session?.user?.email || "guest";
-
-    // メソッドを切り替える (あればDELETE、なければPOST)
-    const method = isLiked ? "DELETE" : "POST";
+    // すでにいいね済みなら何もしない（フロントエンドでのガード）
+    if (likedPosts.includes(postId)) return;
 
     try {
       const response = await fetch("/api/likes", {
-        method: method,
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId, userId }),
+        body: JSON.stringify({ 
+          postId, 
+          userId: session?.user?.email || "guest" // API側でIP識別も併用すると最強
+        }),
       });
 
       if (response.ok) {
-        let newLikedPosts;
-        if (isLiked) {
-          // 解除：リストから取り除く
-          newLikedPosts = likedPosts.filter(id => id !== postId);
-        } else {
-          // 登録：リストに加える
-          newLikedPosts = [...likedPosts, postId];
-        }
-
+        // LocalStorageに保存
+        const newLikedPosts = [...likedPosts, postId];
         setLikedPosts(newLikedPosts);
         localStorage.setItem("lit-club-liked-ids", JSON.stringify(newLikedPosts));
-        fetchPosts(); // 数値を再取得して反映
+        
+        fetchPosts(); // 数値を更新
       }
     } catch (error) {
-      console.error("操作に失敗しました", error);
+      console.error(error);
     }
   };
 

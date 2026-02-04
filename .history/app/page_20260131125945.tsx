@@ -4,7 +4,6 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
-
 // 型定義
 type Comment = {
   commentId: string;
@@ -20,7 +19,7 @@ type Post = {
   tag: string;
   createdAt: number;
   comments?: Comment[]; // オプショナルで追加
-  likes?: number;      // 👈 これを追加
+  
 };
 
 export default function Home() {
@@ -70,35 +69,29 @@ export default function Home() {
   const handleLike = async (postId: string, e: React.MouseEvent) => {
     e.stopPropagation();
 
-    const isLiked = likedPosts.includes(postId);
-    const userId = session?.user?.email || "guest";
-
-    // メソッドを切り替える (あればDELETE、なければPOST)
-    const method = isLiked ? "DELETE" : "POST";
+    // すでにいいね済みなら何もしない（フロントエンドでのガード）
+    if (likedPosts.includes(postId)) return;
 
     try {
       const response = await fetch("/api/likes", {
-        method: method,
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId, userId }),
+        body: JSON.stringify({ 
+          postId, 
+          userId: session?.user?.email || "guest" // API側でIP識別も併用すると最強
+        }),
       });
 
       if (response.ok) {
-        let newLikedPosts;
-        if (isLiked) {
-          // 解除：リストから取り除く
-          newLikedPosts = likedPosts.filter(id => id !== postId);
-        } else {
-          // 登録：リストに加える
-          newLikedPosts = [...likedPosts, postId];
-        }
-
+        // LocalStorageに保存
+        const newLikedPosts = [...likedPosts, postId];
         setLikedPosts(newLikedPosts);
         localStorage.setItem("lit-club-liked-ids", JSON.stringify(newLikedPosts));
-        fetchPosts(); // 数値を再取得して反映
+        
+        fetchPosts(); // 数値を更新
       }
     } catch (error) {
-      console.error("操作に失敗しました", error);
+      console.error(error);
     }
   };
 
@@ -195,79 +188,64 @@ export default function Home() {
       {/* 投稿一覧 */}
       <div className="divide-y divide-slate-200">
         {posts.map((post) => (
-          <article 
-            key={post.id} 
-            className="p-4 hover:bg-slate-50 cursor-pointer transition-colors" 
-            onClick={() => setOpenPostId(openPostId === post.id ? null : post.id)}
-          >
-            {/* 1. 上部：投稿者情報と「いいね」ボタン */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-slate-900">{post.author}</span>
-                <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-500 font-bold uppercase tracking-wider">{post.tag}</span>
-              </div>
-
-              {/* 2. いいねボタン (LocalStorage & パターンC) */}
-              <div className="flex items-center gap-3">
-                <button 
-                  onClick={(e) => handleLike(post.id, e)}
-                  className={`flex items-center gap-1.5 px-2 py-1 rounded-full transition-all duration-300 ${
-                    likedPosts.includes(post.id) 
-                      ? "text-pink-500 bg-pink-50" 
-                      : "text-slate-400 hover:text-pink-400 hover:bg-slate-100"
-                  }`}
+          <article key={post.id} className="p-4 hover:bg-slate-50 cursor-pointer" onClick={() => setOpenPostId(openPostId === post.id ? null : post.id)}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-bold text-slate-900">{post.author}</span>
+              <span className="text-xs bg-slate-200 px-2 py-0.5 rounded text-slate-700">{post.tag}</span>
+            </div>
+            <div className="flex items-center gap-4 mt-2">
+              {/* いいねボタン */}
+              <button 
+                onClick={(e) => handleLike(post.id, e)}
+                className={`flex items-center gap-1.5 transition-all duration-300 ${
+                  likedPosts.includes(post.id) 
+                    ? "text-pink-500 scale-110" 
+                    : "text-slate-400 hover:text-pink-400"
+                }`}
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="18" height="18" 
+                  viewBox="0 0 24 24" 
+                  fill={likedPosts.includes(post.id) ? "currentColor" : "none"} 
+                  stroke="currentColor" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
                 >
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    width="18" height="18" 
-                    viewBox="0 0 24 24" 
-                    fill={likedPosts.includes(post.id) ? "currentColor" : "none"} 
-                    stroke="currentColor" 
-                    strokeWidth="2.5" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  >
-                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
-                  </svg>
-                  <span className="text-xs font-black">{post.likes || 0}</span>
-                </button>
+                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                </svg>
+                <span className="text-xs font-bold">{post.likes || 0}</span>
+              </button>
 
-                {/* コメント数アイコン（表示のみ） */}
-                <div className="flex items-center gap-1 text-slate-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-1.9A9 9 0 1 1 5.9 5.9l1.1 1.1"/></svg>
-                  <span className="text-xs font-bold">{post.comments?.length || 0}</span>
-                </div>
+              {/* コメント数（ついでに表示すると賑やかになります） */}
+              <div className="flex items-center gap-1.5 text-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-1.9A9 9 0 1 1 5.9 5.9l1.1 1.1"/><path d="M15 12h.01"/><path d="M12 12h.01"/><path d="M9 12h.01"/></svg>
+                <span className="text-xs font-bold">{post.comments?.length || 0}</span>
               </div>
             </div>
-
-            {/* 3. タイトル */}
             <h2 className="text-lg font-bold text-slate-900 mb-1">{post.title}</h2>
             
-            {/* 4. 本文表示（クリックで開閉） */}
             {openPostId === post.id ? (
               <>
-                <div className="mt-4 p-5 bg-slate-50 rounded-2xl border border-slate-100 shadow-inner animate-in fade-in zoom-in-95 duration-200">
-                  <p className="whitespace-pre-wrap text-slate-800 leading-relaxed font-medium text-sm sm:text-base">
-                    {post.body}
-                  </p>
+                <div className="mt-4 p-4 bg-slate-100 rounded-lg border-l-4 border-blue-500 shadow-inner">
+                  <p className="whitespace-pre-wrap text-slate-800 leading-relaxed font-medium">{post.body}</p>
                 </div>
-                
-                {/* コメントセクション */}
-                <div className="mt-6 pt-4 border-t border-slate-200">
-                  <p className="text-[10px] font-black text-slate-400 mb-4 uppercase tracking-widest">Reader's Feedback</p>
-                  
-                  {/* 保存済みのコメント一覧 */}
-                  <div className="space-y-3 mb-6">
+                {/* コメント欄セクション */}
+                <div className="mt-4 pt-4 border-t border-slate-200">
+                  <p className="text-xs font-bold text-slate-400 mb-2">コメント</p>
+                  {/* 👇 保存済みのコメントを表示 */}
+                  <div className="space-y-3 mb-4">
                     {post.comments && post.comments.length > 0 ? (
                       post.comments.map((comment) => (
-                        <div key={comment.commentId} className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                        <div key={comment.commentId} className="bg-slate-50 p-3 rounded-lg border border-slate-100">
                           <div className="flex justify-between items-center mb-1">
-                            <span className="text-xs font-bold text-blue-600">{comment.author}</span>
-                            <span className="text-[10px] text-slate-300">
+                            <span className="text-xs font-bold text-slate-700">{comment.author}</span>
+                            <span className="text-[10px] text-slate-400">
                               {new Date(comment.createdAt).toLocaleString('ja-JP')}
                             </span>
                           </div>
-                          <p className="text-sm text-slate-700">{comment.text}</p>
+                          <p className="text-sm text-slate-800">{comment.text}</p>
                         </div>
                       ))
                     ) : (
@@ -275,14 +253,14 @@ export default function Home() {
                     )}
                   </div>
 
-                  {/* コメント入力欄 */}
+                  {/* 入力欄（ここは既存のまま、少しだけ調整） */}
                   <div className="flex gap-2">
                     <input 
                       type="text" 
-                      placeholder="作品に感想を送る..."
+                      placeholder="匿名で感想を書く..."
                       value={commentTexts[post.id] || ""}
                       onChange={(e) => setCommentTexts({ ...commentTexts, [post.id]: e.target.value })}
-                      className="flex-1 text-sm border border-slate-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all" 
+                      className="flex-1 text-sm border border-slate-200 rounded-full px-4 py-2 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
                       onClick={(e) => e.stopPropagation()} 
                     />
                     <button 
@@ -290,7 +268,7 @@ export default function Home() {
                         e.stopPropagation();
                         saveComment(post.id);
                       }}
-                      className="bg-blue-600 text-white px-5 py-2 rounded-full text-xs font-bold hover:bg-blue-700 active:scale-95 transition-all"
+                      className="bg-slate-900 text-white px-4 py-2 rounded-full text-xs font-bold hover:bg-blue-600 transition-colors"
                     >
                       送信
                     </button>
@@ -298,7 +276,7 @@ export default function Home() {
                 </div>
               </>
             ) : (
-              <p className="text-slate-400 text-xs font-medium">クリックして作品を読む...</p>
+              <p className="text-slate-600 text-sm font-medium">クリックして読む...</p>
             )}
           </article>
         ))}

@@ -77,30 +77,30 @@ export default function Home() {
     const method = isLiked ? "DELETE" : "POST";
 
     try {
-      const response = await fetch("/api/likes", {
-        method: method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId, userId }),
-      });
+    const response = await fetch("/api/likes", {
+      method: method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ postId, userId }),
+    });
 
-      if (response.ok) {
-        let newLikedPosts;
-        if (isLiked) {
-          // 解除：リストから取り除く
-          newLikedPosts = likedPosts.filter(id => id !== postId);
-        } else {
-          // 登録：リストに加える
-          newLikedPosts = [...likedPosts, postId];
-        }
-
-        setLikedPosts(newLikedPosts);
-        localStorage.setItem("lit-club-liked-ids", JSON.stringify(newLikedPosts));
-        fetchPosts(); // 数値を再取得して反映
+    if (response.ok) {
+      let newLikedPosts;
+      if (isLiked) {
+        // 解除：リストから取り除く
+        newLikedPosts = likedPosts.filter(id => id !== postId);
+      } else {
+        // 登録：リストに加える
+        newLikedPosts = [...likedPosts, postId];
       }
-    } catch (error) {
-      console.error("操作に失敗しました", error);
+
+      setLikedPosts(newLikedPosts);
+      localStorage.setItem("lit-club-liked-ids", JSON.stringify(newLikedPosts));
+      fetchPosts(); // 数値を再取得して反映
     }
-  };
+  } catch (error) {
+    console.error("操作に失敗しました", error);
+  }
+};
 
   // 1. コメント入力用のStateを投稿IDごとに管理
   const [commentTexts, setCommentTexts] = useState<{ [key: string]: string }>({});
