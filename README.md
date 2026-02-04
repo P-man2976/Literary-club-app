@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Literary Club Portal
 
-## Getting Started
+A web application designed for literary club members to share, read, and discuss their creative works.
 
-First, run the development server:
+## Overview
+This project was born from the need for a dedicated space where club members can easily exchange manuscript files, read each other's work, and provide feedback through comments.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Development Intent
+Previously, managing works and feedback across various platforms was fragmented. I decided to build a custom solution to:
+- **Centralize file sharing and reading** within the club.
+- **Maintain full control** over access range and copyright management.
+- **Ensure flexibility** to modify features based on the club's specific needs, which is difficult with off-the-shelf services.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Key Features
+- **Manuscript Upload:** Supports `.txt` file uploads with automatic metadata extraction.
+- **Reading Experience:** A clean, minimal UI focused on readability.
+- **Feedback System:** A robust comment section for each post to encourage club discussion.
+- **Like System:** A "Pattern C" implementation (LocalStorage + DynamoDB) allowing even guest users to interact while preventing duplicate entries.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Tech Stack
+- **Frontend:** Next.js (App Router), Tailwind CSS, TypeScript
+- **Backend:** Next.js Route Handlers
+- **Database:** Amazon DynamoDB (NoSQL)
+- **Authentication:** NextAuth.js (Google Provider)
+- **Infrastructure:** AWS (IAM, DynamoDB)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Database Design (NoSQL)
+This app utilizes a dual-table strategy for scalability and data integrity:
+- `lit-club-page`: Stores post content and metadata.
+- `lit-club-likes`: A separate table for managing interactions, using a composite key (`postId` + `userId`) to ensure idempotency.
