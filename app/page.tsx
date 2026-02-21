@@ -138,12 +138,49 @@ export default function Home() {
     // ファイル名（拡張子抜き）をタイトルに自動セットする
     const fileName = file.name.replace(/\.[^/.]+$/, "");
 
-    if (file.type === "text/plain") {
-      const text = await file.text();
-      setNewPost((prev) => ({ ...prev, title: fileName, body: text }));
-    } else if (file.type === "application/pdf") {
-      // PDFは後でライブラリを入れるので、今はとりあえずタイトルだけ
-      setNewPost((prev) => ({ ...prev, title: fileName, body: "PDF解析機能は実装中です..." }));
+    try {
+      if (file.type === "text/plain") {
+        const text = await file.text();
+        setNewPost((prev) => ({ ...prev, title: fileName, body: text }));
+      } else if (file.type === "application/pdf") {
+        // PDF parsing - dynamic import
+        const PDFJS = await import("pdfjs-dist");
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await PDFJS.getDocument({ data: arrayBuffer }).promise;
+        let text = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          text += textContent.items.map((item: any) => item.str).join(" ");
+          text += "\n";
+        }
+        setNewPost((prev) => ({ ...prev, title: fileName, body: text }));
+      } else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || file.name.endsWith(".docx")) {
+        // DOCX parsing
+        const arrayBuffer = await file.arrayBuffer();
+        const JSZip = (await import("jszip")).default;
+        
+        // docxファイルを読み込む
+        const zip = new JSZip();
+        const loadedZip = await zip.loadAsync(arrayBuffer);
+        const xml = await loadedZip.file("word/document.xml")?.async("text");
+        
+        if (xml) {
+          // XMLからテキストを抽出
+          const doc = new DOMParser().parseFromString(xml, "text/xml");
+          const textElements = doc.getElementsByTagName("w:t");
+          let text = "";
+          for (let i = 0; i < textElements.length; i++) {
+            text += textElements[i].textContent || "";
+          }
+          setNewPost((prev) => ({ ...prev, title: fileName, body: text || "DOCX解析に失敗しました" }));
+        } else {
+          setNewPost((prev) => ({ ...prev, title: fileName, body: "DOCX解析に失敗しました" }));
+        }
+      }
+    } catch (error) {
+      console.error("ファイル解析エラー:", error);
+      alert("ファイルの解析に失敗しました");
     }
   };
   
@@ -319,7 +356,7 @@ export default function Home() {
             
             <input 
               type="file" 
-              accept=".txt" 
+              accept=".txt,.pdf,.docx" 
               onChange={handleFileChange} 
               className="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" 
             />

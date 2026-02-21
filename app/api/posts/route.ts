@@ -1,62 +1,59 @@
-import { ScanCommand } from "@aws-sdk/lib-dynamodb"; // ScanCommandを追加
-
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
-
-const client = new DynamoDBClient({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-});
-const docClient = DynamoDBDocumentClient.from(client);
+import { getD1Client } from "@/app/lib/db";
 
 export async function POST(request: Request) {
-  const data = await request.json();
+  try {
+    const db = getD1Client();
+    const data = await request.json();
 
-  const command = new PutCommand({
-    TableName: "lit-club-page",
-    Item: {
-      id: uuidv4(), // ランダムなIDを生成
-      createdAt: Date.now(),
+    const postId = uuidv4();
+    const result = await db.insertPost({
+      id: postId,
       title: data.title,
       body: data.body,
       author: data.author,
       tag: data.tag || "創作",
-    },
-  });
+      createdAt: Date.now(),
+    });
 
-  try {
-    await docClient.send(command);
-    console.log("✅ AWS Save Success!");
-    return NextResponse.json({ message: "Success" });
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error || "Failed to save post" },
+        { status: 500 }
+      );
+    }
+
+    console.log("✅ D1 Save Success!");
+    return NextResponse.json({ message: "Success", id: postId });
   } catch (error: any) {
-    console.log("---------- AWS ERROR START ----------");
-    console.log("Error Name:", error.name);
-    console.log("Error Message:", error.message);
-    console.log("---------- AWS ERROR END ----------");
-
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("❌ D1 Save Error:", error.message);
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }
 
 export async function GET() {
-  const command = new ScanCommand({
-    TableName: "lit-club-page",
-  });
-
   try {
-    const response = await docClient.send(command);
-    // createdAt（投稿日時）の大きい順（新しい順）にソート
-    const items = response.Items || [];
-    items.sort((a, b) => b.createdAt - a.createdAt);
-    
-    return NextResponse.json(items);
+    const db = getD1Client();
+    const result = await db.getPosts();
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error || "Failed to fetch posts" },
+        { status: 500 }
+      );
+    }
+
+    const posts = result.results || [];
+    return NextResponse.json(posts);
   } catch (error: any) {
-    console.error("❌ AWS Fetch Error:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("❌ D1 Fetch Error:", error.message);
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }
