@@ -17,6 +17,10 @@ export default function SettingsPage() {
   const [isEditingPenName, setIsEditingPenName] = useState(false);
   const [pendingPenName, setPendingPenName] = useState("");
   const [loadingPenName, setLoadingPenName] = useState(true);
+  const [selfIntro, setSelfIntro] = useState("");
+  const [pendingSelfIntro, setPendingSelfIntro] = useState("");
+  const [isEditingSelfIntro, setIsEditingSelfIntro] = useState(false);
+  const [loadingSelfIntro, setLoadingSelfIntro] = useState(true);
   const [userIcon, setUserIcon] = useState<string | null>(null);
   const [isEditingIcon, setIsEditingIcon] = useState(false);
   const [uploadingIcon, setUploadingIcon] = useState(false);
@@ -44,11 +48,13 @@ export default function SettingsPage() {
           const data = await res.json();
           setPenName(data.penName || "");
           setUserIcon(data.userIcon || null);
+          setSelfIntro(data.selfIntro || "");
         }
       } catch (error) {
         console.error("プロフィール取得エラー:", error);
       } finally {
         setLoadingPenName(false);
+        setLoadingSelfIntro(false);
         setLoadingIcon(false);
       }
     };
@@ -69,10 +75,7 @@ export default function SettingsPage() {
       const res = await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          penName: pendingPenName.trim(),
-          userIcon: userIcon // 既存のアイコンも一緒に保存
-        }),
+        body: JSON.stringify({ penName: pendingPenName.trim() }),
       });
 
       if (res.ok) {
@@ -86,6 +89,34 @@ export default function SettingsPage() {
       }
     } catch (error) {
       console.error("ペンネーム保存エラー:", error);
+      alert("保存に失敗しました");
+    }
+  };
+
+  const saveSelfIntro = async () => {
+    if (pendingSelfIntro.trim().length > 20) {
+      alert("自己紹介は20文字以内にしてください");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selfIntro: pendingSelfIntro.trim() }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setSelfIntro(data.selfIntro || "");
+        setIsEditingSelfIntro(false);
+        alert("自己紹介を保存しました！");
+      } else {
+        const error = await res.json();
+        alert(error.error || "保存に失敗しました");
+      }
+    } catch (error) {
+      console.error("自己紹介保存エラー:", error);
       alert("保存に失敗しました");
     }
   };
@@ -323,9 +354,10 @@ export default function SettingsPage() {
                       value={pendingPenName}
                       onValueChange={setPendingPenName}
                       placeholder="ペンネームを入力..."
-                      maxLength={50}
+                      maxLength={20}
                       size="sm"
                     />
+                    <p className="text-xs text-default-400 text-right">{pendingPenName.length}/20</p>
                     <div className="flex gap-2">
                       <Button
                         color="primary"
@@ -346,6 +378,59 @@ export default function SettingsPage() {
                 ) : (
                   <p className="font-medium">
                     {loadingPenName ? "読み込み中..." : (penName || "未設定")}
+                  </p>
+                )}
+              </div>
+
+              {/* 自己紹介設定 */}
+              <div className="border-t border-divider pt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-default-500 font-bold">自己紹介（20文字まで）</p>
+                  {!isEditingSelfIntro && (
+                    <Button
+                      size="sm"
+                      color="primary"
+                      variant="light"
+                      onPress={() => {
+                        setPendingSelfIntro(selfIntro);
+                        setIsEditingSelfIntro(true);
+                      }}
+                    >
+                      {selfIntro ? "変更" : "設定"}
+                    </Button>
+                  )}
+                </div>
+
+                {isEditingSelfIntro ? (
+                  <div className="space-y-3">
+                    <Input
+                      value={pendingSelfIntro}
+                      onValueChange={setPendingSelfIntro}
+                      placeholder="例: 短歌とSFが好き"
+                      maxLength={20}
+                      size="sm"
+                    />
+                    <p className="text-xs text-default-400 text-right">{pendingSelfIntro.length}/20</p>
+                    <div className="flex gap-2">
+                      <Button
+                        color="primary"
+                        onPress={saveSelfIntro}
+                        className="flex-1"
+                      >
+                        保存
+                      </Button>
+                      <Button
+                        variant="flat"
+                        onPress={() => setIsEditingSelfIntro(false)}
+                        className="flex-1"
+                      >
+                        キャンセル
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="font-medium text-sm text-default-700">
+                    {loadingSelfIntro ? "読み込み中..." : (selfIntro || "未設定")}
                   </p>
                 )}
               </div>

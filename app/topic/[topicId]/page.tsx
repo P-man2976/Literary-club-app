@@ -526,13 +526,24 @@ export default function TopicPage() {
 
         {/* トピック表示 */}
         <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 mb-8 border-l-4 border-purple-500 dark:border-purple-400">
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">お題投稿</p>
           {getDeadlineStatus(topic.deadline) && (
             <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${getDeadlineStatus(topic.deadline)!.bgColor} ${getDeadlineStatus(topic.deadline)!.textColor}`}>
               {getDeadlineStatus(topic.deadline)!.label}
             </div>
           )}
-          <h2 className="text-xl font-bold text-purple-600 dark:text-purple-400 mb-2">{topic.title}</h2>
+          <div className="flex items-center justify-between gap-3 mb-2">
+            <h2 className="text-xl font-bold text-purple-600 dark:text-purple-400">{topic.title}</h2>
+            <button
+              onClick={() => handleLike(topic.id)}
+              className={`px-4 py-2 rounded font-semibold transition whitespace-nowrap shrink-0 ${
+                likedPosts.includes(topic.id)
+                  ? "bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400"
+                  : "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700"
+              }`}
+            >
+              ❤️ {topic.likes || 0}
+            </button>
+          </div>
           {topic.subtitle && (
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 italic">{topic.subtitle}</p>
           )}
@@ -553,16 +564,6 @@ export default function TopicPage() {
             <span>{new Date(topic.createdAt * 1000).toLocaleString()}</span>
           </div>
           <div className="flex gap-4 mt-4">
-            <button
-              onClick={() => handleLike(topic.id)}
-              className={`px-4 py-2 rounded font-semibold transition ${
-                likedPosts.includes(topic.id)
-                  ? "bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400"
-                  : "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700"
-              }`}
-            >
-              ❤️ {topic.likes || 0}
-            </button>
             {session?.user?.email === topic.authorEmail && (
               <button
                 onClick={() => deletePost(topic.id)}

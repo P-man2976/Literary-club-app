@@ -5,8 +5,112 @@ const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
 const CLOUDFLARE_D1_DATABASE_ID = process.env.CLOUDFLARE_D1_DATABASE_ID;
 const CLOUDFLARE_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
 
-// ペンネーム・アイコンを取得
-export async function GET(request: Request) {
+type ProfileAiResult = {
+  summary: string;
+  hashtags: string[];
+};
+
+type QueryResult = {
+  ok: boolean;
+  results: any[];
+  error?: string;
+};
+
+async function d1Query(url: string, sql: string, params: any[]): Promise<QueryResult> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ sql, params }),
+  });
+
+  const text = await response.text();
+  if (!response.ok) {
+    return { ok: false, results: [], error: text || response.statusText };
+  }
+
+  let data: any;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return { ok: false, results: [], error: "Invalid D1 JSON response" };
+  }
+
+  if (data?.success === false || data?.result?.[0]?.success === false) {
+    return {
+      ok: false,
+      results: [],
+      error: data?.errors?.[0]?.message || data?.result?.[0]?.error || "D1 query failed",
+    };
+  }
+
+  return { ok: true, results: data?.result?.[0]?.results || [] };
+}
+
+function normalizeHashtags(tags: string[]): string[] {
+  const cleaned = tags
+    .map((tag) => String(tag || "").trim().replace(/^#+/, ""))
+    .filter((tag) => tag.length > 0)
+    .slice(0, 3);
+
+  while (cleaned.length < 3) {
+    cleaned.push("文芸部");
+  }
+
+  return cleaned.map((tag) => `#${tag.slice(0, 12)}`);
+}
+
+function fallbackProfileAnalysisFromPosts(): ProfileAiResult {
+  return {
+    summary: "過去投稿をもとにしたAI分析は準備中です。投稿が増えると表示が育ちます。",
+    hashtags: normalizeHashtags(["投稿分析準備中", "文芸部", "創作ログ"]),
+  };
+}
+
+async function buildPostsBasedAnalysisSkeleton(email: string, url: string): Promise<ProfileAiResult> {
+  try {
+    const postRes = await d1Query(
+      url,
+      "SELECT tag, title FROM posts WHERE authorEmail = ? ORDER BY createdAt DESC LIMIT 60",
+      [email]
+    );
+
+    if (!postRes.ok) {
+      return fallbackProfileAnalysisFromPosts();
+    }
+
+    const rows = postRes.results;
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return {
+        summary: "まだ投稿データが少ないため、AI分析はこれから表示されます。",
+        hashtags: normalizeHashtags(["初投稿待ち", "文芸部", "これから"]),
+      };
+    }
+
+    const tagCounts: Record<string, number> = {};
+    rows.forEach((row: any) => {
+      const tag = String(row?.tag || "創作").trim() || "創作";
+      tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+    });
+
+    const sortedTags = Object.entries(tagCounts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([tag]) => tag);
+
+    const topTag = sortedTags[0] || "創作";
+    return {
+      summary: `過去${rows.length}件の投稿では「${topTag}」の比率が高め。AI本実装時に文体と得意領域を詳しく分析します。`,
+      hashtags: normalizeHashtags([topTag, "投稿傾向", "文芸部"]),
+    };
+  } catch {
+    return fallbackProfileAnalysisFromPosts();
+  }
+}
+
+export async function GET() {
   try {
     const session = await getServerSession();
     if (!session?.user?.email) {
@@ -14,31 +118,30 @@ export async function GET(request: Request) {
     }
 
     const url = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/d1/database/${CLOUDFLARE_D1_DATABASE_ID}/query`;
-    
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        sql: "SELECT penName, userIcon FROM userProfiles WHERE email = ?",
-        params: [session.user.email],
-      }),
-    });
+    const result = await d1Query(
+      url,
+      "SELECT penName, userIcon, selfIntro, aiSummary, aiTagsJson, aiUpdatedAt FROM userProfiles WHERE email = ?",
+      [session.user.email]
+    );
 
-    if (!response.ok) {
-      console.error("D1 Response:", await response.text());
-      throw new Error(`Cloudflare D1 API error: ${response.statusText}`);
+    if (!result.ok) {
+      return NextResponse.json(
+        { error: "userProfiles schema is not migrated. Run latest migrations first." },
+        { status: 500 }
+      );
     }
 
-    const data = await response.json();
-    const profile = data.result[0]?.results?.[0];
+    const profile = result.results[0] || null;
+    const aiTags = profile?.aiTagsJson ? JSON.parse(profile.aiTagsJson) : [];
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       penName: profile?.penName || null,
       userIcon: profile?.userIcon || null,
-      email: session.user.email 
+      selfIntro: profile?.selfIntro || "",
+      aiSummary: profile?.aiSummary || "",
+      aiTags: Array.isArray(aiTags) ? aiTags : [],
+      aiUpdatedAt: profile?.aiUpdatedAt || null,
+      email: session.user.email,
     });
   } catch (error) {
     console.error("Profile GET error:", error);
@@ -46,7 +149,6 @@ export async function GET(request: Request) {
   }
 }
 
-// ペンネーム・アイコンを保存
 export async function POST(request: Request) {
   try {
     const session = await getServerSession();
@@ -54,84 +156,129 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { penName, userIcon } = await request.json();
+    const { penName, userIcon, selfIntro, refreshAi } = await request.json();
     const hasPenName = penName !== undefined && penName !== null;
     const hasUserIcon = userIcon !== undefined;
-    
-    // バリデーション
+    const hasSelfIntro = selfIntro !== undefined;
+
+    if (!hasPenName && !hasUserIcon && !hasSelfIntro) {
+      return NextResponse.json({ error: "更新するデータがありません" }, { status: 400 });
+    }
+
     if (hasPenName) {
-      if (penName.trim().length === 0) {
+      if (typeof penName !== "string" || penName.trim().length === 0) {
         return NextResponse.json({ error: "ペンネームを入力してください" }, { status: 400 });
       }
-      if (penName.length > 50) {
-        return NextResponse.json({ error: "ペンネームは50文字以内にしてください" }, { status: 400 });
+      if (penName.trim().length > 20) {
+        return NextResponse.json({ error: "ペンネームは20文字以内にしてください" }, { status: 400 });
+      }
+    }
+
+    if (hasSelfIntro) {
+      if (typeof selfIntro !== "string") {
+        return NextResponse.json({ error: "自己紹介の形式が不正です" }, { status: 400 });
+      }
+      if (selfIntro.trim().length > 20) {
+        return NextResponse.json({ error: "自己紹介は20文字以内にしてください" }, { status: 400 });
       }
     }
 
     if (hasUserIcon && userIcon !== null) {
-      if (userIcon.length > 1000000) {
-        return NextResponse.json({ error: "アイコン画像は1MB以下にしてください" }, { status: 400 });
+      if (typeof userIcon !== "string") {
+        return NextResponse.json({ error: "アイコンURLの形式が不正です" }, { status: 400 });
+      }
+      if (userIcon.length > 1000) {
+        return NextResponse.json({ error: "アイコンURLが長すぎます" }, { status: 400 });
       }
     }
 
-    if (!hasPenName && !hasUserIcon) {
-      return NextResponse.json({ error: "更新するデータがありません" }, { status: 400 });
-    }
-
     const url = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/d1/database/${CLOUDFLARE_D1_DATABASE_ID}/query`;
+    const currentRes = await d1Query(
+      url,
+      "SELECT penName, userIcon, selfIntro, aiSummary, aiTagsJson, aiUpdatedAt FROM userProfiles WHERE email = ?",
+      [session.user.email]
+    );
 
-    // 現在値を取得して、未指定項目は既存値を維持する
-    const currentRes = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        sql: "SELECT penName, userIcon FROM userProfiles WHERE email = ?",
-        params: [session.user.email],
-      }),
-    });
-
-    const currentData = currentRes.ok ? await currentRes.json() : null;
-    const currentProfile = currentData?.result?.[0]?.results?.[0] || null;
-
-    const finalPenName = hasPenName ? penName.trim() : (currentProfile?.penName || null);
-    const finalUserIcon = hasUserIcon ? (userIcon || null) : (currentProfile?.userIcon || null);
-
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        sql: `INSERT INTO userProfiles (email, penName, userIcon, createdAt, updatedAt) 
-              VALUES (?, ?, ?, strftime('%s', 'now'), strftime('%s', 'now'))
-              ON CONFLICT(email) DO UPDATE SET 
-                penName = ?,
-                userIcon = ?,
-                updatedAt = strftime('%s', 'now')`,
-        params: [
-          session.user.email, 
-          finalPenName, 
-          finalUserIcon, 
-          finalPenName, 
-          finalUserIcon
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("D1 Response:", errorText);
-      throw new Error(`Cloudflare D1 API error: ${response.statusText}`);
+    if (!currentRes.ok) {
+      return NextResponse.json(
+        { error: "userProfiles schema is not migrated. Run latest migrations first." },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      penName: finalPenName || null,
-      userIcon: finalUserIcon || null
+    const current = currentRes.results[0] || null;
+    const finalPenName = hasPenName
+      ? String(penName).trim()
+      : (current?.penName || session.user.name || "匿名部員");
+    const finalUserIcon = hasUserIcon ? (userIcon || null) : (current?.userIcon || null);
+    const finalSelfIntro = hasSelfIntro ? String(selfIntro || "").trim() : (current?.selfIntro || "");
+
+    const nowSec = Math.floor(Date.now() / 1000);
+    const currentAiUpdatedAt = Number(current?.aiUpdatedAt || 0);
+    const refreshIntervalSec = 60 * 60 * 24 * 14;
+    const shouldRefreshAi =
+      refreshAi === true ||
+      !current?.aiSummary ||
+      !currentAiUpdatedAt ||
+      nowSec - currentAiUpdatedAt > refreshIntervalSec;
+
+    const aiGenerated = shouldRefreshAi
+      ? await buildPostsBasedAnalysisSkeleton(session.user.email, url)
+      : null;
+
+    const finalAiSummary = aiGenerated
+      ? aiGenerated.summary
+      : (current?.aiSummary || fallbackProfileAnalysisFromPosts().summary);
+
+    const finalAiTags = aiGenerated
+      ? aiGenerated.hashtags
+      : (current?.aiTagsJson
+          ? JSON.parse(current.aiTagsJson)
+          : fallbackProfileAnalysisFromPosts().hashtags);
+
+    const finalAiUpdatedAt = shouldRefreshAi ? nowSec : (currentAiUpdatedAt || nowSec);
+
+    const saveRes = await d1Query(
+      url,
+      `INSERT INTO userProfiles (email, penName, userIcon, selfIntro, aiSummary, aiTagsJson, aiUpdatedAt, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%s', 'now'), strftime('%s', 'now'))
+       ON CONFLICT(email) DO UPDATE SET
+         penName = ?,
+         userIcon = ?,
+         selfIntro = ?,
+         aiSummary = ?,
+         aiTagsJson = ?,
+         aiUpdatedAt = ?,
+         updatedAt = strftime('%s', 'now')`,
+      [
+        session.user.email,
+        finalPenName,
+        finalUserIcon,
+        finalSelfIntro,
+        finalAiSummary,
+        JSON.stringify(finalAiTags),
+        finalAiUpdatedAt,
+        finalPenName,
+        finalUserIcon,
+        finalSelfIntro,
+        finalAiSummary,
+        JSON.stringify(finalAiTags),
+        finalAiUpdatedAt,
+      ]
+    );
+
+    if (!saveRes.ok) {
+      return NextResponse.json({ error: saveRes.error || "Failed to save profile" }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      penName: finalPenName,
+      userIcon: finalUserIcon,
+      selfIntro: finalSelfIntro,
+      aiSummary: finalAiSummary,
+      aiTags: finalAiTags,
+      aiUpdatedAt: finalAiUpdatedAt,
     });
   } catch (error) {
     console.error("Profile POST error:", error);
