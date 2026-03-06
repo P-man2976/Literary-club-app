@@ -32,20 +32,57 @@ export async function POST(request: Request) {
 }
 
 // 特定の投稿のコメント取得 (GET)
-// URL例: /api/comments?postId=xxxx
+// URL例: 
+// - 単一: /api/comments?postId=xxxx
+// - 複数: /api/comments?postIds=xxx,yyy,zzz (カンマ区切り)
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const postId = searchParams.get("postId");
+    const postIdsParam = searchParams.get("postIds");
 
+    const db = getD1Client();
+
+    // 複数postIDの場合 (一括取得)
+    if (postIdsParam) {
+      const postIds = postIdsParam.split(",").filter(Boolean);
+      if (postIds.length === 0) {
+        return NextResponse.json({});
+      }
+
+      const placeholders = postIds.map(() => "?").join(",");
+      const result = await db.execute<any>({
+        sql: `SELECT * FROM comments WHERE postId IN (${placeholders}) ORDER BY createdAt ASC`,
+        params: postIds,
+      });
+
+      if (!result.success) {
+        return NextResponse.json(
+          { error: result.error || "Failed to fetch comments" },
+          { status: 500 }
+        );
+      }
+
+      // postIdごとにグループ化
+      const commentsByPostId: { [key: string]: any[] } = {};
+      (result.results || []).forEach((comment: any) => {
+        if (!commentsByPostId[comment.postId]) {
+          commentsByPostId[comment.postId] = [];
+        }
+        commentsByPostId[comment.postId].push(comment);
+      });
+
+      return NextResponse.json(commentsByPostId);
+    }
+
+    // 単一postIDの場合 (従来通り)
     if (!postId) {
       return NextResponse.json(
-        { error: "postId is required" },
+        { error: "postId or postIds is required" },
         { status: 400 }
       );
     }
 
-    const db = getD1Client();
     const result = await db.getCommentsByPostId(postId);
 
     if (!result.success) {

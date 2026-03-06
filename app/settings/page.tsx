@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Button, Card, CardBody, Input, Avatar } from "@heroui/react";
+import { getUserIconUrl } from "@/app/lib/imageUtils";
 
 export default function SettingsPage() {
   const { data: session } = useSession();
@@ -282,12 +283,12 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-3">
                     {userIcon ? (
                       <img 
-                        src={userIcon} 
+                        src={getUserIconUrl(session?.user?.email, userIcon) || userIcon} 
                         alt="カスタムアイコン"
-                        className="w-16 h-16 rounded-full object-cover border-2 border-primary"
+                        className="w-16 h-16 min-w-16 min-h-16 rounded-full object-cover border-2 border-primary shrink-0"
                       />
                     ) : (
-                      <div className="w-16 h-16 rounded-full bg-default-200 flex items-center justify-center">
+                      <div className="w-16 h-16 min-w-16 min-h-16 rounded-full bg-default-200 flex items-center justify-center shrink-0">
                         <span className="text-sm text-default-400">未設定</span>
                       </div>
                     )}

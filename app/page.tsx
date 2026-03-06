@@ -4,6 +4,7 @@ import { useSession, signIn } from "next-auth/react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getUserIconUrl } from "@/app/lib/imageUtils";
 import { 
   Button, 
   Card, 
@@ -156,10 +157,8 @@ export default function Home() {
   };
 
   const getDisplayIcon = (authorEmail: string | null | undefined) => {
-    if (authorEmail && userIconMap[authorEmail]) {
-      return userIconMap[authorEmail];
-    }
-    return null;
+    // メールアドレスから画像URLを生成（R2対応 + 後方互換性あり）
+    return getUserIconUrl(authorEmail, userIconMap[authorEmail || ""]);
   };
 
   const getTopicParticipants = (topic: Post) => {
@@ -678,8 +677,8 @@ export default function Home() {
         </Tab>
       </Tabs>
 
-      <Modal isOpen={isTopicDecisionModalOpen} onClose={() => setIsTopicDecisionModalOpen(false)} size="2xl">
-        <ModalContent>
+      <Modal isOpen={isTopicDecisionModalOpen} onClose={() => setIsTopicDecisionModalOpen(false)} size="2xl" backdrop="opaque">
+        <ModalContent className="bg-background">
           {() => (
             <>
               <ModalHeader>📌 お題を決定</ModalHeader>
@@ -755,8 +754,8 @@ export default function Home() {
       </Modal>
 
       {/* 投稿モーダル */}
-      <Modal isOpen={isOpen} onClose={onClose} size="2xl">
-        <ModalContent>
+      <Modal isOpen={isOpen} onClose={onClose} size="2xl" backdrop="opaque">
+        <ModalContent className="bg-background">
           {(onClose) => (
             <>
               <ModalHeader>

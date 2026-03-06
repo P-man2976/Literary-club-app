@@ -3,6 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { getUserIconUrl } from "@/app/lib/imageUtils";
 
 type Comment = {
   commentId: string;
@@ -79,31 +80,30 @@ export default function TopicPage() {
       // トピックを取得
       const topicData = allPosts.find(p => p.id === topicId);
       
-      // 返信を取得
+      // 返信を取得（/api/postsで既にcommentCount, likesが含まれている）
       const repliesData = allPosts.filter(p => p.parentPostId === topicId);
       
       if (topicData) {
-        // コメントといいねを並列で取得
-        const [cRes, lRes] = await Promise.all([
-          fetch(`/api/comments?postId=${topicData.id}`),
-          fetch(`/api/likes?postId=${topicData.id}`)
-        ]);
+        // トピックのコメント詳細のみ取得（件数は既にある）
+        const cRes = await fetch(`/api/comments?postId=${topicData.id}`);
         const comments = await cRes.json();
-        const likesData = await lRes.json();
         
-        setTopic({ ...topicData, comments, likes: likesData.count });
+        setTopic({ ...topicData, comments });
       }
 
-      // 返信にもコメントといいねを取得
-      const repliesWithDetails = await Promise.all(repliesData.map(async (reply) => {
-        const [cRes, lRes] = await Promise.all([
-          fetch(`/api/comments?postId=${reply.id}`),
-          fetch(`/api/likes?postId=${reply.id}`)
-        ]);
-        const comments = await cRes.json();
-        const likesData = await lRes.json();
-        
-        return { ...reply, comments, likes: likesData.count };
+      // 返信のコメントを一括取得
+      const replyIds = repliesData.map(r => r.id);
+      let commentsByPostId = new Map<string, any[]>();
+      
+      if (replyIds.length > 0) {
+        const cRes = await fetch(`/api/comments?postIds=${replyIds.join(",")}`);
+        const commentsData = await cRes.json();
+        commentsByPostId = new Map(Object.entries(commentsData));
+      }
+      
+      const repliesWithDetails = repliesData.map((reply) => ({
+        ...reply,
+        comments: commentsByPostId.get(reply.id) || [],
       }));
 
       // すべてのauthorEmailを収集（トピック、返信、コメント）
@@ -180,10 +180,8 @@ export default function TopicPage() {
   };
 
   const getDisplayIcon = (authorEmail: string | null | undefined) => {
-    if (authorEmail && userIconMap[authorEmail]) {
-      return userIconMap[authorEmail];
-    }
-    return null;
+    // メールアドレスから画像URLを生成（R2対応 + 後方互換性あり）
+    return getUserIconUrl(authorEmail, userIconMap[authorEmail || ""]);
   };
 
   const getReplyParticipants = () => {
@@ -545,10 +543,10 @@ export default function TopicPage() {
                 <img
                   src={getDisplayIcon(topic.authorEmail) || ""}
                   alt="投稿者アイコン"
-                  className="w-6 h-6 rounded-full object-cover border border-gray-300"
+                  className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full object-cover border border-gray-300"
                 />
               ) : (
-                <div className="w-6 h-6 rounded-full bg-gray-200 border border-gray-300" />
+                <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-200 border border-gray-300" />
               )}
               {getDisplayName(topic.authorEmail, topic.author)}
             </span>

@@ -63,18 +63,36 @@ HUGGINGFACE_MODEL=mistralai/Mistral-7B-Instruct-v0.2
 HUGGINGFACE_BASE_URL=https://api-inference.huggingface.co/models
 ```
 
-### アイコン画像アップロード（Cloudflare Images）
+### アイコン画像アップロード（Cloudflare R2）
 
-base64保存ではなく画像URL保存にするため、Cloudflare Images を利用します。
+ユーザーアイコンは **Cloudflare R2（無料オブジェクトストレージ）** に保存します。
+
+**セキュリティ & パフォーマンス最適化：**
+- 📧 メールアドレスは **SHA-256でハッシュ化** してファイル名として使用（セキュリティ対策）
+- 🖼️ アップロード時に **バックエンドで自動リサイズ**（128x128px、JPEG、品質85%）
+- 🚀 一貫したURLで高速読み込み（CDNキャッシュ対応）
 
 ```bash
-# 既存のCloudflare APIトークンに Images 書き込み権限が必要
-CLOUDFLARE_ACCOUNT_ID=your_account_id
-CLOUDFLARE_API_TOKEN=your_api_token
+# R2設定（Cloudflare ダッシュボードで取得）
+R2_ACCOUNT_ID=your_account_id
+R2_ACCESS_KEY_ID=your_r2_access_key
+R2_SECRET_ACCESS_KEY=your_r2_secret_key
+R2_BUCKET_NAME=user-icons
 
-# 任意: variants が返らない環境向け
-CLOUDFLARE_IMAGES_DELIVERY_BASE=https://imagedelivery.net/<hash>
+# R2 Public URL（バケット設定で有効化）
+R2_PUBLIC_URL=https://pub-xxxxx.r2.dev
+# またはカスタムドメイン使用時
+# R2_PUBLIC_URL=https://icons.yourdomain.com
+
+# フロントエンド用（NEXT_PUBLIC_ プレフィックス必須）
+NEXT_PUBLIC_R2_PUBLIC_URL=https://pub-xxxxx.r2.dev
 ```
+
+**R2の設定手順：**
+1. Cloudflare ダッシュボード → R2 → バケット作成（例: `user-icons`）
+2. バケット設定 → Public Access を有効化 → Public URL をコピー
+3. Manage R2 API Tokens → API Token 作成（Read & Write 権限）
+4. 上記環境変数を `.env.local` に設定
 
 ### 本番へデプロイ
 

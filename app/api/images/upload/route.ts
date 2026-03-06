@@ -1,9 +1,33 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import sharp from "sharp";
+import crypto from "crypto";
 
-const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
-const CLOUDFLARE_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
-const CLOUDFLARE_IMAGES_DELIVERY_BASE = process.env.CLOUDFLARE_IMAGES_DELIVERY_BASE || "";
+const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
+const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
+const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
+const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME;
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL; // 例: https://pub-xxxxx.r2.dev
+
+// 画像の統一サイズ
+const ICON_SIZE = 128;
+
+// R2クライアントを初期化（S3互換）
+const getR2Client = () => {
+  if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY) {
+    throw new Error("Missing R2 credentials");
+  }
+
+  return new S3Client({
+    region: "auto",
+    endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: R2_ACCESS_KEY_ID,
+      secretAccessKey: R2_SECRET_ACCESS_KEY,
+    },
+  });
+};
 
 export async function POST(request: Request) {
   try {
@@ -12,9 +36,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (!CLOUDFLARE_ACCOUNT_ID || !CLOUDFLARE_API_TOKEN) {
+    if (!R2_BUCKET_NAME || !R2_PUBLIC_URL) {
       return NextResponse.json(
-        { error: "Missing Cloudflare env vars" },
+        { error: "Missing R2 configuration" },
         { status: 500 }
       );
     }
@@ -34,49 +58,44 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "画像は1MB以下にしてください" }, { status: 400 });
     }
 
-    const uploadForm = new FormData();
-    uploadForm.append("file", file, file.name);
-    uploadForm.append("metadata", JSON.stringify({
-      uploader: session.user.email,
-      uploadedAt: Date.now(),
-    }));
+    // ファイル名にハッシュ化したメールアドレスを使用（セキュリティ対策）
+    const email = session.user.email;
+    const hashedEmail = crypto.createHash('sha256').update(email.toLowerCase().trim()).digest('hex');
+    const fileName = `${hashedEmail}.jpg`; // 統一してJPG形式で保存
 
-    const url = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/images/v1`;
-    const cfRes = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
+    // ファイルをArrayBufferに変換
+    const arrayBuffer = await file.arrayBuffer();
+    
+    // Sharp で画像をリサイズ（128x128px、正方形、JPEGに変換）
+    const resizedBuffer = await sharp(Buffer.from(arrayBuffer))
+      .resize(ICON_SIZE, ICON_SIZE, {
+        fit: "cover", // アスペクト比を維持しつつトリミング
+        position: "center",
+      })
+      .jpeg({ quality: 85 }) // JPEG 品質85%
+      .toBuffer();
+
+    // R2にアップロード
+    const r2Client = getR2Client();
+    const command = new PutObjectCommand({
+      Bucket: R2_BUCKET_NAME,
+      Key: fileName,
+      Body: resizedBuffer,
+      ContentType: "image/jpeg",
+      Metadata: {
+        uploader: email,
+        uploadedAt: Date.now().toString(),
       },
-      body: uploadForm,
     });
 
-    const cfJson = await cfRes.json();
+    await r2Client.send(command);
 
-    if (!cfRes.ok || !cfJson?.success) {
-      return NextResponse.json(
-        { error: cfJson?.errors?.[0]?.message || "Cloudflare Images upload failed" },
-        { status: 502 }
-      );
-    }
-
-    const variants: string[] = cfJson?.result?.variants || [];
-    const imageId: string = cfJson?.result?.id;
-
-    let imageUrl = variants[0] || "";
-    if (!imageUrl && CLOUDFLARE_IMAGES_DELIVERY_BASE && imageId) {
-      imageUrl = `${CLOUDFLARE_IMAGES_DELIVERY_BASE}/${imageId}/public`;
-    }
-
-    if (!imageUrl) {
-      return NextResponse.json(
-        { error: "画像URLの取得に失敗しました" },
-        { status: 502 }
-      );
-    }
+    // 画像URLを構築
+    const imageUrl = `${R2_PUBLIC_URL}/${fileName}`;
 
     return NextResponse.json({ success: true, imageUrl });
   } catch (error: any) {
-    console.error("image upload error:", error);
+    console.error("R2 upload error:", error);
     return NextResponse.json(
       { error: error?.message || "Failed to upload image" },
       { status: 500 }
