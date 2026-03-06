@@ -195,6 +195,69 @@ export class D1Client {
   }
 
   async deletePost(postId: string) {
+    // 対象投稿を取得
+    const targetPostResult = await this.execute<{ id: string; isTopicPost: number }>({
+      sql: `SELECT id, isTopicPost FROM posts WHERE id = ? LIMIT 1`,
+      params: [postId],
+    });
+
+    if (!targetPostResult.success || !targetPostResult.results || targetPostResult.results.length === 0) {
+      return {
+        success: false,
+        error: "Post not found",
+      };
+    }
+
+    const targetPost = targetPostResult.results[0] as any;
+
+    // お題に投稿（返信）がある場合は削除禁止
+    if (Number(targetPost.isTopicPost || 0) === 1) {
+      const childCountResult = await this.execute<{ count: number }>({
+        sql: `SELECT COUNT(*) as count FROM posts WHERE parentPostId = ?`,
+        params: [postId],
+      });
+
+      if (!childCountResult.success) {
+        return {
+          success: false,
+          error: childCountResult.error || "Failed to check topic children",
+        };
+      }
+
+      const childCount = Number((childCountResult.results?.[0] as any)?.count || 0);
+      if (childCount > 0) {
+        return {
+          success: false,
+          error: "Topic with replies cannot be deleted",
+        };
+      }
+    }
+
+    // 投稿に紐づくコメントといいねを先に削除
+    const deleteCommentsResult = await this.execute({
+      sql: `DELETE FROM comments WHERE postId = ?`,
+      params: [postId],
+    });
+
+    if (!deleteCommentsResult.success) {
+      return {
+        success: false,
+        error: deleteCommentsResult.error || "Failed to delete related comments",
+      };
+    }
+
+    const deleteLikesResult = await this.execute({
+      sql: `DELETE FROM likes WHERE postId = ?`,
+      params: [postId],
+    });
+
+    if (!deleteLikesResult.success) {
+      return {
+        success: false,
+        error: deleteLikesResult.error || "Failed to delete related likes",
+      };
+    }
+
     return this.execute({
       sql: `DELETE FROM posts WHERE id = ?`,
       params: [postId],

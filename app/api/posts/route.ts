@@ -133,9 +133,10 @@ export async function DELETE(request: Request) {
     const result = await db.deletePost(postId);
 
     if (!result.success) {
+      const isTopicDeleteBlocked = result.error === "Topic with replies cannot be deleted";
       return NextResponse.json(
         { error: result.error || "Failed to delete post" },
-        { status: 500 }
+        { status: isTopicDeleteBlocked ? 409 : 500 }
       );
     }
 
