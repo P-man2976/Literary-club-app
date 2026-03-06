@@ -266,11 +266,30 @@ export default function TopicPage() {
         
         if (xml) {
           const doc = new DOMParser().parseFromString(xml, "text/xml");
-          const textElements = doc.getElementsByTagName("w:t");
           let text = "";
-          for (let i = 0; i < textElements.length; i++) {
-            text += textElements[i].textContent || "";
+
+          const paragraphs = doc.getElementsByTagName("w:p");
+
+          const readNodeText = (node: Node): string => {
+            const name = node.nodeName;
+            if (name === "w:t") return node.textContent || "";
+            if (name === "w:tab") return "\t";
+            if (name === "w:br" || name === "w:cr") return "\n";
+
+            let out = "";
+            node.childNodes.forEach((child) => {
+              out += readNodeText(child);
+            });
+            return out;
+          };
+
+          for (let i = 0; i < paragraphs.length; i++) {
+            text += readNodeText(paragraphs[i]);
+            if (i < paragraphs.length - 1) {
+              text += "\n";
+            }
           }
+
           setNewPost((prev) => ({ ...prev, title: fileName, body: text || "DOCX解析に失敗しました" }));
         } else {
           setNewPost((prev) => ({ ...prev, title: fileName, body: "DOCX解析に失敗しました" }));
@@ -531,18 +550,8 @@ export default function TopicPage() {
               {getDeadlineStatus(topic.deadline)!.label}
             </div>
           )}
-          <div className="flex items-center justify-between gap-3 mb-2">
+          <div className="mb-2">
             <h2 className="text-xl font-bold text-purple-600 dark:text-purple-400">{topic.title}</h2>
-            <button
-              onClick={() => handleLike(topic.id)}
-              className={`px-4 py-2 rounded font-semibold transition whitespace-nowrap shrink-0 ${
-                likedPosts.includes(topic.id)
-                  ? "bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400"
-                  : "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700"
-              }`}
-            >
-              ❤️ {topic.likes || 0}
-            </button>
           </div>
           {topic.subtitle && (
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 italic">{topic.subtitle}</p>
@@ -670,7 +679,6 @@ export default function TopicPage() {
             ) : (
               <>
                 <div className="mb-4">
-                  <label className="block text-sm font-semibold dark:text-slate-300 mb-2">📄 ファイルを選択</label>
                   <input
                     type="file"
                     accept=".txt,.pdf,.docx"

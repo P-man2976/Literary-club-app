@@ -70,7 +70,6 @@ export default function Home() {
   const [userIcon, setUserIcon] = useState<string | null>(null);
   const [postingMode, setPostingMode] = useState<"regular" | "topic" | "reply">("regular");
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
-  const [likedPosts, setLikedPosts] = useState<string[]>([]);
   const [replyTexts, setReplyTexts] = useState<{ [key: string]: { title: string; body: string } }>({});
   const [penName, setPenName] = useState("");
   const [penNameMap, setPenNameMap] = useState<{ [email: string]: string }>({});
@@ -139,10 +138,6 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const savedLikes = localStorage.getItem("lit-club-liked-ids");
-    if (savedLikes) {
-      setLikedPosts(JSON.parse(savedLikes));
-    }
     fetchPosts();
   }, []);
 
@@ -194,37 +189,6 @@ export default function Home() {
     });
 
     return participants;
-  };
-
-  const handleLike = async (postId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-
-    const isLiked = likedPosts.includes(postId);
-    const userId = session?.user?.email || "guest";
-    const method = isLiked ? "DELETE" : "POST";
-
-    try {
-      const response = await fetch("/api/likes", {
-        method: method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId, userId }),
-      });
-
-      if (response.ok) {
-        let newLikedPosts;
-        if (isLiked) {
-          newLikedPosts = likedPosts.filter(id => id !== postId);
-        } else {
-          newLikedPosts = [...likedPosts, postId];
-        }
-
-        setLikedPosts(newLikedPosts);
-        localStorage.setItem("lit-club-liked-ids", JSON.stringify(newLikedPosts));
-        fetchPosts();
-      }
-    } catch (error) {
-      console.error("操作に失敗しました", error);
-    }
   };
 
   const [commentTexts, setCommentTexts] = useState<{ [key: string]: string }>({});
@@ -431,26 +395,30 @@ export default function Home() {
           const doc = new DOMParser().parseFromString(xml, "text/xml");
           const paragraphs = doc.getElementsByTagName("w:p");
           let text = "";
-          
-          // 段落ごとに処理して改行を保持
+
+          const readNodeText = (node: Node): string => {
+            const name = node.nodeName;
+            if (name === "w:t") return node.textContent || "";
+            if (name === "w:tab") return "\t";
+            if (name === "w:br" || name === "w:cr") return "\n";
+
+            let out = "";
+            node.childNodes.forEach((child) => {
+              out += readNodeText(child);
+            });
+            return out;
+          };
+
+          // Wordの段落・改行タグを保持してテキスト化
           for (let i = 0; i < paragraphs.length; i++) {
             const paragraph = paragraphs[i];
-            const textElements = paragraph.getElementsByTagName("w:t");
-            let paragraphText = "";
-            
-            // 段落内のテキストを結合
-            for (let j = 0; j < textElements.length; j++) {
-              paragraphText += textElements[j].textContent || "";
-            }
-            
-            // 段落の終わりに改行を追加
-            text += paragraphText;
-            if (paragraphText) {
+            text += readNodeText(paragraph);
+            if (i < paragraphs.length - 1) {
               text += "\n";
             }
           }
-          
-          setNewPost((prev) => ({ ...prev, title: fileName, body: text.trim() || "DOCX解析に失敗しました" }));
+
+          setNewPost((prev) => ({ ...prev, title: fileName, body: text || "DOCX解析に失敗しました" }));
         } else {
           setNewPost((prev) => ({ ...prev, title: fileName, body: "DOCX解析に失敗しました" }));
         }
@@ -628,20 +596,6 @@ export default function Home() {
                         <Chip size="sm" color="secondary" variant="flat">お題</Chip>
                       </div>
                       <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          variant="light"
-                          onPress={() => handleLike(topic.id, { stopPropagation: () => {} } as any)}
-                          color={likedPosts.includes(topic.id) ? "danger" : "default"}
-                        >
-                          <div className="flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={likedPosts.includes(topic.id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
-                            </svg>
-                            <span className="text-xs font-bold">{topic.likes || 0}</span>
-                          </div>
-                        </Button>
                         <div className="flex items-center gap-2">
                           <div className="flex items-center gap-1 text-default-400 text-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-1.9A9 9 0 1 1 5.9 5.9l1.1 1.1"/></svg>
@@ -847,10 +801,7 @@ export default function Home() {
                         ) : (
                           <div className="w-12 h-12 rounded-full bg-default-200 border border-default-300" />
                         )}
-                        <div className="min-w-0">
-                          <p className="font-bold text-base truncate">{displayName}</p>
-                          <p className="text-xs text-default-400 truncate">{member.email}</p>
-                        </div>
+                        <p className="font-bold text-base truncate">{displayName}</p>
                       </div>
 
                       <div className="rounded-lg bg-default-50 dark:bg-default-100/10 p-3">
@@ -1086,7 +1037,6 @@ export default function Home() {
               ) : (
                 <>
                   <div>
-                    <label className="block text-sm font-semibold mb-2">ファイルを選択</label>
                     <input 
                       type="file" 
                       accept=".txt,.pdf,.docx" 
