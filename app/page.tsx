@@ -86,7 +86,6 @@ export default function Home() {
   const [userIconMap, setUserIconMap] = useState<{ [email: string]: string }>({});
   const [selectedProposalId, setSelectedProposalId] = useState<string | null>(null);
   const [selectedPoolTopicId, setSelectedPoolTopicId] = useState<string | null>(null);
-  const [topicDecisionSource, setTopicDecisionSource] = useState<"proposal" | "pool">("proposal");
   const [proposalDeadline, setProposalDeadline] = useState<number | null>(null);
   const [memberProfiles, setMemberProfiles] = useState<MemberProfile[]>([]);
   const [editingProposalId, setEditingProposalId] = useState<string | null>(null);
@@ -596,29 +595,28 @@ export default function Home() {
     : null;
 
   const pastTopicPool = topicPosts.filter((topic) => !!topic.deadline && topic.deadline < Date.now());
+  const decisionCandidates = [
+    ...topicProposals.map((candidate) => ({ ...candidate, source: "proposal" as const })),
+    ...pastTopicPool.map((candidate) => ({ ...candidate, source: "pool" as const })),
+  ];
+  const selectedDecisionCandidate = selectedProposal || selectedPoolTopic;
   const hasDecisionCandidates = topicProposals.length > 0 || pastTopicPool.length > 0;
 
   const selectRandomCandidate = () => {
-    if (topicDecisionSource === "proposal") {
-      if (topicProposals.length === 0) {
-        alert("お題案がまだありません");
-        return;
-      }
-      const randomIndex = Math.floor(Math.random() * topicProposals.length);
-      const randomProposal = topicProposals[randomIndex];
-      setSelectedProposalId(randomProposal.id);
-      setSelectedPoolTopicId(null);
+    if (decisionCandidates.length === 0) {
+      alert("候補がまだありません");
       return;
     }
 
-    if (pastTopicPool.length === 0) {
-      alert("過去お題プールがまだありません");
-      return;
+    const randomIndex = Math.floor(Math.random() * decisionCandidates.length);
+    const randomCandidate = decisionCandidates[randomIndex];
+    if (randomCandidate.source === "proposal") {
+      setSelectedProposalId(randomCandidate.id);
+      setSelectedPoolTopicId(null);
+    } else {
+      setSelectedPoolTopicId(randomCandidate.id);
+      setSelectedProposalId(null);
     }
-    const randomIndex = Math.floor(Math.random() * pastTopicPool.length);
-    const randomTopic = pastTopicPool[randomIndex];
-    setSelectedPoolTopicId(randomTopic.id);
-    setSelectedProposalId(null);
   };
 
   // ローディング状態
@@ -699,11 +697,12 @@ export default function Home() {
         onSelectionChange={(key) => setActiveTab(key as "proposal" | "topics" | "members")}
         variant="underlined"
         color="primary"
+        className="w-full"
         classNames={{
-          base: "sticky top-[73px] bg-background z-20 border-b border-divider px-0",
-          tabList: "w-full !grid !grid-cols-3 gap-0",
+          base: "sticky top-[73px] w-full bg-background z-20 border-b border-divider px-0",
+          tabList: "w-full !grid !grid-cols-3 !gap-0 px-0",
           cursor: "w-full h-[3px]",
-          tab: "h-12 w-full max-w-none justify-center data-[selected=true]:font-black data-[selected=true]:text-primary",
+          tab: "h-12 w-full max-w-none !mx-0 !px-0 justify-center rounded-none data-[selected=true]:font-black data-[selected=true]:text-primary",
           tabContent: "group-data-[selected=true]:text-primary group-data-[selected=false]:text-gray-500",
         }}
       >
@@ -806,7 +805,6 @@ export default function Home() {
                   alert("候補がありません。まずお題案を投稿してください。");
                   return;
                 }
-                setTopicDecisionSource(topicProposals.length > 0 ? "proposal" : "pool");
                 setSelectedProposalId(null);
                 setSelectedPoolTopicId(null);
                 setProposalDeadline(null);
@@ -833,7 +831,7 @@ export default function Home() {
             {session && (
               <Card shadow="sm" className="border border-default-200 rounded-2xl">
                 <CardBody className="p-4 space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2">
                     <input
                       type="text"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2"
@@ -1075,67 +1073,53 @@ export default function Home() {
               ) : (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <p className="text-sm font-semibold">候補元</p>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <button
-                        className={`px-3 py-2 rounded-lg text-sm font-semibold ${
-                          topicDecisionSource === "proposal"
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300"
-                        }`}
-                        onClick={() => {
-                          setTopicDecisionSource("proposal");
-                          setSelectedPoolTopicId(null);
-                        }}
-                        disabled={topicProposals.length === 0}
+                        onClick={selectRandomCandidate}
+                        disabled={decisionCandidates.length === 0}
+                        className="px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        お題案投稿タブ
+                        ランダム
                       </button>
                       <button
-                        className={`px-3 py-2 rounded-lg text-sm font-semibold ${
-                          topicDecisionSource === "pool"
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300"
-                        }`}
-                        onClick={() => {
-                          setTopicDecisionSource("pool");
-                          setSelectedProposalId(null);
-                        }}
-                        disabled={pastTopicPool.length === 0}
+                        type="button"
+                        disabled
+                        title="AIお題作成は準備中です"
+                        className="px-4 py-2 bg-sky-600 text-white rounded-lg font-semibold opacity-50 cursor-not-allowed"
                       >
-                        過去お題プール
+                        生成AI (準備中)
                       </button>
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
                     <select
                       className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
-                      value={topicDecisionSource === "proposal" ? (selectedProposalId || "") : (selectedPoolTopicId || "")}
+                      value={selectedProposalId ? `proposal:${selectedProposalId}` : selectedPoolTopicId ? `pool:${selectedPoolTopicId}` : ""}
                       onChange={(e) => {
-                        if (topicDecisionSource === "proposal") {
-                          setSelectedProposalId(e.target.value || null);
-                          setSelectedPoolTopicId(null);
-                        } else {
-                          setSelectedPoolTopicId(e.target.value || null);
+                        const selectedValue = e.target.value;
+                        if (!selectedValue) {
                           setSelectedProposalId(null);
+                          setSelectedPoolTopicId(null);
+                          return;
                         }
+
+                        const [source, candidateId] = selectedValue.split(":");
+                        if (source === "proposal") {
+                          setSelectedProposalId(candidateId || null);
+                          setSelectedPoolTopicId(null);
+                          return;
+                        }
+
+                        setSelectedPoolTopicId(candidateId || null);
+                        setSelectedProposalId(null);
                       }}
                     >
-                      <option value="">{topicDecisionSource === "proposal" ? "お題案を選択" : "過去お題を選択"}</option>
-                      {(topicDecisionSource === "proposal" ? topicProposals : pastTopicPool).map((candidate) => (
-                        <option key={candidate.id} value={candidate.id}>
-                          {candidate.title}
+                      <option value="">候補を選択</option>
+                      {decisionCandidates.map((candidate) => (
+                        <option key={`${candidate.source}-${candidate.id}`} value={`${candidate.source}:${candidate.id}`}>
+                          {candidate.source === "proposal" ? "[お題案]" : "[過去お題]"} {candidate.title}
                         </option>
                       ))}
                     </select>
-                    <button
-                      onClick={selectRandomCandidate}
-                      disabled={topicDecisionSource === "proposal" ? topicProposals.length === 0 : pastTopicPool.length === 0}
-                      className="px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      ランダム
-                    </button>
                   </div>
 
                   <input
@@ -1150,18 +1134,18 @@ export default function Home() {
                     }}
                   />
 
-                  {(topicDecisionSource === "proposal" ? selectedProposal : selectedPoolTopic) ? (
+                  {selectedDecisionCandidate ? (
                     <div className="rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 p-3">
                       <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                        {(topicDecisionSource === "proposal" ? selectedProposal : selectedPoolTopic)?.title}
+                        {selectedDecisionCandidate.title}
                       </p>
                       <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-4">
-                        {(topicDecisionSource === "proposal" ? selectedProposal : selectedPoolTopic)?.body}
+                        {selectedDecisionCandidate.body}
                       </p>
                     </div>
                   ) : (
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      {topicDecisionSource === "proposal" ? "お題案を選択してください。" : "過去お題を選択してください。"}
+                      候補を選択してください。
                     </p>
                   )}
                 </div>
@@ -1179,11 +1163,11 @@ export default function Home() {
               <button
                 disabled={(!selectedProposalId && !selectedPoolTopicId) || !proposalDeadline}
                 onClick={() => {
-                  if (topicDecisionSource === "proposal" && selectedProposalId && proposalDeadline) {
+                  if (selectedProposalId && proposalDeadline) {
                     convertProposalToTopic(selectedProposalId, proposalDeadline);
                     return;
                   }
-                  if (topicDecisionSource === "pool" && selectedPoolTopicId && proposalDeadline) {
+                  if (selectedPoolTopicId && proposalDeadline) {
                     convertPoolTopicToTopic(selectedPoolTopicId, proposalDeadline);
                   }
                 }}
