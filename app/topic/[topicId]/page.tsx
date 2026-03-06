@@ -329,7 +329,13 @@ export default function TopicPage() {
             {session?.user?.email === topic.author && (
               <button
                 onClick={() => deletePost(topic.id)}
-                className="px-4 py-2 bg-red-100 text-red-600 rounded font-semibold hover:bg-red-200"
+                disabled={replies.length > 0}
+                className={`px-4 py-2 rounded font-semibold ${
+                  replies.length > 0
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-red-100 text-red-600 hover:bg-red-200"
+                }`}
+                title={replies.length > 0 ? "このお題に投稿があるため削除できません" : "削除"}
               >
                 削除
               </button>

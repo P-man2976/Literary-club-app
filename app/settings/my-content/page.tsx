@@ -22,6 +22,7 @@ export default function MyContentPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
+  const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
   // ログインしていない場合はリダイレクト
@@ -36,10 +37,11 @@ export default function MyContentPage() {
     const fetchMyPosts = async () => {
       try {
         const res = await fetch("/api/posts");
-        const allPosts: Post[] = await res.json();
+        const allPostsData: Post[] = await res.json();
+        setAllPosts(allPostsData); // 全投稿を保存（子投稿カウント用）
         
         // 自分の投稿のみをフィルタ
-        const myPosts = allPosts.filter(post => post.author === session?.user?.name);
+        const myPosts = allPostsData.filter(post => post.author === session?.user?.name);
         
         // 各投稿のコメントといいね情報を取得
         const postsWithDetails = await Promise.all(myPosts.map(async (post) => {
@@ -68,6 +70,17 @@ export default function MyContentPage() {
 
   // 投稿を削除
   const deletePost = async (postId: string) => {
+    const post = posts.find(p => p.id === postId);
+    
+    // お題で投稿がある場合は削除不可
+    if (post?.isTopicPost === 1) {
+      const childCount = allPosts.filter(p => p.parentPostId === postId).length;
+      if (childCount > 0) {
+        alert("このお題には投稿があるため削除できません");
+        return;
+      }
+    }
+    
     if (!confirm("本当に削除しますか？")) return;
     
     try {
@@ -156,8 +169,22 @@ export default function MyContentPage() {
                     {/* 削除ボタン */}
                     <button
                       onClick={() => deletePost(post.id)}
-                      className="flex-shrink-0 p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                      title="削除"
+                      disabled={
+                        post.isTopicPost === 1 && 
+                        allPosts.filter(p => p.parentPostId === post.id).length > 0
+                      }
+                      className={`flex-shrink-0 p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100 ${
+                        post.isTopicPost === 1 && 
+                        allPosts.filter(p => p.parentPostId === post.id).length > 0
+                          ? "text-gray-300 cursor-not-allowed"
+                          : "text-red-400 hover:text-red-600 hover:bg-red-50"
+                      }`}
+                      title={
+                        post.isTopicPost === 1 && 
+                        allPosts.filter(p => p.parentPostId === post.id).length > 0
+                          ? "このお題に投稿があるため削除できません"
+                          : "削除"
+                      }
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M3 6h18"/>
