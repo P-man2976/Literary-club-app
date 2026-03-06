@@ -8,8 +8,10 @@
 
 html.light body {
   background-color: #fcfbf8;
+  color: #0f172a;
 }
 
 html.dark body {
   background-color: #121a2b;
+  color: #f8fafc;
 }

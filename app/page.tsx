@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getUserIconUrl } from "@/app/lib/imageUtils";
+import useSWR from "swr";
 import { 
   Button, 
   Card, 
@@ -15,9 +16,10 @@ import {
   Avatar, 
   Chip,
   Divider,
-  Badge
+  Badge,
+  Spinner
 } from "@heroui/react";
-import { Lightbulb, Pin, Save, Users } from "lucide-react";
+import { Lightbulb, Pin, Save, Users, AlertCircle, Settings } from "lucide-react";
 
 
 // 型定義
@@ -55,6 +57,12 @@ type MemberProfile = {
   updatedAt: number;
 };
 
+// SWR fetcher
+const fetcher = (url: string) => fetch(url).then((res) => {
+  if (!res.ok) throw new Error('データの取得に失敗しました');
+  return res.json();
+});
+
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -82,66 +90,64 @@ export default function Home() {
   const [proposalDeadline, setProposalDeadline] = useState<number | null>(null);
   const [memberProfiles, setMemberProfiles] = useState<MemberProfile[]>([]);
 
-  const fetchPosts = async () => {
-    const res = await fetch("/api/posts");
-    const allPostsData: Post[] = await res.json();
-    
-    if (Array.isArray(allPostsData)) {
-      const postsWithAll = allPostsData;
+  // SWRでデータ取得
+  const { data: allPostsData, error: postsError, isLoading: postsLoading, mutate: mutatePosts } = useSWR<Post[]>('/api/posts', fetcher, {
+    refreshInterval: 30000, // 30秒ごとに自動リフェッチ
+    revalidateOnFocus: true,
+  });
 
-      const allEmails = new Set<string>();
-      postsWithAll.forEach(post => {
-        if (post.authorEmail) allEmails.add(post.authorEmail);
-      });
+  const { data: memberProfilesData, error: profilesError } = useSWR('/api/profiles', fetcher, {
+    refreshInterval: 60000, // 60秒ごとに自動リフェッチ
+  });
 
-      if (allEmails.size > 0) {
-        try {
-          const penNameRes = await fetch("/api/profiles", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ emails: Array.from(allEmails) }),
-          });
-          if (penNameRes.ok) {
-            const { penNameMap: fetchedMap, userIconMap: fetchedIconMap } = await penNameRes.json();
-            setPenNameMap(fetchedMap || {});
-            setUserIconMap(fetchedIconMap || {});
-          }
-        } catch (error) {
-          console.error("ペンネーム取得エラー:", error);
-        }
-      }
-      
-      const allSorted = postsWithAll.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-      setAllPosts(allSorted);
-      
-      const topics = postsWithAll.filter(p => p.isTopicPost === 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-      const proposals = postsWithAll.filter(p => p.tag === "お題案" && p.isTopicPost !== 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-      const regular = postsWithAll.filter(p => !p.parentPostId && p.isTopicPost !== 1 && p.tag !== "お題案").sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-      
-      const topicsWithChildren = topics.map(topic => {
-        const children = postsWithAll.filter(p => p.parentPostId === topic.id);
-        return { ...topic, children };
-      });
-      
-      setTopicPosts(topicsWithChildren);
-      setTopicProposals(proposals);
-      setPosts(regular);
-
-      try {
-        const membersRes = await fetch("/api/profiles");
-        if (membersRes.ok) {
-          const membersData = await membersRes.json();
-          setMemberProfiles(Array.isArray(membersData.profiles) ? membersData.profiles : []);
-        }
-      } catch (error) {
-        console.error("部員プロフィール取得エラー:", error);
-      }
-    }
-  };
-
+  // SWRで取得したデータを処理
   useEffect(() => {
-    fetchPosts();
-  }, []);
+    if (!allPostsData || !Array.isArray(allPostsData)) return;
+
+    const postsWithAll = allPostsData;
+
+    const allEmails = new Set<string>();
+    postsWithAll.forEach(post => {
+      if (post.authorEmail) allEmails.add(post.authorEmail);
+    });
+
+    if (allEmails.size > 0) {
+      fetch("/api/profiles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emails: Array.from(allEmails) }),
+      })
+        .then(res => res.ok ? res.json() : Promise.reject())
+        .then(({ penNameMap: fetchedMap, userIconMap: fetchedIconMap }) => {
+          setPenNameMap(fetchedMap || {});
+          setUserIconMap(fetchedIconMap || {});
+        })
+        .catch(error => console.error("ペンネーム取得エラー:", error));
+    }
+
+    const allSorted = postsWithAll.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    setAllPosts(allSorted);
+
+    const topics = postsWithAll.filter(p => p.isTopicPost === 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    const proposals = postsWithAll.filter(p => p.tag === "お題案" && p.isTopicPost !== 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    const regular = postsWithAll.filter(p => !p.parentPostId && p.isTopicPost !== 1 && p.tag !== "お題案").sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+    const topicsWithChildren = topics.map(topic => {
+      const children = postsWithAll.filter(p => p.parentPostId === topic.id);
+      return { ...topic, children };
+    });
+
+    setTopicPosts(topicsWithChildren);
+    setTopicProposals(proposals);
+    setPosts(regular);
+  }, [allPostsData]);
+
+  // 部員プロフィールデータの処理
+  useEffect(() => {
+    if (memberProfilesData) {
+      setMemberProfiles(Array.isArray(memberProfilesData.profiles) ? memberProfilesData.profiles : []);
+    }
+  }, [memberProfilesData]);
 
   useEffect(() => {
     if (status !== "loading") {
@@ -227,7 +233,7 @@ export default function Home() {
       if (response.ok) {
         setCommentTexts({ ...commentTexts, [postId]: "" });
         alert("感想を送信しました！");
-        fetchPosts();
+        mutatePosts();
       }
     } catch (error) {
       console.error(error);
@@ -244,7 +250,7 @@ export default function Home() {
 
       if (response.ok) {
         alert("削除しました！");
-        fetchPosts();
+        mutatePosts();
       }
     } catch (error) {
       console.error("削除に失敗しました", error);
@@ -278,7 +284,7 @@ export default function Home() {
         setProposalDeadline(null);
         setSelectedProposalId(null);
         setIsTopicDecisionModalOpen(false);
-        await fetchPosts();
+        await mutatePosts();
       } else {
         const error = await response.text();
         alert("エラー: " + error);
@@ -319,7 +325,7 @@ export default function Home() {
         setSelectedProposalId(null);
         setSelectedPoolTopicId(null);
         setIsTopicDecisionModalOpen(false);
-        await fetchPosts();
+        await mutatePosts();
       } else {
         const error = await response.text();
         alert("エラー: " + error);
@@ -355,17 +361,17 @@ export default function Home() {
       });
 
       if (response.ok) {
-        alert("返信を投稿しました！");
+        alert("投稿しました！");
         setReplyTexts({ ...replyTexts, [topicId]: { title: "", body: "" } });
-        fetchPosts();
+        mutatePosts();
       } else {
         const error = await response.json();
-        console.error("返信エラー:", error);
-        alert("返信の投稿に失敗しました: " + (error.error || "不明なエラー"));
+        console.error("投稿エラー:", error);
+        alert("投稿に失敗しました: " + (error.error || "不明なエラー"));
       }
     } catch (error) {
-      console.error("返信エラー:", error);
-      alert("返信の投稿に失敗しました");
+      console.error("投稿エラー:", error);
+      alert("投稿に失敗しました");
     }
   };
 
@@ -489,13 +495,13 @@ export default function Home() {
 
       if (response.ok) {
         const mode = effectiveMode === "topic" ? "お題を作成しました！" : 
-                     effectiveMode === "reply" ? "返信を投稿しました！" : "保存しました！";
+                     effectiveMode === "reply" ? "投稿しました！" : "保存しました！";
         alert(mode);
         setNewPost({ title: "", body: "", tag: "創作" });
         setPostingMode("regular");
         setSelectedTopicId(null);
         onClose();
-        fetchPosts();
+        mutatePosts();
       } else {
         const errorText = await response.text();
         console.error("投稿エラー:", response.status, errorText);
@@ -568,6 +574,37 @@ export default function Home() {
     setSelectedProposalId(null);
   };
 
+  // ローディング状態
+  if (postsLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-8">
+        <Spinner size="lg" color="primary" />
+        <p className="mt-4 text-default-500">データを読み込んでいます...</p>
+      </div>
+    );
+  }
+
+  // エラー状態
+  if (postsError || profilesError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-8">
+        <AlertCircle size={48} className="text-danger mb-4" />
+        <p className="text-lg font-semibold text-danger mb-2">データの取得に失敗しました</p>
+        <p className="text-sm text-default-500 mb-4">
+          {postsError?.message || profilesError?.message || 'ネットワーク接続を確認してください'}
+        </p>
+        <Button 
+          color="primary" 
+          onPress={() => {
+            mutatePosts();
+          }}
+        >
+          再試行
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <main className="min-h-screen max-w-2xl mx-auto pb-40">
       {/* ヘッダー */}
@@ -576,17 +613,26 @@ export default function Home() {
           <h1 className="text-xl font-black">文芸部ポータル</h1>
           
           {session ? (
-            <Link href="/settings" aria-label="設定" className="block">
-              {getUserIconUrl(session.user?.email, userIcon) ? (
-                <img
-                  src={getUserIconUrl(session.user?.email, userIcon) || ""}
-                  alt="プロフィール"
-                  className="w-10 h-10 rounded-full object-cover border-2 border-primary"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-default-200 border-2 border-primary" />
-              )}
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/settings"
+                aria-label="設定"
+                className="w-10 h-10 rounded-full border border-default-300 bg-default-100/60 dark:bg-default-800/60 flex items-center justify-center"
+              >
+                <Settings size={18} />
+              </Link>
+              <Link href="/settings/profile" aria-label="アカウント設定" className="block">
+                {getUserIconUrl(session.user?.email, userIcon) ? (
+                  <img
+                    src={getUserIconUrl(session.user?.email, userIcon) || ""}
+                    alt="プロフィール"
+                    className="w-10 h-10 rounded-full object-cover border-2 border-primary"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-default-200 border-2 border-primary" />
+                )}
+              </Link>
+            </div>
           ) : (
             <Button 
               onPress={() => signIn("google")}
@@ -608,9 +654,9 @@ export default function Home() {
         color="primary"
         classNames={{
           base: "sticky top-[73px] bg-background z-20 border-b border-divider px-0",
-          tabList: "w-full !grid !grid-cols-3 gap-0 md:!flex md:justify-center md:gap-2",
+          tabList: "w-full !grid !grid-cols-3 gap-0",
           cursor: "w-full h-[3px]",
-          tab: "h-12 w-full max-w-none justify-center data-[selected=true]:font-black data-[selected=true]:text-primary md:flex-none md:w-[180px]",
+          tab: "h-12 w-full max-w-none justify-center data-[selected=true]:font-black data-[selected=true]:text-primary",
           tabContent: "group-data-[selected=true]:text-primary group-data-[selected=false]:text-default-500",
         }}
       >
@@ -707,7 +753,7 @@ export default function Home() {
 
           {session && (
             <button
-              className="fixed right-6 bottom-24 z-40 w-14 h-14 rounded-full bg-primary text-white text-3xl leading-none font-light shadow-lg hover:scale-105 transition-transform"
+              className="fixed right-6 bottom-24 z-40 h-12 rounded-full bg-primary text-white text-sm font-bold px-4 shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
               onClick={() => {
                 if (!hasDecisionCandidates) {
                   alert("候補がありません。まずお題案を投稿してください。");
@@ -722,7 +768,7 @@ export default function Home() {
               aria-label="お題を決定"
               title={hasDecisionCandidates ? "お題を決定" : "候補がありません"}
             >
-              +
+              + お題作成
             </button>
           )}
         </Tab>
@@ -770,7 +816,7 @@ export default function Home() {
                           if (res.ok) {
                             alert("お題案を投稿しました！");
                             setNewPost({ title: "", body: "", tag: "お題案" });
-                            await fetchPosts();
+                            await mutatePosts();
                             router.refresh();
                           }
                         });
@@ -816,7 +862,7 @@ export default function Home() {
                               }).then((res) => {
                                 if (res.ok) {
                                   alert("削除しました！");
-                                  fetchPosts();
+                                  mutatePosts();
                                 }
                               });
                             }
@@ -882,9 +928,9 @@ export default function Home() {
                         <p className="text-sm font-medium text-default-700">{member.selfIntro || "未設定"}</p>
                       </div>
 
-                      <div className="rounded-lg bg-primary-50/70 dark:bg-primary-900/20 p-3">
-                        <p className="text-xs text-default-500 mb-1">AI短文分析</p>
-                        <p className="text-sm text-default-700 dark:text-default-300">
+                      <div className="rounded-lg bg-primary-50/70 dark:bg-primary-900/30 p-3">
+                        <p className="text-xs text-default-500 dark:text-slate-300 mb-1">AI短文分析</p>
+                        <p className="text-sm text-default-700 dark:text-slate-100">
                           {member.aiSummary || "過去投稿ベースのAI分析は準備中です。"}
                         </p>
                       </div>

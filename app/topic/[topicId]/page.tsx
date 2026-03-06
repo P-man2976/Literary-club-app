@@ -79,6 +79,45 @@ export default function TopicPage() {
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<TopicAnalysis | null>(null);
+  const [scrollingPostId, setScrollingPostId] = useState<string | null>(null);
+  const scrollHideTimerRef = useRef<number | null>(null);
+  const [showHorizontalHint, setShowHorizontalHint] = useState(true);
+
+  const handleBodyScroll = (postId: string) => {
+    setScrollingPostId(postId);
+    if (scrollHideTimerRef.current) {
+      window.clearTimeout(scrollHideTimerRef.current);
+    }
+    scrollHideTimerRef.current = window.setTimeout(() => {
+      setScrollingPostId((current) => (current === postId ? null : current));
+    }, 200);
+  };
+
+  const dismissHorizontalHint = () => {
+    setShowHorizontalHint(false);
+    try {
+      localStorage.setItem("lit-club-horizontal-hint-dismissed", "1");
+    } catch {
+      // Ignore storage errors on restricted browsers.
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (scrollHideTimerRef.current) {
+        window.clearTimeout(scrollHideTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    try {
+      const dismissed = localStorage.getItem("lit-club-horizontal-hint-dismissed") === "1";
+      if (dismissed) setShowHorizontalHint(false);
+    } catch {
+      // Ignore storage errors on restricted browsers.
+    }
+  }, []);
 
   // トピック詳細と返信を取得
   const fetchTopicAndReplies = async () => {
@@ -349,7 +388,7 @@ export default function TopicPage() {
         isTopicPost: 0,
       };
 
-      console.log("返信データ:", postData);
+      console.log("投稿データ:", postData);
 
       const response = await fetch("/api/posts", {
         method: "POST",
@@ -560,20 +599,20 @@ export default function TopicPage() {
         </div>
 
         {/* トピック表示 */}
-        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 mb-8 border-l-4 border-purple-500 dark:border-purple-400">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 mb-8 border-l-4 border-blue-500 dark:border-blue-400">
           {getDeadlineStatus(topic.deadline) && (
             <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${getDeadlineStatus(topic.deadline)!.bgColor} ${getDeadlineStatus(topic.deadline)!.textColor}`}>
               {getDeadlineStatus(topic.deadline)!.label}
             </div>
           )}
           <div className="mb-2">
-            <h2 className="text-xl font-bold text-purple-600 dark:text-purple-400">{topic.title}</h2>
+            <h2 className="text-xl font-bold text-blue-600 dark:text-blue-400">{topic.title}</h2>
           </div>
           {topic.subtitle && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 italic">{topic.subtitle}</p>
+            <p className="text-sm text-gray-600 dark:text-slate-200 mb-4 italic">{topic.subtitle}</p>
           )}
-          <p className="text-gray-700 dark:text-gray-300 mb-4 whitespace-pre-wrap">{topic.body}</p>
-          <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-gray-700 dark:text-slate-100 mb-4 whitespace-pre-wrap">{topic.body}</p>
+          <div className="flex items-center justify-between text-sm text-gray-500 dark:text-slate-200">
             <span className="flex items-center gap-2">
               {getDisplayIcon(topic.authorEmail) ? (
                 <img
@@ -595,7 +634,7 @@ export default function TopicPage() {
                 disabled={replies.length > 0}
                 className={`px-4 py-2 rounded font-semibold ${
                   replies.length > 0
-                    ? "bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                    ? "bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-300 cursor-not-allowed"
                     : "bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900"
                 }`}
                 title={replies.length > 0 ? "このお題に投稿があるため削除できません" : "削除"}
@@ -620,7 +659,7 @@ export default function TopicPage() {
           </div>
 
           {replies.length === 0 && (
-            <p className="text-sm text-slate-500 dark:text-slate-400">投稿が集まると分析できます。</p>
+            <p className="text-sm text-slate-500 dark:text-slate-200">投稿が集まると分析できます。</p>
           )}
 
           {analysisError && (
@@ -630,13 +669,13 @@ export default function TopicPage() {
           {analysisResult && (
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">総評</p>
-                <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap">{analysisResult.overview}</p>
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-100 mb-1">総評</p>
+                <p className="text-sm text-slate-600 dark:text-slate-100 whitespace-pre-wrap">{analysisResult.overview}</p>
               </div>
 
               <div>
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">良かった点</p>
-                <ul className="list-disc pl-5 text-sm text-slate-600 dark:text-slate-300 space-y-1">
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-100 mb-1">良かった点</p>
+                <ul className="list-disc pl-5 text-sm text-slate-600 dark:text-slate-100 space-y-1">
                   {analysisResult.strengths?.map((item, idx) => (
                     <li key={`strength-${idx}`}>{item}</li>
                   ))}
@@ -644,8 +683,8 @@ export default function TopicPage() {
               </div>
 
               <div>
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">改善提案</p>
-                <ul className="list-disc pl-5 text-sm text-slate-600 dark:text-slate-300 space-y-1">
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-100 mb-1">改善提案</p>
+                <ul className="list-disc pl-5 text-sm text-slate-600 dark:text-slate-100 space-y-1">
                   {analysisResult.suggestions?.map((item, idx) => (
                     <li key={`suggestion-${idx}`}>{item}</li>
                   ))}
@@ -653,28 +692,28 @@ export default function TopicPage() {
               </div>
 
               <div>
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">投稿者ごとの講評</p>
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-100 mb-2">投稿者ごとの講評</p>
                 <div className="space-y-2">
                   {analysisResult.authorFeedback?.map((item, idx) => (
                     <div key={`author-${idx}`} className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
                       <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{item.author}</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">ほめる: {item.praise}</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">批評: {item.critique}</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">次の一歩: {item.nextStep}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-100 mt-1">ほめる: {item.praise}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-100 mt-1">批評: {item.critique}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-100 mt-1">次の一歩: {item.nextStep}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
               <div>
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">投稿ごとの講評</p>
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-100 mb-2">投稿ごとの講評</p>
                 <div className="space-y-2">
                   {analysisResult.postFeedback?.map((item, idx) => (
                     <div key={`post-${item.postId || idx}`} className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
                       <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{item.title}</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">ほめる: {item.praise}</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">批評: {item.critique}</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">次の一歩: {item.nextStep}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-100 mt-1">ほめる: {item.praise}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-100 mt-1">批評: {item.critique}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-100 mt-1">次の一歩: {item.nextStep}</p>
                     </div>
                   ))}
                 </div>
@@ -707,8 +746,8 @@ export default function TopicPage() {
                     onChange={handleFileChange}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded cursor-pointer"
                   />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">対応形式: テキスト (.txt), PDF, Word (.docx)</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">ファイルのタイトルと内容から自動で投稿が作成されます</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-200 mt-2">対応形式: テキスト (.txt), PDF, Word (.docx)</p>
+                  <p className="text-xs text-gray-400 dark:text-slate-300 mt-1">ファイルのタイトルと内容から自動で投稿が作成されます</p>
                 </div>
 
                 {newPost.title && (
@@ -795,15 +834,29 @@ export default function TopicPage() {
             replies.map((reply) => (
               <div
                 key={reply.id}
-                className="bg-white rounded-lg shadow-md p-6 mb-4 border-l-4 border-blue-500"
+                className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 mb-4 border-l-4 border-blue-500 dark:border-blue-400"
               >
                 {/* 投稿本体 */}
                 <div className="mb-4">
-                  <h4 className="text-lg font-bold text-blue-600 mb-2">{reply.title}</h4>
-                  <div className="mb-4 overflow-x-auto border border-gray-200 rounded-lg p-4 bg-gray-50" style={{ direction: 'rtl' }}>
-                    <p className="text-gray-700 whitespace-pre-wrap" style={{ writingMode: 'vertical-rl', height: '400px', minWidth: 'fit-content', direction: 'ltr' }}>{reply.body}</p>
+                  <h4 className="text-lg font-bold text-blue-600 dark:text-blue-400 mb-2">{reply.title}</h4>
+                  <div 
+                      className="mb-4 overflow-x-auto border border-default-200 dark:border-default-700 rounded-lg p-4 bg-default-50 dark:bg-default-100/10 relative group" 
+                      onScroll={() => handleBodyScroll(reply.id)}
+                      onWheel={(event) => {
+                        if (event.shiftKey && showHorizontalHint) {
+                          dismissHorizontalHint();
+                        }
+                      }}
+                    style={{ direction: 'rtl' }}
+                  >
+                      {showHorizontalHint && scrollingPostId !== reply.id && (
+                        <div className="hidden group-hover:flex absolute top-2 left-2 bg-blue-600/95 text-white text-xs px-3 py-1 rounded-md pointer-events-none z-10">
+                          Shift + スクロールで横スクロールできます
+                        </div>
+                      )}
+                      <p className="text-default-900 dark:text-slate-100 whitespace-pre-wrap" style={{ writingMode: 'vertical-rl', height: '400px', minWidth: 'fit-content', direction: 'ltr' }}>{reply.body}</p>
                   </div>
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                  <div className="flex items-center justify-between text-sm text-default-500 dark:text-slate-300 mb-4">
                     <span className="flex items-center gap-2">
                       {getDisplayIcon(reply.authorEmail) ? (
                         <img
@@ -812,7 +865,7 @@ export default function TopicPage() {
                           className="w-6 h-6 rounded-full object-cover border border-gray-300"
                         />
                       ) : (
-                        <div className="w-6 h-6 rounded-full bg-gray-200 border border-gray-300" />
+                        <div className="w-6 h-6 rounded-full bg-default-200 dark:bg-default-700 border border-default-300 dark:border-default-600" />
                       )}
                       {getDisplayName(reply.authorEmail, reply.author)}
                     </span>
@@ -823,8 +876,8 @@ export default function TopicPage() {
                       onClick={() => handleLike(reply.id)}
                       className={`px-4 py-2 rounded font-semibold transition ${
                         likedPosts.includes(reply.id)
-                          ? "bg-red-100 text-red-600"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+                          : "bg-default-100 dark:bg-default-800 text-default-600 dark:text-slate-200 hover:bg-default-200 dark:hover:bg-default-700"
                       } flex items-center gap-1`}
                     >
                       <Heart size={14} /> {reply.likes || 0}
@@ -832,7 +885,7 @@ export default function TopicPage() {
                     {session?.user?.email === reply.authorEmail && (
                       <button
                         onClick={() => deletePost(reply.id)}
-                        className="px-4 py-2 bg-red-100 text-red-600 rounded font-semibold hover:bg-red-200"
+                        className="px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded font-semibold hover:bg-red-200 dark:hover:bg-red-900/50"
                       >
                         削除
                       </button>
@@ -842,15 +895,15 @@ export default function TopicPage() {
 
                 {/* コメント一覧 */}
                 {reply.comments && reply.comments.length > 0 && (
-                  <div className="mb-4 pt-4 border-t border-gray-200">
-                    <p className="text-xs font-bold text-gray-400 mb-3 flex items-center gap-1">
+                  <div className="mb-4 pt-4 border-t border-default-200 dark:border-default-700">
+                    <p className="text-xs font-bold text-default-400 dark:text-slate-300 mb-3 flex items-center gap-1">
                       <MessageCircle size={14} /> コメント ({reply.comments.length})
                     </p>
                     <div className="space-y-3">
                       {reply.comments.map((comment) => (
-                        <div key={comment.commentId} className="bg-gray-50 p-3 rounded-lg text-sm">
+                        <div key={comment.commentId} className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg text-sm">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-semibold text-gray-700 flex items-center gap-2">
+                            <span className="font-semibold text-default-700 dark:text-slate-200 flex items-center gap-2">
                               {getDisplayIcon(comment.authorEmail) ? (
                                 <img
                                   src={getDisplayIcon(comment.authorEmail) || ""}
@@ -858,14 +911,14 @@ export default function TopicPage() {
                                   className="w-5 h-5 rounded-full object-cover border border-gray-300"
                                 />
                               ) : (
-                                <div className="w-5 h-5 rounded-full bg-gray-200 border border-gray-300" />
+                                <div className="w-5 h-5 rounded-full bg-default-200 dark:bg-default-700 border border-default-300 dark:border-default-600" />
                               )}
                               {getDisplayName(comment.authorEmail, comment.author)}
                               {comment.editedAt && (
-                                <span className="text-xs text-gray-400">(編集済み)</span>
+                                <span className="text-xs text-default-400 dark:text-slate-300">(編集済み)</span>
                               )}
                             </span>
-                            <span className="text-xs text-gray-400">{new Date(comment.createdAt * 1000).toLocaleString()}</span>
+                            <span className="text-xs text-default-400 dark:text-slate-300">{new Date(comment.createdAt * 1000).toLocaleString()}</span>
                           </div>
                           
                           {/* 編集モード */}
@@ -874,7 +927,7 @@ export default function TopicPage() {
                               <textarea
                                 value={editingCommentText}
                                 onChange={(e) => setEditingCommentText(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border border-default-300 dark:border-default-600 bg-default-50 dark:bg-default-800 text-default-900 dark:text-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 rows={3}
                               />
                               <div className="flex gap-2">
@@ -886,7 +939,7 @@ export default function TopicPage() {
                                 </button>
                                 <button
                                   onClick={cancelEditingComment}
-                                  className="px-3 py-1 bg-gray-300 text-gray-700 rounded text-xs hover:bg-gray-400"
+                                  className="px-3 py-1 bg-default-300 dark:bg-default-700 text-default-700 dark:text-slate-200 rounded text-xs hover:bg-default-400 dark:hover:bg-default-600"
                                 >
                                   キャンセル
                                 </button>
@@ -894,14 +947,14 @@ export default function TopicPage() {
                             </div>
                           ) : (
                             <>
-                              <p className="text-gray-600 mb-2">{comment.text}</p>
+                              <p className="text-default-600 dark:text-slate-200 mb-2">{comment.text}</p>
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => toggleCommentLike(comment.commentId)}
                                   className={`text-xs px-2 py-1 rounded transition ${
                                     commentLikes[comment.commentId]
-                                      ? "bg-red-100 text-red-600"
-                                      : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                                      ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+                                      : "bg-default-200 dark:bg-default-800 text-default-600 dark:text-slate-200 hover:bg-default-300 dark:hover:bg-default-700"
                                   } flex items-center gap-1`}
                                 >
                                   <Heart size={12} /> {commentLikes[comment.commentId] ? 1 : 0}
@@ -925,19 +978,19 @@ export default function TopicPage() {
 
                 {/* コメント入力フォーム */}
                 {session && (
-                  <div className="pt-4 border-t border-gray-200">
+                  <div className="pt-4 border-t border-default-200 dark:border-default-700">
                     <div className="flex gap-2">
                       <input
                         type="text"
                         placeholder="コメントを入力..."
                         value={commentTexts[reply.id] || ""}
                         onChange={(e) => setCommentTexts({ ...commentTexts, [reply.id]: e.target.value })}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 px-3 py-2 border border-default-300 dark:border-default-600 bg-default-50 dark:bg-default-800 text-default-900 dark:text-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                       <button
                         onClick={() => saveComment(reply.id)}
                         disabled={!commentTexts[reply.id]}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold text-sm hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold text-sm hover:bg-blue-600 disabled:bg-default-300 dark:disabled:bg-default-700 disabled:cursor-not-allowed transition"
                       >
                         送信
                       </button>
