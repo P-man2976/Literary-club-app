@@ -376,9 +376,25 @@ export default function Home() {
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const textContent = await page.getTextContent();
-          const pageText = textContent.items
-            .map((item: any) => item.str)
-            .join(" ");
+          
+          // Y座標を使って改行を検出
+          let lastY = -1;
+          let pageText = "";
+          for (const item of textContent.items as any[]) {
+            if (!item.str) continue;
+            
+            const currentY = item.transform[5]; // Y座標
+            if (lastY !== -1 && Math.abs(currentY - lastY) > 5) {
+              // Y座標が変わったら改行
+              pageText += "\n";
+            } else if (lastY !== -1 && pageText.length > 0 && !pageText.endsWith(" ")) {
+              // 同じ行でスペースがない場合はスペース追加
+              pageText += " ";
+            }
+            pageText += item.str;
+            lastY = currentY;
+          }
+          
           text += pageText + "\n";
         }
         
