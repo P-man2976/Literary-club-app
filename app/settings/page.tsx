@@ -5,160 +5,383 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { Button, Card, CardBody, Input, Avatar } from "@heroui/react";
 
 export default function SettingsPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [penName, setPenName] = useState("");
+  const [isEditingPenName, setIsEditingPenName] = useState(false);
+  const [pendingPenName, setPendingPenName] = useState("");
+  const [loadingPenName, setLoadingPenName] = useState(true);
+  const [userIcon, setUserIcon] = useState<string | null>(null);
+  const [isEditingIcon, setIsEditingIcon] = useState(false);
+  const [uploadingIcon, setUploadingIcon] = useState(false);
+  const [loadingIcon, setLoadingIcon] = useState(true);
 
   // Hydration対策
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // プロフィール情報取得（ペンネーム + アイコン）
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch("/api/profile");
+        if (res.ok) {
+          const data = await res.json();
+          setPenName(data.penName || "");
+          setUserIcon(data.userIcon || null);
+        }
+      } catch (error) {
+        console.error("プロフィール取得エラー:", error);
+      } finally {
+        setLoadingPenName(false);
+        setLoadingIcon(false);
+      }
+    };
+
+    if (session) {
+      fetchProfile();
+    }
+  }, [session]);
+
+  // ペンネーム保存
+  const savePenName = async () => {
+    if (!pendingPenName.trim()) {
+      alert("ペンネームを入力してください");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          penName: pendingPenName.trim(),
+          userIcon: userIcon // 既存のアイコンも一緒に保存
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setPenName(data.penName);
+        setIsEditingPenName(false);
+        alert("ペンネームを保存しました！");
+      } else {
+        const error = await res.json();
+        alert(error.error || "保存に失敗しました");
+      }
+    } catch (error) {
+      console.error("ペンネーム保存エラー:", error);
+      alert("保存に失敗しました");
+    }
+  };
+
+  // アイコン画像ハンドラー
+  const handleIconFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("画像ファイルを選択してください");
+      return;
+    }
+
+    if (file.size > 500000) {
+      alert("画像は500KB以下にしてください");
+      return;
+    }
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64Data = event.target?.result as string;
+        
+        setUploadingIcon(true);
+        const res = await fetch("/api/profile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            userIcon: base64Data,
+            penName: penName // 既存のペンネームも一緒に保存
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setUserIcon(data.userIcon);
+          setIsEditingIcon(false);
+          alert("アイコンを保存しました！");
+        } else {
+          const error = await res.json();
+          alert(error.error || "保存に失敗しました");
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("アイコン保存エラー:", error);
+      alert("保存に失敗しました");
+    } finally {
+      setUploadingIcon(false);
+    }
+  };
+
   if (!session) return <div className="p-10 text-center">ログインが必要です</div>;
 
   return (
-    <main className="min-h-screen bg-slate-50 max-w-2xl mx-auto border-x border-slate-200">
+    <main className="min-h-screen max-w-2xl mx-auto">
       {/* ヘッダー: 戻るボタン付き */}
-      <header className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-200 p-4 flex items-center gap-4">
-        <Link 
-          href="/" 
-          className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-600"
+      <header className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-divider p-4 flex items-center gap-4">
+        <Button
+          as={Link}
+          href="/"
+          isIconOnly
+          variant="light"
           aria-label="戻る"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="m15 18-6-6 6-6"/>
           </svg>
-        </Link>
-        <h1 className="text-xl font-bold text-slate-900">設定</h1>
+        </Button>
+        <h1 className="text-xl font-bold">設定</h1>
       </header>
 
       <div className="p-6 space-y-8">
         {/* プロフィール設定セクション */}
         <section>
-          <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">プロフィール</h2>
-          <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
-            <div className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-xs text-slate-500 font-bold">名前 / アイコン</p>
-                <p className="text-slate-900 font-medium">{session.user?.name}</p>
+          <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-4">プロフィール</h2>
+          <Card>
+            <CardBody className="gap-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-default-500 font-bold">Google名 / Google アイコン</p>
+                  <p className="font-medium">{session.user?.name}</p>
+                </div>
+                <Avatar src={session.user?.image || ""} size="lg" />
               </div>
-              <img src={session.user?.image || ""} className="w-12 h-12 rounded-full border border-slate-200" alt="" />
-            </div>
-            <div className="p-4 flex items-center justify-between group cursor-not-allowed">
-              <div>
-                <p className="text-xs text-slate-500 font-bold">ペンネーム</p>
-                <p className="text-slate-400">未設定（実装予定）</p>
+              
+              {/* カスタムアイコン設定 */}
+              <div className="border-t border-divider pt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-default-500 font-bold">カスタムアイコン</p>
+                  {!isEditingIcon && (
+                    <Button
+                      size="sm"
+                      color="primary"
+                      variant="light"
+                      onPress={() => setIsEditingIcon(true)}
+                    >
+                      {userIcon ? "変更" : "アップロード"}
+                    </Button>
+                  )}
+                </div>
+                
+                {isEditingIcon ? (
+                  <div className="space-y-3">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleIconFileChange}
+                      disabled={uploadingIcon}
+                      className="block w-full text-sm text-default-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-primary-50 file:text-primary-700
+                        hover:file:bg-primary-100"
+                    />
+                    <p className="text-xs text-default-400">推奨: 正方形、500KB以下</p>
+                    <Button
+                      variant="flat"
+                      onPress={() => setIsEditingIcon(false)}
+                      className="w-full"
+                      isDisabled={uploadingIcon}
+                    >
+                      キャンセル
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    {userIcon ? (
+                      <img 
+                        src={userIcon} 
+                        alt="カスタムアイコン"
+                        className="w-16 h-16 rounded-full object-cover border-2 border-primary"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-default-200 flex items-center justify-center">
+                        <span className="text-sm text-default-400">未設定</span>
+                      </div>
+                    )}
+                    <p className="text-sm text-default-600">
+                      {loadingIcon ? "読み込み中..." : (userIcon ? "カスタムアイコン設定済み" : "アイコンはまだ設定されていません")}
+                    </p>
+                  </div>
+                )}
               </div>
-              <span className="text-slate-300">→</span>
-            </div>
-          </div>
+
+              {/* ペンネーム設定 */}
+              <div className="border-t border-divider pt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-default-500 font-bold">ペンネーム</p>
+                  {!isEditingPenName && (
+                    <Button
+                      size="sm"
+                      color="primary"
+                      variant="light"
+                      onPress={() => {
+                        setPendingPenName(penName);
+                        setIsEditingPenName(true);
+                      }}
+                    >
+                      {penName ? "変更" : "設定"}
+                    </Button>
+                  )}
+                </div>
+                {isEditingPenName ? (
+                  <div className="space-y-3">
+                    <Input
+                      value={pendingPenName}
+                      onValueChange={setPendingPenName}
+                      placeholder="ペンネームを入力..."
+                      maxLength={50}
+                      size="sm"
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        color="primary"
+                        onPress={savePenName}
+                        className="flex-1"
+                      >
+                        保存
+                      </Button>
+                      <Button
+                        variant="flat"
+                        onPress={() => setIsEditingPenName(false)}
+                        className="flex-1"
+                      >
+                        キャンセル
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="font-medium">
+                    {loadingPenName ? "読み込み中..." : (penName || "未設定")}
+                  </p>
+                )}
+              </div>
+            </CardBody>
+          </Card>
         </section>
 
         {/* テーマ設定セクション */}
         <section>
-          <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">テーマ</h2>
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700 overflow-hidden">
-            {mounted && (
-              <>
-                <button 
-                  onClick={() => setTheme("light")}
-                  className={`w-full p-4 flex items-center justify-between text-left transition-colors ${
-                    theme === "light" 
-                      ? "bg-blue-50 dark:bg-blue-950" 
-                      : "hover:bg-slate-50 dark:hover:bg-slate-800"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-500">
-                      <circle cx="12" cy="12" r="5"/>
-                      <line x1="12" y1="1" x2="12" y2="3"/>
-                      <line x1="12" y1="21" x2="12" y2="23"/>
-                      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-                      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-                      <line x1="1" y1="12" x2="3" y2="12"/>
-                      <line x1="21" y1="12" x2="23" y2="12"/>
-                      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-                      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-                    </svg>
-                    <div>
-                      <p className={`font-bold ${theme === "light" ? "text-blue-600" : "text-slate-900 dark:text-white"}`}>ライト</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">明るいテーマ</p>
+          <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-4">テーマ</h2>
+          <Card>
+            <CardBody className="gap-0 p-0">
+              {mounted && (
+                <>
+                  <Button
+                    onPress={() => setTheme("light")}
+                    variant="light"
+                    className={`w-full justify-start px-4 py-6 rounded-none ${
+                      theme === "light" ? "bg-primary-50" : ""
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-500">
+                        <circle cx="12" cy="12" r="5"/>
+                        <line x1="12" y1="1" x2="12" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="23"/>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                        <line x1="1" y1="12" x2="3" y2="12"/>
+                        <line x1="21" y1="12" x2="23" y2="12"/>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                      </svg>
+                      <div className="flex-1 text-left">
+                        <p className={`font-bold ${theme === "light" ? "text-primary" : ""}`}>ライト</p>
+                        <p className="text-xs text-default-500">明るいテーマ</p>
+                      </div>
+                      {theme === "light" && <span className="text-primary">✓</span>}
                     </div>
-                  </div>
-                  {theme === "light" && <span className="text-blue-600">✓</span>}
-                </button>
-                <button 
-                  onClick={() => setTheme("dark")}
-                  className={`w-full p-4 flex items-center justify-between text-left transition-colors ${
-                    theme === "dark" 
-                      ? "bg-blue-50 dark:bg-blue-950" 
-                      : "hover:bg-slate-50 dark:hover:bg-slate-800"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-500">
-                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                    </svg>
-                    <div>
-                      <p className={`font-bold ${theme === "dark" ? "text-blue-600 dark:text-blue-400" : "text-slate-900 dark:text-white"}`}>ダーク</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">暗いテーマ</p>
+                  </Button>
+                  <div className="border-t border-divider" />
+                  <Button
+                    onPress={() => setTheme("dark")}
+                    variant="light"
+                    className={`w-full justify-start px-4 py-6 rounded-none ${
+                      theme === "dark" ? "bg-primary-50 dark:bg-primary-900/20" : ""
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-500">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                      </svg>
+                      <div className="flex-1 text-left">
+                        <p className={`font-bold ${theme === "dark" ? "text-primary" : ""}`}>ダーク</p>
+                        <p className="text-xs text-default-500">暗いテーマ</p>
+                      </div>
+                      {theme === "dark" && <span className="text-primary">✓</span>}
                     </div>
-                  </div>
-                  {theme === "dark" && <span className="text-blue-600 dark:text-blue-400">✓</span>}
-                </button>
-                <button 
-                  onClick={() => setTheme("system")}
-                  className={`w-full p-4 flex items-center justify-between text-left transition-colors ${
-                    theme === "system" 
-                      ? "bg-blue-50 dark:bg-blue-950" 
-                      : "hover:bg-slate-50 dark:hover:bg-slate-800"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-600 dark:text-slate-400">
-                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                      <line x1="2" y1="20" x2="22" y2="20"/>
-                    </svg>
-                    <div>
-                      <p className={`font-bold ${theme === "system" ? "text-blue-600 dark:text-blue-400" : "text-slate-900 dark:text-white"}`}>端末の設定に合わせる</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">システムのテーマに従う</p>
+                  </Button>
+                  <div className="border-t border-divider" />
+                  <Button
+                    onPress={() => setTheme("system")}
+                    variant="light"
+                    className={`w-full justify-start px-4 py-6 rounded-none ${
+                      theme === "system" ? "bg-primary-50 dark:bg-primary-900/20" : ""
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-default-500">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                        <line x1="2" y1="20" x2="22" y2="20"/>
+                      </svg>
+                      <div className="flex-1 text-left">
+                        <p className={`font-bold ${theme === "system" ? "text-primary" : ""}`}>端末の設定に合わせる</p>
+                        <p className="text-xs text-default-500">システムのテーマに従う</p>
+                      </div>
+                      {theme === "system" && <span className="text-primary">✓</span>}
                     </div>
-                  </div>
-                  {theme === "system" && <span className="text-blue-600 dark:text-blue-400">✓</span>}
-                </button>
-              </>
-            )}
-          </div>
+                  </Button>
+                </>
+              )}
+            </CardBody>
+          </Card>
         </section>
 
         {/* コンテンツ管理セクション */}
         <section>
-          <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">コンテンツ管理</h2>
-          <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
-            <button 
-              onClick={() => router.push("/settings/my-content")}
-              className="w-full p-4 flex items-center justify-between hover:bg-slate-50 text-left transition-colors"
-            >
-              <div>
-                <p className="text-slate-900 font-bold">自分の投稿一覧</p>
-                <p className="text-xs text-slate-500">削除・閲覧数の確認</p>
+          <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-4">コンテンツ管理</h2>
+          <Card isPressable onPress={() => router.push("/settings/my-content")}>
+            <CardBody>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-bold">自分の投稿一覧</p>
+                  <p className="text-xs text-default-500">削除・閲覧数の確認</p>
+                </div>
+                <span className="text-default-400">→</span>
               </div>
-              <span className="text-slate-400">→</span>
-            </button>
-          </div>
+            </CardBody>
+          </Card>
         </section>
 
         {/* アカウント操作 */}
         <section>
-          <button 
-            onClick={() => signOut({ callbackUrl: "/" })}
-            className="w-full p-4 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-2xl border border-red-100 transition-colors text-center"
+          <Button
+            color="danger"
+            variant="flat"
+            onPress={() => signOut({ callbackUrl: "/" })}
+            className="w-full"
           >
             ログアウト
-          </button>
+          </Button>
         </section>
       </div>
     </main>

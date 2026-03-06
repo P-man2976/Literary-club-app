@@ -8,10 +8,12 @@ type Comment = {
   commentId: string;
   text: string;
   author: string;
+  authorEmail?: string | null;
   createdAt: number;
 };
 
 type Post = {
+  authorEmail?: string | null;
   id: string;
   author: string;
   title: string;
@@ -37,6 +39,9 @@ export default function TopicPage() {
   const [loading, setLoading] = useState(true);
   const [commentTexts, setCommentTexts] = useState<{ [key: string]: string }>({});
   const [commentLikes, setCommentLikes] = useState<{ [key: string]: boolean }>({});
+  const [penName, setPenName] = useState("");
+  const [penNameMap, setPenNameMap] = useState<{ [email: string]: string }>({});
+  const [userIconMap, setUserIconMap] = useState<{ [email: string]: string }>({});
 
   // トピック詳細と返信を取得
   const fetchTopicAndReplies = async () => {
@@ -74,6 +79,34 @@ export default function TopicPage() {
         return { ...reply, comments, likes: likesData.count };
       }));
 
+      // すべてのauthorEmailを収集（トピック、返信、コメント）
+      const allEmails = new Set<string>();
+      if (topicData?.authorEmail) allEmails.add(topicData.authorEmail);
+      repliesWithDetails.forEach(reply => {
+        if (reply.authorEmail) allEmails.add(reply.authorEmail);
+        reply.comments?.forEach((comment: any) => {
+          if (comment.authorEmail) allEmails.add(comment.authorEmail);
+        });
+      });
+
+      // ペンネームを一括取得
+      if (allEmails.size > 0) {
+        try {
+          const penNameRes = await fetch("/api/profiles", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ emails: Array.from(allEmails) }),
+          });
+          if (penNameRes.ok) {
+            const { penNameMap: fetchedMap, userIconMap: fetchedIconMap } = await penNameRes.json();
+            setPenNameMap(fetchedMap || {});
+            setUserIconMap(fetchedIconMap || {});
+          }
+        } catch (error) {
+          console.error("ペンネーム取得エラー:", error);
+        }
+      }
+
       setReplies(repliesWithDetails.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
       setLoading(false);
     } catch (error) {
@@ -91,6 +124,59 @@ export default function TopicPage() {
       setLikedPosts(JSON.parse(savedLikes));
     }
   }, [topicId]);
+
+  // ペンネーム取得
+  useEffect(() => {
+    const fetchPenName = async () => {
+      try {
+        const res = await fetch("/api/profile");
+        if (res.ok) {
+          const data = await res.json();
+          setPenName(data.penName || "");
+        }
+      } catch (error) {
+        console.error("ペンネーム取得エラー:", error);
+      }
+    };
+
+    if (session) {
+      fetchPenName();
+    }
+  }, [session]);
+
+  // ペンネームまたは通常の名前を返すヘルパー関数
+  const getDisplayName = (authorEmail: string | null | undefined, authorName: string) => {
+    if (authorEmail && penNameMap[authorEmail]) {
+      return penNameMap[authorEmail];
+    }
+    return authorName;
+  };
+
+  const getDisplayIcon = (authorEmail: string | null | undefined) => {
+    if (authorEmail && userIconMap[authorEmail]) {
+      return userIconMap[authorEmail];
+    }
+    return null;
+  };
+
+  const getReplyParticipants = () => {
+    const seen = new Set<string>();
+    const participants: Array<{ key: string; name: string; icon: string | null }> = [];
+
+    replies.forEach((reply) => {
+      const key = reply.authorEmail || `name:${reply.author}`;
+      if (seen.has(key)) return;
+
+      seen.add(key);
+      participants.push({
+        key,
+        name: getDisplayName(reply.authorEmail, reply.author),
+        icon: getDisplayIcon(reply.authorEmail),
+      });
+    });
+
+    return participants;
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -157,7 +243,8 @@ export default function TopicPage() {
       const postData = {
         title: newPost.title,
         body: newPost.body,
-        author: session?.user?.name || "匿名部員",
+        author: penName || session?.user?.name || "匿名部員",
+        authorEmail: session?.user?.email || null,
         tag: newPost.tag || "創作",
         parentPostId: topicId,
         isTopicPost: 0,
@@ -246,7 +333,8 @@ export default function TopicPage() {
         body: JSON.stringify({
           postId: postId,
           text: text,
-          author: session?.user?.name || "匿名部員",
+          author: penName || session?.user?.name || "匿名部員",
+          authorEmail: session?.user?.email || null,
         }),
       });
 
@@ -283,22 +371,22 @@ export default function TopicPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-blue-50 p-4 md:p-6">
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 md:p-6">
       <div className="max-w-2xl mx-auto">
         {/* ヘッダー */}
         <div className="flex justify-between items-center mb-8">
           <button
             onClick={() => router.back()}
-            className="text-blue-500 hover:text-blue-700 font-semibold"
+            className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold"
           >
             ← 戻る
           </button>
-          <h1 className="text-2xl font-bold text-center flex-1">お題詳細</h1>
+          <h1 className="text-2xl font-bold text-center flex-1 text-slate-900 dark:text-slate-100">お題詳細</h1>
           <div>
             {session ? (
               <button
                 onClick={() => signOut()}
-                className="text-red-500 hover:text-red-700 font-semibold"
+                className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-semibold"
               >
                 ログアウト
               </button>
@@ -307,12 +395,23 @@ export default function TopicPage() {
         </div>
 
         {/* トピック表示 */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8 border-l-4 border-purple-500">
-          <p className="text-sm text-gray-500 mb-2">お題投稿</p>
-          <h2 className="text-xl font-bold text-purple-600 mb-4">{topic.title}</h2>
-          <p className="text-gray-700 mb-4 whitespace-pre-wrap">{topic.body}</p>
-          <div className="flex items-center justify-between text-sm text-gray-500">
-            <span>{topic.author}</span>
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 mb-8 border-l-4 border-purple-500 dark:border-purple-400">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">お題投稿</p>
+          <h2 className="text-xl font-bold text-purple-600 dark:text-purple-400 mb-4">{topic.title}</h2>
+          <p className="text-gray-700 dark:text-gray-300 mb-4 whitespace-pre-wrap">{topic.body}</p>
+          <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+            <span className="flex items-center gap-2">
+              {getDisplayIcon(topic.authorEmail) ? (
+                <img
+                  src={getDisplayIcon(topic.authorEmail) || ""}
+                  alt="投稿者アイコン"
+                  className="w-6 h-6 rounded-full object-cover border border-gray-300"
+                />
+              ) : (
+                <div className="w-6 h-6 rounded-full bg-gray-200 border border-gray-300" />
+              )}
+              {getDisplayName(topic.authorEmail, topic.author)}
+            </span>
             <span>{new Date(topic.createdAt * 1000).toLocaleString()}</span>
           </div>
           <div className="flex gap-4 mt-4">
@@ -320,20 +419,20 @@ export default function TopicPage() {
               onClick={() => handleLike(topic.id)}
               className={`px-4 py-2 rounded font-semibold transition ${
                 likedPosts.includes(topic.id)
-                  ? "bg-red-100 text-red-600"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400"
+                  : "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700"
               }`}
             >
               ❤️ {topic.likes || 0}
             </button>
-            {session?.user?.email === topic.author && (
+            {session?.user?.email === topic.authorEmail && (
               <button
                 onClick={() => deletePost(topic.id)}
                 disabled={replies.length > 0}
                 className={`px-4 py-2 rounded font-semibold ${
                   replies.length > 0
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-red-100 text-red-600 hover:bg-red-200"
+                    ? "bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                    : "bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900"
                 }`}
                 title={replies.length > 0 ? "このお題に投稿があるため削除できません" : "削除"}
               >
@@ -345,19 +444,19 @@ export default function TopicPage() {
 
         {/* 投稿フォーム（ファイルインポート専用） */}
         {session && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h3 className="text-lg font-bold mb-4">✍️ このお題に投稿する</h3>
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 mb-8">
+            <h3 className="text-lg font-bold dark:text-slate-100 mb-4">✍️ このお題に投稿する</h3>
             
             <div className="mb-4">
-              <label className="block text-sm font-semibold mb-2">📄 ファイルを選択</label>
+              <label className="block text-sm font-semibold dark:text-slate-300 mb-2">📄 ファイルを選択</label>
               <input
                 type="file"
                 accept=".txt,.pdf,.docx"
                 onChange={handleFileChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded cursor-pointer"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded cursor-pointer"
               />
-              <p className="text-xs text-gray-500 mt-2">対応形式: テキスト (.txt), PDF, Word (.docx)</p>
-              <p className="text-xs text-gray-400 mt-1">ファイルのタイトルと内容から自動で投稿が作成されます</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">対応形式: テキスト (.txt), PDF, Word (.docx)</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">ファイルのタイトルと内容から自動で投稿が作成されます</p>
             </div>
 
             {newPost.title && (
@@ -396,7 +495,42 @@ export default function TopicPage() {
 
         {/* 投稿一覧 */}
         <div>
-          <h3 className="text-lg font-bold mb-4">このお題への投稿 ({replies.length})</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold">このお題への投稿 ({replies.length})</h3>
+            {getReplyParticipants().length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">参加者</span>
+                <div className="flex items-center -space-x-2">
+                  {getReplyParticipants()
+                    .slice(0, 8)
+                    .map((participant) => (
+                      participant.icon ? (
+                        <img
+                          key={participant.key}
+                          src={participant.icon}
+                          alt={participant.name}
+                          title={participant.name}
+                          className="w-7 h-7 rounded-full object-cover border-2 border-white"
+                        />
+                      ) : (
+                        <div
+                          key={participant.key}
+                          title={participant.name}
+                          className="w-7 h-7 rounded-full bg-gray-300 text-[10px] font-bold text-gray-700 border-2 border-white flex items-center justify-center"
+                        >
+                          {participant.name.slice(0, 1)}
+                        </div>
+                      )
+                    ))}
+                  {getReplyParticipants().length > 8 && (
+                    <div className="w-7 h-7 rounded-full bg-gray-200 text-[10px] font-bold text-gray-600 border-2 border-white flex items-center justify-center">
+                      +{getReplyParticipants().length - 8}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           {replies.length === 0 ? (
             <p className="text-gray-500 text-center py-8">まだ投稿がありません</p>
           ) : (
@@ -410,7 +544,18 @@ export default function TopicPage() {
                   <h4 className="text-lg font-bold text-blue-600 mb-2">{reply.title}</h4>
                   <p className="text-gray-700 mb-4 whitespace-pre-wrap">{reply.body}</p>
                   <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                    <span>{reply.author}</span>
+                    <span className="flex items-center gap-2">
+                      {getDisplayIcon(reply.authorEmail) ? (
+                        <img
+                          src={getDisplayIcon(reply.authorEmail) || ""}
+                          alt="投稿者アイコン"
+                          className="w-6 h-6 rounded-full object-cover border border-gray-300"
+                        />
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-gray-200 border border-gray-300" />
+                      )}
+                      {getDisplayName(reply.authorEmail, reply.author)}
+                    </span>
                     <span>{new Date(reply.createdAt * 1000).toLocaleString()}</span>
                   </div>
                   <div className="flex gap-4">
@@ -443,7 +588,18 @@ export default function TopicPage() {
                       {reply.comments.map((comment) => (
                         <div key={comment.commentId} className="bg-gray-50 p-3 rounded-lg text-sm">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-semibold text-gray-700">{comment.author}</span>
+                            <span className="font-semibold text-gray-700 flex items-center gap-2">
+                              {getDisplayIcon(comment.authorEmail) ? (
+                                <img
+                                  src={getDisplayIcon(comment.authorEmail) || ""}
+                                  alt="コメント投稿者アイコン"
+                                  className="w-5 h-5 rounded-full object-cover border border-gray-300"
+                                />
+                              ) : (
+                                <div className="w-5 h-5 rounded-full bg-gray-200 border border-gray-300" />
+                              )}
+                              {getDisplayName(comment.authorEmail, comment.author)}
+                            </span>
                             <span className="text-xs text-gray-400">{new Date(comment.createdAt * 1000).toLocaleString()}</span>
                           </div>
                           <p className="text-gray-600 mb-2">{comment.text}</p>

@@ -75,6 +75,7 @@ export class D1Client {
     title: string;
     body: string;
     author: string;
+    authorEmail?: string | null;
     tag: string;
     createdAt: number;
     parentPostId?: string | null;
@@ -82,14 +83,15 @@ export class D1Client {
   }) {
     return this.execute({
       sql: `
-        INSERT INTO posts (id, title, body, author, tag, createdAt, updatedAt, parentPostId, isTopicPost)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO posts (id, title, body, author, authorEmail, tag, createdAt, updatedAt, parentPostId, isTopicPost)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       params: [
         post.id,
         post.title,
         post.body,
         post.author,
+        post.authorEmail || null,
         post.tag,
         post.createdAt,
         Date.now(),
@@ -130,18 +132,20 @@ export class D1Client {
     commentId: string;
     text: string;
     author: string;
+    authorEmail?: string | null;
     createdAt: number;
   }) {
     return this.execute({
       sql: `
-        INSERT INTO comments (postId, commentId, text, author, createdAt)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO comments (postId, commentId, text, author, authorEmail, createdAt)
+        VALUES (?, ?, ?, ?, ?, ?)
       `,
       params: [
         comment.postId,
         comment.commentId,
         comment.text,
         comment.author,
+        comment.authorEmail || null,
         comment.createdAt,
       ],
     });

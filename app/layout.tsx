@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-// 先ほど作成したProviderを読み込む
 import { NextAuthProvider } from "./components/NextAuthProvider"; 
-import { ThemeProvider } from "next-themes"; 
+import { Providers } from "./providers"; 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,7 +19,6 @@ export const metadata: Metadata = {
   description: "部員限定の投稿プラットフォーム",
 };
 
-// Next.jsはこの "export default function" を探しています
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,12 +27,11 @@ export default function RootLayout({
   return (
     <html lang="ja" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {/* これで全体を包む */}
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <Providers>
           <NextAuthProvider>
             {children}
           </NextAuthProvider>
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );

@@ -14,6 +14,7 @@ export async function POST(request: Request) {
       commentId: commentId,
       text: data.text,
       author: data.author,
+      authorEmail: data.authorEmail || null,
       createdAt: Date.now(),
     });
 

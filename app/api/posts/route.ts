@@ -15,6 +15,7 @@ export async function POST(request: Request) {
       title: data.title,
       body: data.body,
       author: data.author,
+      authorEmail: data.authorEmail || null,
       tag: data.tag || "創作",
       createdAt: Date.now(),
       parentPostId: data.parentPostId || null,
