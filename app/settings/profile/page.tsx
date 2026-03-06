@@ -123,7 +123,7 @@ export default function ProfileSettingsPage() {
   if (!session) return <div className="p-10 text-center">ログインが必要です</div>;
 
   return (
-    <main className="min-h-screen max-w-2xl mx-auto">
+    <main className="min-h-screen max-w-3xl mx-auto">
       <header className="sticky top-0 z-30 bg-background border-b border-divider p-4 flex items-center gap-4">
         <Button as={Link} href="/" isIconOnly variant="light" aria-label="戻る">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -133,10 +133,10 @@ export default function ProfileSettingsPage() {
         <h1 className="text-xl font-bold">アカウント設定</h1>
       </header>
 
-      <div className="p-6 space-y-8">
+      <div className="p-5 space-y-6">
         <section>
-          <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-4">アカウント</h2>
-          <Card>
+          <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-3">アカウント</h2>
+          <Card className="rounded-2xl">
             <CardBody className="gap-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -178,7 +178,7 @@ export default function ProfileSettingsPage() {
                         className="w-16 h-16 min-w-16 min-h-16 rounded-full object-cover border-2 border-primary shrink-0"
                       />
                     ) : (
-                      <div className="w-16 h-16 min-w-16 min-h-16 rounded-full bg-default-200 flex items-center justify-center shrink-0">
+                      <div className="w-16 h-16 min-w-16 min-h-16 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
                         <span className="text-sm text-default-400">未設定</span>
                       </div>
                     )}
@@ -222,8 +222,8 @@ export default function ProfileSettingsPage() {
         </section>
 
         <section>
-          <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-4">コンテンツ管理</h2>
-          <Card isPressable onPress={() => router.push("/settings/my-content")}>
+          <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-3">コンテンツ管理</h2>
+          <Card className="rounded-2xl" isPressable onPress={() => router.push("/settings/my-content")}>
             <CardBody>
               <div className="flex items-center justify-between">
                 <div>

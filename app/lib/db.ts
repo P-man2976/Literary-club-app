@@ -297,6 +297,41 @@ export class D1Client {
       params: [comment.text, comment.editedAt, comment.commentId],
     });
   }
+
+  async updatePost(post: {
+    postId: string;
+    title: string;
+    body: string;
+    authorEmail: string;
+    updatedAt: number;
+  }) {
+    // まず、投稿の作成者が正しいか確認
+    const checkResult = await this.execute({
+      sql: `SELECT authorEmail FROM posts WHERE id = ?`,
+      params: [post.postId],
+    });
+
+    if (!checkResult.success || !checkResult.results || checkResult.results.length === 0) {
+      return {
+        success: false,
+        error: "Post not found",
+      };
+    }
+
+    const existingPost = checkResult.results[0] as any;
+    if (existingPost.authorEmail !== post.authorEmail) {
+      return {
+        success: false,
+        error: "Unauthorized to edit this post",
+      };
+    }
+
+    // 更新を実行
+    return this.execute({
+      sql: `UPDATE posts SET title = ?, body = ?, updatedAt = ? WHERE id = ?`,
+      params: [post.title, post.body, post.updatedAt, post.postId],
+    });
+  }
 }
 
 /**

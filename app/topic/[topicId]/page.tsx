@@ -81,7 +81,10 @@ export default function TopicPage() {
   const [analysisResult, setAnalysisResult] = useState<TopicAnalysis | null>(null);
   const [scrollingPostId, setScrollingPostId] = useState<string | null>(null);
   const scrollHideTimerRef = useRef<number | null>(null);
-  const [showHorizontalHint, setShowHorizontalHint] = useState(true);
+  const [showHorizontalHint, setShowHorizontalHint] = useState(false);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editingPostTitle, setEditingPostTitle] = useState("");
+  const [editingPostBody, setEditingPostBody] = useState("");
 
   const handleBodyScroll = (postId: string) => {
     setScrollingPostId(postId);
@@ -111,11 +114,22 @@ export default function TopicPage() {
   }, []);
 
   useEffect(() => {
+    // タッチデバイス（スマホ・タブレット）ではヒントを表示しない
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (isTouchDevice) {
+      setShowHorizontalHint(false);
+      return;
+    }
+
+    // PC環境のみ：localStorageで非表示設定を確認
     try {
       const dismissed = localStorage.getItem("lit-club-horizontal-hint-dismissed") === "1";
-      if (dismissed) setShowHorizontalHint(false);
+      if (!dismissed) {
+        setShowHorizontalHint(true);
+      }
     } catch {
       // Ignore storage errors on restricted browsers.
+      setShowHorizontalHint(true);
     }
   }, []);
 
@@ -467,6 +481,50 @@ export default function TopicPage() {
     }
   };
 
+  const startEditingPost = (postId: string, title: string, body: string) => {
+    setEditingPostId(postId);
+    setEditingPostTitle(title);
+    setEditingPostBody(body);
+  };
+
+  const cancelEditingPost = () => {
+    setEditingPostId(null);
+    setEditingPostTitle("");
+    setEditingPostBody("");
+  };
+
+  const saveEditedPost = async (postId: string) => {
+    if (!editingPostTitle.trim() || !editingPostBody.trim()) {
+      alert("タイトルと内容は必須です");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/posts", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          postId,
+          title: editingPostTitle,
+          body: editingPostBody,
+          authorEmail: session?.user?.email,
+        }),
+      });
+
+      if (response.ok) {
+        alert("更新しました！");
+        cancelEditingPost();
+        fetchTopicAndReplies();
+      } else {
+        const error = await response.json();
+        alert(`更新に失敗しました: ${error.error}`);
+      }
+    } catch (error) {
+      console.error("編集エラー:", error);
+      alert("編集に失敗しました");
+    }
+  };
+
   const saveComment = async (postId: string) => {
     const text = commentTexts[postId];
     if (!text) return;
@@ -585,7 +643,7 @@ export default function TopicPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 md:p-6">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         {/* ヘッダー */}
         <div className="flex items-center mb-8">
           <button
@@ -599,7 +657,45 @@ export default function TopicPage() {
         </div>
 
         {/* トピック表示 */}
-        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 mb-8 border-l-4 border-blue-500 dark:border-blue-400">
+        {editingPostId === topic.id ? (
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md p-6 mb-8 border-l-4 border-blue-500 dark:border-blue-400">
+            <h3 className="text-lg font-bold mb-4">お題を編集</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2">タイトル</label>
+                <input
+                  type="text"
+                  value={editingPostTitle}
+                  onChange={(e) => setEditingPostTitle(e.target.value)}
+                  className="w-full px-4 py-2 border border-default-300 dark:border-default-600 bg-default-50 dark:bg-default-800 text-default-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">内容</label>
+                <textarea
+                  value={editingPostBody}
+                  onChange={(e) => setEditingPostBody(e.target.value)}
+                  className="w-full px-4 py-2 border border-default-300 dark:border-default-600 bg-default-50 dark:bg-default-800 text-default-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[200px]"
+                />
+              </div>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => saveEditedPost(topic.id)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600"
+                >
+                  保存
+                </button>
+                <button
+                  onClick={cancelEditingPost}
+                  className="px-4 py-2 bg-default-300 dark:bg-default-700 text-default-700 dark:text-slate-200 rounded-lg font-semibold hover:bg-default-400 dark:hover:bg-default-600"
+                >
+                  キャンセル
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md p-6 mb-8 border-l-4 border-blue-500 dark:border-blue-400">
           {getDeadlineStatus(topic.deadline) && (
             <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${getDeadlineStatus(topic.deadline)!.bgColor} ${getDeadlineStatus(topic.deadline)!.textColor}`}>
               {getDeadlineStatus(topic.deadline)!.label}
@@ -625,28 +721,37 @@ export default function TopicPage() {
               )}
               {getDisplayName(topic.authorEmail, topic.author)}
             </span>
-            <span>{new Date(topic.createdAt * 1000).toLocaleString()}</span>
+            <span>{new Date(topic.createdAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
           </div>
           <div className="flex gap-4 mt-4">
             {session?.user?.email === topic.authorEmail && (
-              <button
-                onClick={() => deletePost(topic.id)}
-                disabled={replies.length > 0}
-                className={`px-4 py-2 rounded font-semibold ${
-                  replies.length > 0
-                    ? "bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-300 cursor-not-allowed"
-                    : "bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900"
-                }`}
-                title={replies.length > 0 ? "このお題に投稿があるため削除できません" : "削除"}
-              >
-                削除
-              </button>
+              <>
+                <button
+                  onClick={() => startEditingPost(topic.id, topic.title, topic.body)}
+                  className="px-4 py-2 bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 rounded font-semibold hover:bg-blue-200 dark:hover:bg-blue-900"
+                >
+                  編集
+                </button>
+                <button
+                  onClick={() => deletePost(topic.id)}
+                  disabled={replies.length > 0}
+                  className={`px-4 py-2 rounded font-semibold ${
+                    replies.length > 0
+                      ? "bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-300 cursor-not-allowed"
+                      : "bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900"
+                  }`}
+                  title={replies.length > 0 ? "このお題に投稿があるため削除できません" : "削除"}
+                >
+                  削除
+                </button>
+              </>
             )}
           </div>
         </div>
+        )}
 
         {/* AI分析 */}
-        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 mb-8 border border-slate-200 dark:border-slate-700">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md p-6 mb-8 border border-slate-200 dark:border-slate-700">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">AI講評</h3>
             <button
@@ -724,7 +829,7 @@ export default function TopicPage() {
 
         {/* 投稿フォーム（ファイルインポート専用） */}
         {session && (
-          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 mb-8">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md p-6 mb-8">
             <h3 className="text-lg font-bold dark:text-slate-100 mb-4 flex items-center gap-2">
               <PenLine size={18} />
               このお題に投稿する
@@ -834,13 +939,53 @@ export default function TopicPage() {
             replies.map((reply) => (
               <div
                 key={reply.id}
-                className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 mb-4 border-l-4 border-blue-500 dark:border-blue-400"
+                className="bg-white dark:bg-slate-900 rounded-2xl shadow-md p-6 mb-4 border-l-4 border-blue-500 dark:border-blue-400"
               >
+                {/* 編集フォーム */}
+                {editingPostId === reply.id ? (
+                  <div className="mb-4">
+                    <h4 className="text-lg font-bold mb-4">投稿を編集</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold mb-2">タイトル</label>
+                        <input
+                          type="text"
+                          value={editingPostTitle}
+                          onChange={(e) => setEditingPostTitle(e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold mb-2">内容</label>
+                        <textarea
+                          value={editingPostBody}
+                          onChange={(e) => setEditingPostBody(e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[200px]"
+                        />
+                      </div>
+                      <div className="flex gap-4">
+                        <button
+                          onClick={() => saveEditedPost(reply.id)}
+                          className="px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600"
+                        >
+                          保存
+                        </button>
+                        <button
+                          onClick={cancelEditingPost}
+                          className="px-4 py-2 bg-gray-300 dark:bg-slate-700 text-gray-700 dark:text-slate-200 rounded-lg font-semibold hover:bg-gray-400 dark:hover:bg-slate-600"
+                        >
+                          キャンセル
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
                 {/* 投稿本体 */}
                 <div className="mb-4">
                   <h4 className="text-lg font-bold text-blue-600 dark:text-blue-400 mb-2">{reply.title}</h4>
                   <div 
-                      className="mb-4 overflow-x-auto border border-default-200 dark:border-default-700 rounded-lg p-4 bg-default-50 dark:bg-default-100/10 relative group" 
+                      className="mb-4 overflow-x-auto border border-gray-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-900/20 relative group" 
                       onScroll={() => handleBodyScroll(reply.id)}
                       onWheel={(event) => {
                         if (event.shiftKey && showHorizontalHint) {
@@ -865,11 +1010,11 @@ export default function TopicPage() {
                           className="w-6 h-6 rounded-full object-cover border border-gray-300"
                         />
                       ) : (
-                        <div className="w-6 h-6 rounded-full bg-default-200 dark:bg-default-700 border border-default-300 dark:border-default-600" />
+                        <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-slate-700 border border-gray-300 dark:border-slate-600" />
                       )}
                       {getDisplayName(reply.authorEmail, reply.author)}
                     </span>
-                    <span>{new Date(reply.createdAt * 1000).toLocaleString()}</span>
+                    <span>{new Date(reply.createdAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                   <div className="flex gap-4">
                     <button
@@ -877,31 +1022,41 @@ export default function TopicPage() {
                       className={`px-4 py-2 rounded font-semibold transition ${
                         likedPosts.includes(reply.id)
                           ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
-                          : "bg-default-100 dark:bg-default-800 text-default-600 dark:text-slate-200 hover:bg-default-200 dark:hover:bg-default-700"
+                          : "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700"
                       } flex items-center gap-1`}
                     >
-                      <Heart size={14} /> {reply.likes || 0}
+                      <Heart size={14} className={likedPosts.includes(reply.id) ? "" : "dark:fill-default-500 dark:stroke-default-500"} /> {reply.likes || 0}
                     </button>
                     {session?.user?.email === reply.authorEmail && (
-                      <button
-                        onClick={() => deletePost(reply.id)}
-                        className="px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded font-semibold hover:bg-red-200 dark:hover:bg-red-900/50"
-                      >
-                        削除
-                      </button>
+                      <>
+                        <button
+                          onClick={() => startEditingPost(reply.id, reply.title, reply.body)}
+                          className="px-4 py-2 bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 rounded font-semibold hover:bg-blue-200 dark:hover:bg-blue-900"
+                        >
+                          編集
+                        </button>
+                        <button
+                          onClick={() => deletePost(reply.id)}
+                          className="px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded font-semibold hover:bg-red-200 dark:hover:bg-red-900/50"
+                        >
+                          削除
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
+                </>
+                )}
 
                 {/* コメント一覧 */}
                 {reply.comments && reply.comments.length > 0 && (
-                  <div className="mb-4 pt-4 border-t border-default-200 dark:border-default-700">
+                  <div className="mb-4 pt-4 border-t border-gray-200 dark:border-slate-700">
                     <p className="text-xs font-bold text-default-400 dark:text-slate-300 mb-3 flex items-center gap-1">
                       <MessageCircle size={14} /> コメント ({reply.comments.length})
                     </p>
                     <div className="space-y-3">
                       {reply.comments.map((comment) => (
-                        <div key={comment.commentId} className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg text-sm">
+                        <div key={comment.commentId} className="bg-slate-50 dark:bg-slate-900/20 p-3 rounded-lg text-sm">
                           <div className="flex items-center justify-between mb-1">
                             <span className="font-semibold text-default-700 dark:text-slate-200 flex items-center gap-2">
                               {getDisplayIcon(comment.authorEmail) ? (
@@ -911,14 +1066,14 @@ export default function TopicPage() {
                                   className="w-5 h-5 rounded-full object-cover border border-gray-300"
                                 />
                               ) : (
-                                <div className="w-5 h-5 rounded-full bg-default-200 dark:bg-default-700 border border-default-300 dark:border-default-600" />
+                                <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-slate-700 border border-gray-300 dark:border-slate-600" />
                               )}
                               {getDisplayName(comment.authorEmail, comment.author)}
                               {comment.editedAt && (
                                 <span className="text-xs text-default-400 dark:text-slate-300">(編集済み)</span>
                               )}
                             </span>
-                            <span className="text-xs text-default-400 dark:text-slate-300">{new Date(comment.createdAt * 1000).toLocaleString()}</span>
+                            <span className="text-xs text-default-400 dark:text-slate-300">{new Date(comment.createdAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
                           
                           {/* 編集モード */}
@@ -954,10 +1109,10 @@ export default function TopicPage() {
                                   className={`text-xs px-2 py-1 rounded transition ${
                                     commentLikes[comment.commentId]
                                       ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
-                                      : "bg-default-200 dark:bg-default-800 text-default-600 dark:text-slate-200 hover:bg-default-300 dark:hover:bg-default-700"
+                                      : "bg-default-200 dark:bg-default-800 text-default-600 dark:text-default-400 hover:bg-default-300 dark:hover:bg-default-700"
                                   } flex items-center gap-1`}
                                 >
-                                  <Heart size={12} /> {commentLikes[comment.commentId] ? 1 : 0}
+                                  <Heart size={12} className={commentLikes[comment.commentId] ? "" : "dark:fill-default-500 dark:stroke-default-500"} /> {commentLikes[comment.commentId] ? 1 : 0}
                                 </button>
                                 {session?.user?.email === comment.authorEmail && (
                                   <button

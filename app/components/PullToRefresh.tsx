@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const PULL_THRESHOLD = 88;
-const MAX_PULL_DISTANCE = 140;
+const PULL_THRESHOLD = 118;
+const MAX_PULL_DISTANCE = 185;
 
 export function PullToRefresh() {
   const startYRef = useRef<number | null>(null);
@@ -54,7 +54,10 @@ export function PullToRefresh() {
 
       if (isReady && !isRefreshing) {
         setIsRefreshing(true);
-        window.location.reload();
+        // Show feedback animation briefly before actual reload.
+        window.setTimeout(() => {
+          window.location.reload();
+        }, 420);
         return;
       }
 
@@ -73,20 +76,23 @@ export function PullToRefresh() {
     };
   }, [isReady, isRefreshing]);
 
-  const visible = pullDistance > 0 && !isRefreshing;
+  const visible = pullDistance > 0 || isRefreshing;
 
   return (
     <div
       className="pointer-events-none fixed inset-x-0 top-0 z-[60] flex justify-center"
       aria-hidden
       style={{
-        transform: `translateY(${Math.min(pullDistance - 44, 24)}px)`,
+        transform: `translateY(${isRefreshing ? 18 : Math.min(pullDistance - 44, 24)}px)`,
         opacity: visible ? 1 : 0,
         transition: visible ? "none" : "opacity 120ms ease, transform 120ms ease",
       }}
     >
-      <div className="rounded-full border border-default-300 bg-background/90 px-3 py-1 text-xs font-bold text-default-700 shadow-sm backdrop-blur">
-        {isReady ? "離して再読み込み" : "下に引っ張って更新"}
+      <div className="rounded-full border border-gray-300 bg-background/95 px-3 py-1 text-xs font-bold text-gray-700 shadow-sm backdrop-blur flex items-center gap-2">
+        {isRefreshing && (
+          <span className="inline-block h-3.5 w-3.5 rounded-full border-2 border-gray-400 border-t-transparent animate-spin" />
+        )}
+        {isRefreshing ? "再読み込み中..." : isReady ? "離して再読み込み" : "下に引っ張って更新"}
       </div>
     </div>
   );

@@ -89,6 +89,9 @@ export default function Home() {
   const [topicDecisionSource, setTopicDecisionSource] = useState<"proposal" | "pool">("proposal");
   const [proposalDeadline, setProposalDeadline] = useState<number | null>(null);
   const [memberProfiles, setMemberProfiles] = useState<MemberProfile[]>([]);
+  const [editingProposalId, setEditingProposalId] = useState<string | null>(null);
+  const [editingProposalTitle, setEditingProposalTitle] = useState("");
+  const [editingProposalBody, setEditingProposalBody] = useState("");
 
   // SWRでデータ取得
   const { data: allPostsData, error: postsError, isLoading: postsLoading, mutate: mutatePosts } = useSWR<Post[]>('/api/posts', fetcher, {
@@ -191,6 +194,50 @@ export default function Home() {
   const getDisplayIcon = (authorEmail: string | null | undefined) => {
     // メールアドレスから画像URLを生成（R2対応 + 後方互換性あり）
     return getUserIconUrl(authorEmail, userIconMap[authorEmail || ""]);
+  };
+
+  const startEditingProposal = (proposalId: string, title: string, body: string) => {
+    setEditingProposalId(proposalId);
+    setEditingProposalTitle(title);
+    setEditingProposalBody(body);
+  };
+
+  const cancelEditingProposal = () => {
+    setEditingProposalId(null);
+    setEditingProposalTitle("");
+    setEditingProposalBody("");
+  };
+
+  const saveEditedProposal = async (proposalId: string) => {
+    if (!editingProposalTitle.trim() || !editingProposalBody.trim()) {
+      alert("タイトルと内容は必須です");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/posts", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          postId: proposalId,
+          title: editingProposalTitle,
+          body: editingProposalBody,
+          authorEmail: session?.user?.email,
+        }),
+      });
+
+      if (response.ok) {
+        alert("更新しました！");
+        cancelEditingProposal();
+        mutatePosts();
+      } else {
+        const error = await response.json();
+        alert(`更新に失敗しました: ${error.error}`);
+      }
+    } catch (error) {
+      console.error("編集エラー:", error);
+      alert("編集に失敗しました");
+    }
   };
 
   const getTopicParticipants = (topic: Post) => {
@@ -520,14 +567,14 @@ export default function Home() {
 
 
   if (status === "loading" && !sessionLoadTimedOut) {
-    return <div className="p-10 text-center text-default-500">読み込み中...</div>;
+    return <div className="p-10 text-center text-gray-500">読み込み中...</div>;
   }
 
   if (status === "loading" && sessionLoadTimedOut) {
     return (
       <div className="p-10 text-center space-y-4">
-        <p className="text-default-700 font-semibold">セッション確認に時間がかかっています</p>
-        <p className="text-default-500 text-sm">通信状況により認証確認が遅れる場合があります。</p>
+        <p className="text-gray-700 font-semibold">セッション確認に時間がかかっています</p>
+        <p className="text-gray-500 text-sm">通信状況により認証確認が遅れる場合があります。</p>
         <div className="flex justify-center gap-2">
           <Button color="primary" onPress={() => window.location.reload()}>
             再読み込み
@@ -579,7 +626,7 @@ export default function Home() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8">
         <Spinner size="lg" color="primary" />
-        <p className="mt-4 text-default-500">データを読み込んでいます...</p>
+        <p className="mt-4 text-gray-500">データを読み込んでいます...</p>
       </div>
     );
   }
@@ -590,7 +637,7 @@ export default function Home() {
       <div className="min-h-screen flex flex-col items-center justify-center p-8">
         <AlertCircle size={48} className="text-danger mb-4" />
         <p className="text-lg font-semibold text-danger mb-2">データの取得に失敗しました</p>
-        <p className="text-sm text-default-500 mb-4">
+        <p className="text-sm text-gray-500 mb-4">
           {postsError?.message || profilesError?.message || 'ネットワーク接続を確認してください'}
         </p>
         <Button 
@@ -606,7 +653,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen max-w-2xl mx-auto pb-40">
+    <main className="min-h-screen max-w-3xl mx-auto pb-40">
       {/* ヘッダー */}
       <header className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-divider p-4 z-30">
         <div className="flex justify-between items-center">
@@ -617,7 +664,7 @@ export default function Home() {
               <Link
                 href="/settings"
                 aria-label="設定"
-                className="w-10 h-10 rounded-full border border-default-300 bg-default-100/60 dark:bg-default-800/60 flex items-center justify-center"
+                className="w-10 h-10 rounded-full border border-gray-300 bg-gray-100/60 dark:bg-slate-800/60 flex items-center justify-center"
               >
                 <Settings size={18} />
               </Link>
@@ -629,7 +676,7 @@ export default function Home() {
                     className="w-10 h-10 rounded-full object-cover border-2 border-primary"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-default-200 border-2 border-primary" />
+                  <div className="w-10 h-10 rounded-full bg-gray-200 border-2 border-primary" />
                 )}
               </Link>
             </div>
@@ -657,7 +704,7 @@ export default function Home() {
           tabList: "w-full !grid !grid-cols-3 gap-0",
           cursor: "w-full h-[3px]",
           tab: "h-12 w-full max-w-none justify-center data-[selected=true]:font-black data-[selected=true]:text-primary",
-          tabContent: "group-data-[selected=true]:text-primary group-data-[selected=false]:text-default-500",
+          tabContent: "group-data-[selected=true]:text-primary group-data-[selected=false]:text-gray-500",
         }}
       >
         <Tab
@@ -671,9 +718,9 @@ export default function Home() {
         >
           {topicPosts.length === 0 ? (
             <div className="p-10 text-center">
-              <Pin size={34} className="mx-auto mb-4 text-default-400" />
-              <p className="text-default-500 text-sm font-medium">まだお題がありません</p>
-              <p className="text-default-400 text-xs mt-2">お題案投稿タブで案を投稿し、選択してお題化できます。</p>
+              <Pin size={34} className="mx-auto mb-4 text-gray-400" />
+              <p className="text-gray-500 text-sm font-medium">まだお題がありません</p>
+              <p className="text-gray-400 text-xs mt-2">お題案投稿タブで案を投稿し、選択してお題化できます。</p>
             </div>
           ) : (
             <div className="p-3 space-y-3">
@@ -681,7 +728,7 @@ export default function Home() {
                 <Card 
                   key={topic.id}
                   shadow="sm"
-                  className="border border-default-200 rounded-2xl"
+                  className="border border-gray-200 rounded-2xl"
                 >
                   <CardBody className="p-4 gap-2">
                     <div className="flex items-center justify-between">
@@ -690,17 +737,17 @@ export default function Home() {
                           <img
                             src={getDisplayIcon(topic.authorEmail) || ""}
                             alt="投稿者アイコン"
-                            className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full object-cover border border-default-300"
+                            className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full object-cover border border-gray-300"
                           />
                         ) : (
-                          <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-default-200 border border-default-300" />
+                          <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-200 border border-gray-300" />
                         )}
                         <span className="font-bold">{getDisplayName(topic.authorEmail, topic.author)}</span>
                         <Chip size="sm" color="secondary" variant="flat">お題</Chip>
                       </div>
                       <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1 text-default-400 text-sm">
+                          <div className="flex items-center gap-1 text-gray-400 text-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-1.9A9 9 0 1 1 5.9 5.9l1.1 1.1"/></svg>
                             <span className="text-xs font-bold">{topic.children?.length || 0} 投稿</span>
                           </div>
@@ -721,14 +768,14 @@ export default function Home() {
                                     <div
                                       key={participant.key}
                                       title={participant.name}
-                                      className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-default-300 text-[10px] font-bold text-default-700 border-2 border-background flex items-center justify-center"
+                                      className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-300 text-[10px] font-bold text-gray-700 border-2 border-background flex items-center justify-center"
                                     >
                                       {participant.name.slice(0, 1)}
                                     </div>
                                   )
                                 ))}
                               {getTopicParticipants(topic).length > 6 && (
-                                <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-default-200 text-[10px] font-bold text-default-600 border-2 border-background flex items-center justify-center">
+                                <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-200 text-[10px] font-bold text-gray-600 border-2 border-background flex items-center justify-center">
                                   +{getTopicParticipants(topic).length - 6}
                                 </div>
                               )}
@@ -742,8 +789,8 @@ export default function Home() {
                       className="cursor-pointer"
                     >
                       <h2 className="text-lg font-bold">{topic.title}</h2>
-                      <p className="text-sm text-default-600 line-clamp-2">{topic.body}</p>
-                      <p className="text-xs text-default-400">クリックして詳細ページを表示...</p>
+                      <p className="text-sm text-gray-600 line-clamp-2">{topic.body}</p>
+                      <p className="text-xs text-gray-400">クリックして詳細ページを表示...</p>
                     </div>
                   </CardBody>
                 </Card>
@@ -835,9 +882,9 @@ export default function Home() {
               </Card>
             )}
 
-            <Card shadow="sm" className="border border-default-200 rounded-2xl">
+            <Card shadow="sm" className="border border-gray-200 rounded-2xl">
               <CardBody className="p-4 space-y-3">
-                <p className="text-sm text-default-500">お題の決定は「お題」タブ右下の + ボタンから行えます。</p>
+                <p className="text-sm text-gray-500">お題の決定は「お題」タブ右下の + ボタンから行えます。</p>
               </CardBody>
             </Card>
 
@@ -845,35 +892,76 @@ export default function Home() {
               <div className="space-y-3">
                 <h3 className="text-lg font-bold">過去のお題案</h3>
                 {topicProposals.map((proposal) => (
+                  editingProposalId === proposal.id ? (
+                    <Card key={proposal.id} shadow="sm" className="border border-gray-200 rounded-2xl">
+                      <CardBody className="p-4 space-y-3">
+                        <h4 className="font-semibold text-base">お題案を編集</h4>
+                        <input
+                          type="text"
+                          value={editingProposalTitle}
+                          onChange={(e) => setEditingProposalTitle(e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <textarea
+                          value={editingProposalBody}
+                          onChange={(e) => setEditingProposalBody(e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => saveEditedProposal(proposal.id)}
+                            className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-semibold hover:bg-blue-600"
+                          >
+                            保存
+                          </button>
+                          <button
+                            onClick={cancelEditingProposal}
+                            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-400"
+                          >
+                            キャンセル
+                          </button>
+                        </div>
+                      </CardBody>
+                    </Card>
+                  ) : (
                   <Card key={proposal.id} shadow="sm" className="border border-default-200 rounded-2xl cursor-pointer hover:shadow-md transition-shadow">
                     <CardBody className="p-4 space-y-2">
                       <h4 className="font-semibold text-base text-default-700">{proposal.title}</h4>
                       <p className="text-sm text-default-600 line-clamp-3">{proposal.body}</p>
                       <div className="flex items-center justify-between text-xs text-default-500 pt-2">
                         <span>投稿者: {getDisplayName(proposal.authorEmail, proposal.author)}</span>
-                        <span>{new Date(proposal.createdAt * 1000).toLocaleDateString()}</span>
+                        <span>{new Date(proposal.createdAt).toLocaleDateString('ja-JP')}</span>
                       </div>
                       {session?.user?.email === proposal.authorEmail && (
-                        <button
-                          onClick={() => {
-                            if (confirm("このお題案を削除しますか？")) {
-                              fetch(`/api/posts?postId=${proposal.id}`, {
-                                method: "DELETE",
-                              }).then((res) => {
-                                if (res.ok) {
-                                  alert("削除しました！");
-                                  mutatePosts();
-                                }
-                              });
-                            }
-                          }}
-                          className="text-xs text-red-500 hover:text-red-700 font-semibold mt-2"
-                        >
-                          削除
-                        </button>
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={() => startEditingProposal(proposal.id, proposal.title, proposal.body)}
+                            className="text-xs text-blue-500 hover:text-blue-700 font-semibold"
+                          >
+                            編集
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm("このお題案を削除しますか？")) {
+                                fetch(`/api/posts?postId=${proposal.id}`, {
+                                  method: "DELETE",
+                                }).then((res) => {
+                                  if (res.ok) {
+                                    alert("削除しました！");
+                                    mutatePosts();
+                                  }
+                                });
+                              }
+                            }}
+                            className="text-xs text-red-500 hover:text-red-700 font-semibold"
+                          >
+                            削除
+                          </button>
+                        </div>
                       )}
                     </CardBody>
                   </Card>
+                  )
                 ))}
               </div>
             )}
@@ -923,7 +1011,7 @@ export default function Home() {
                         <p className="font-bold text-base truncate">{displayName}</p>
                       </div>
 
-                      <div className="rounded-lg bg-default-50 dark:bg-default-100/10 p-3">
+                      <div className="rounded-lg bg-slate-50 dark:bg-slate-900/20 p-3">
                         <p className="text-xs text-default-500 mb-1">自己紹介</p>
                         <p className="text-sm font-medium text-default-700">{member.selfIntro || "未設定"}</p>
                       </div>
@@ -958,7 +1046,7 @@ export default function Home() {
           onClick={() => setIsTopicDecisionModalOpen(false)}
         >
           <div 
-            className="bg-white dark:bg-slate-900 rounded-lg shadow-lg max-w-2xl w-full"
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg max-w-3xl w-full"
             onClick={(e) => e.stopPropagation()}
           >
             {/* ヘッダー */}
@@ -1115,7 +1203,7 @@ export default function Home() {
           onClick={onClose}
         >
           <div 
-            className="bg-white dark:bg-slate-900 rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* ヘッダー */}

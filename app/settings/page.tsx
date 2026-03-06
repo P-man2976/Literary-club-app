@@ -127,7 +127,7 @@ export default function SettingsPage() {
   if (!session) return <div className="p-10 text-center">ログインが必要です</div>;
 
   return (
-    <main className="min-h-screen max-w-2xl mx-auto">
+    <main className="min-h-screen max-w-3xl mx-auto">
       <header className="sticky top-0 z-30 bg-background border-b border-divider p-4 flex items-center gap-4">
         <Button as={Link} href="/" isIconOnly variant="light" aria-label="戻る">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -137,10 +137,10 @@ export default function SettingsPage() {
         <h1 className="text-xl font-bold">設定</h1>
       </header>
 
-      <div className="p-6 space-y-8">
+      <div className="p-5 space-y-6">
         <section>
-          <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-4">テーマ</h2>
-          <Card>
+          <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-3">テーマ</h2>
+          <Card className="rounded-2xl">
             <CardBody className="gap-0 p-0">
               {mounted && (
                 <>
@@ -192,8 +192,8 @@ export default function SettingsPage() {
         </section>
 
         <section>
-          <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-4">通知</h2>
-          <Card>
+          <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-3">通知</h2>
+          <Card className="rounded-2xl">
             <CardBody className="gap-4">
               {notificationSupported ? (
                 <>
@@ -206,7 +206,7 @@ export default function SettingsPage() {
                       onClick={toggleNotifications}
                       disabled={notificationPermission === "denied"}
                       className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                        notificationEnabled ? "bg-primary" : "bg-default-300"
+                        notificationEnabled ? "bg-primary" : "bg-gray-300"
                       } ${notificationPermission === "denied" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                     >
                       <span
@@ -236,9 +236,9 @@ export default function SettingsPage() {
         </section>
 
         <section>
-          <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-4">プロフィール</h2>
-          <Card isPressable onPress={() => router.push("/settings/profile")}>
-            <CardBody>
+          <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-3">プロフィール</h2>
+          <Card className="w-full rounded-2xl" isPressable onPress={() => router.push("/settings/profile")}>
+            <CardBody className="py-5">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-bold">プロフィール設定へ</p>

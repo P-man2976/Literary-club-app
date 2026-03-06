@@ -150,3 +150,41 @@ export async function DELETE(request: Request) {
     );
   }
 }
+
+export async function PATCH(request: Request) {
+  try {
+    const db = getD1Client();
+    const data = await request.json();
+
+    if (!data.postId || !data.title || !data.body || !data.authorEmail) {
+      return NextResponse.json(
+        { error: "postId, title, body, and authorEmail are required" },
+        { status: 400 }
+      );
+    }
+
+    const result = await db.updatePost({
+      postId: data.postId,
+      title: data.title,
+      body: data.body,
+      authorEmail: data.authorEmail,
+      updatedAt: Date.now(),
+    });
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error || "Failed to update post" },
+        { status: result.error === "Unauthorized to edit this post" ? 403 : 500 }
+      );
+    }
+
+    console.log("✅ D1 Update Success!");
+    return NextResponse.json({ message: "Success" });
+  } catch (error: any) {
+    console.error("❌ D1 Update Error:", error.message);
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
+  }
+}
