@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { Heart, MessageCircle } from "lucide-react";
 
 type Post = {
   id: string;
@@ -162,8 +163,8 @@ export default function MyContentPage() {
                       {/* メタ情報 */}
                       <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 mb-3">
                         <span className="text-xs">{new Date(post.createdAt).toLocaleString('ja-JP')}</span>
-                        <span className="flex items-center gap-1">❤️ {post.likes || 0}</span>
-                        <span className="flex items-center gap-1">💬 {post.comments?.length || 0}</span>
+                        <span className="flex items-center gap-1"><Heart size={14} /> {post.likes || 0}</span>
+                        <span className="flex items-center gap-1"><MessageCircle size={14} /> {post.comments?.length || 0}</span>
                       </div>
                     </div>
 

@@ -4,6 +4,7 @@ import { useSession, signIn } from "next-auth/react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { BookOpen, Pin, Save } from "lucide-react";
 import { 
   Button, 
   Card, 
@@ -450,7 +451,7 @@ export default function Home() {
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900"
             }`}
           >
-            📚 すべて
+            <span className="inline-flex items-center gap-1"><BookOpen size={14} /> すべて</span>
           </button>
           <button
             onClick={() => setActiveTab("topics")}
@@ -460,7 +461,7 @@ export default function Home() {
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900"
             }`}
           >
-            📌 お題
+            <span className="inline-flex items-center gap-1"><Pin size={14} /> お題</span>
           </button>
         </div>
       </div>
@@ -534,7 +535,7 @@ export default function Home() {
           ))}
           {allPosts.length === 0 && (
             <div className="p-10 text-center">
-              <p className="text-slate-400 dark:text-slate-500 text-sm mb-2">📚</p>
+              <BookOpen size={20} className="mx-auto mb-2 text-slate-400 dark:text-slate-500" />
               <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">まだ投稿がありません</p>
               <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">右下の+ボタンから最初の作品を投稿しましょう！</p>
             </div>
@@ -547,7 +548,7 @@ export default function Home() {
       {topicPosts.length > 0 ? (
         <div className="border-b-4 border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950">
           <div className="p-4 bg-purple-100 dark:bg-purple-900 border-b border-purple-200 dark:border-purple-800">
-            <h2 className="text-sm font-black text-purple-900 dark:text-purple-200 uppercase tracking-widest">📌 毎週のお題</h2>
+            <h2 className="text-sm font-black text-purple-900 dark:text-purple-200 uppercase tracking-widest inline-flex items-center gap-1"><Pin size={14} /> 毎週のお題</h2>
           </div>
           <div className="divide-y divide-slate-200 dark:divide-slate-800">
             {topicPosts.map((topic) => (
@@ -595,7 +596,7 @@ export default function Home() {
         </div>
       ) : (
         <div className="p-10 text-center">
-          <p className="text-slate-400 dark:text-slate-500 text-sm mb-2">📌</p>
+          <Pin size={20} className="mx-auto mb-2 text-slate-400 dark:text-slate-500" />
           <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">まだお題がありません</p>
           <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">右下の+ボタンから最初のお題を作成しましょう！</p>
         </div>
@@ -611,7 +612,11 @@ export default function Home() {
           <div className="mb-2 w-72 sm:w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-5 rounded-3xl shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div className="flex justify-between items-center mb-4">
               <p className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase">
-                {activeTab === "topics" ? "📌 お題を作成" : "💾 作品を投稿"}
+                {activeTab === "topics" ? (
+                  <span className="inline-flex items-center gap-1"><Pin size={14} /> お題を作成</span>
+                ) : (
+                  <span className="inline-flex items-center gap-1"><Save size={14} /> 作品を投稿</span>
+                )}
               </p>
               <button onClick={() => setIsFormOpen(false)} className="text-slate-400 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-400">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>

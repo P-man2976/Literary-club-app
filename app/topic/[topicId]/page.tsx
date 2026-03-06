@@ -1,9 +1,18 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { getUserIconUrl } from "@/app/lib/imageUtils";
+import {
+  ArrowLeft,
+  FileCheck2,
+  Heart,
+  MessageCircle,
+  PenLine,
+  Send,
+  TriangleAlert,
+} from "lucide-react";
 
 type Comment = {
   commentId: string;
@@ -340,7 +349,7 @@ export default function TopicPage() {
         isTopicPost: 0,
       };
 
-      console.log("📝 返信データ:", postData);
+      console.log("返信データ:", postData);
 
       const response = await fetch("/api/posts", {
         method: "POST",
@@ -349,14 +358,14 @@ export default function TopicPage() {
       });
 
       const text = await response.text();
-      console.log("💾 レスポンス:", response.status, text);
+      console.log("レスポンス:", response.status, text);
 
       if (response.ok) {
         alert("投稿しました！");
         setNewPost({ title: "", body: "", tag: "創作" });
         fetchTopicAndReplies();
       } else {
-        console.error("❌ エラー:", text);
+        console.error("エラー:", text);
         alert("投稿に失敗しました");
       }
     } catch (error) {
@@ -542,9 +551,10 @@ export default function TopicPage() {
         <div className="flex items-center mb-8">
           <button
             onClick={() => router.back()}
-            className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold"
+            className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold flex items-center gap-1"
           >
-            ← 戻る
+            <ArrowLeft size={16} />
+            戻る
           </button>
           <h1 className="text-2xl font-bold text-center flex-1 text-slate-900 dark:text-slate-100">お題詳細</h1>
         </div>
@@ -676,11 +686,17 @@ export default function TopicPage() {
         {/* 投稿フォーム（ファイルインポート専用） */}
         {session && (
           <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 mb-8">
-            <h3 className="text-lg font-bold dark:text-slate-100 mb-4">✍️ このお題に投稿する</h3>
+            <h3 className="text-lg font-bold dark:text-slate-100 mb-4 flex items-center gap-2">
+              <PenLine size={18} />
+              このお題に投稿する
+            </h3>
             
             {isDeadlineExpired(topic.deadline) ? (
               <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                <p className="text-red-600 dark:text-red-400 font-semibold">⚠️ このお題の締め切りが過ぎているため、投稿できません</p>
+                <p className="text-red-600 dark:text-red-400 font-semibold flex items-center gap-2">
+                  <TriangleAlert size={16} />
+                  このお題の締め切りが過ぎているため、投稿できません
+                </p>
               </div>
             ) : (
               <>
@@ -698,7 +714,10 @@ export default function TopicPage() {
                 {newPost.title && (
                   <>
                     <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <p className="text-xs text-blue-500 font-bold mb-2">📋 ファイル解析済み</p>
+                      <p className="text-xs text-blue-500 font-bold mb-2 flex items-center gap-1">
+                        <FileCheck2 size={14} />
+                        ファイル解析済み
+                      </p>
                       <p className="text-sm font-bold text-blue-900 truncate">{newPost.title}</p>
                       <p className="text-xs text-blue-700 mt-2 line-clamp-3">{newPost.body}</p>
                     </div>
@@ -720,9 +739,10 @@ export default function TopicPage() {
 
                     <button
                       onClick={saveReply}
-                      className="w-full px-4 py-3 bg-blue-500 text-white font-bold rounded hover:bg-blue-600 transition"
+                      className="w-full px-4 py-3 bg-blue-500 text-white font-bold rounded hover:bg-blue-600 transition flex items-center justify-center gap-2"
                     >
-                      ✨ 投稿
+                      <Send size={16} />
+                      投稿
                     </button>
                   </>
                 )}
@@ -803,9 +823,9 @@ export default function TopicPage() {
                         likedPosts.includes(reply.id)
                           ? "bg-red-100 text-red-600"
                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                      }`}
+                      } flex items-center gap-1`}
                     >
-                      ❤️ {reply.likes || 0}
+                      <Heart size={14} /> {reply.likes || 0}
                     </button>
                     {session?.user?.email === reply.authorEmail && (
                       <button
@@ -821,7 +841,9 @@ export default function TopicPage() {
                 {/* コメント一覧 */}
                 {reply.comments && reply.comments.length > 0 && (
                   <div className="mb-4 pt-4 border-t border-gray-200">
-                    <p className="text-xs font-bold text-gray-400 mb-3">💬 コメント ({reply.comments.length})</p>
+                    <p className="text-xs font-bold text-gray-400 mb-3 flex items-center gap-1">
+                      <MessageCircle size={14} /> コメント ({reply.comments.length})
+                    </p>
                     <div className="space-y-3">
                       {reply.comments.map((comment) => (
                         <div key={comment.commentId} className="bg-gray-50 p-3 rounded-lg text-sm">
@@ -878,9 +900,9 @@ export default function TopicPage() {
                                     commentLikes[comment.commentId]
                                       ? "bg-red-100 text-red-600"
                                       : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-                                  }`}
+                                  } flex items-center gap-1`}
                                 >
-                                  ❤️ {commentLikes[comment.commentId] ? 1 : 0}
+                                  <Heart size={12} /> {commentLikes[comment.commentId] ? 1 : 0}
                                 </button>
                                 {session?.user?.email === comment.authorEmail && (
                                   <button

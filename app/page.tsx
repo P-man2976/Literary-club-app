@@ -17,6 +17,7 @@ import {
   Divider,
   Badge
 } from "@heroui/react";
+import { Lightbulb, Pin, Save, Users } from "lucide-react";
 
 
 // 型定義
@@ -613,10 +614,18 @@ export default function Home() {
           tabContent: "group-data-[selected=true]:text-primary group-data-[selected=false]:text-default-500",
         }}
       >
-        <Tab key="topics" title="📌 お題">
+        <Tab
+          key="topics"
+          title={
+            <span className="flex items-center gap-1">
+              <Pin size={14} />
+              お題
+            </span>
+          }
+        >
           {topicPosts.length === 0 ? (
             <div className="p-10 text-center">
-              <p className="text-4xl mb-4">📌</p>
+              <Pin size={34} className="mx-auto mb-4 text-default-400" />
               <p className="text-default-500 text-sm font-medium">まだお題がありません</p>
               <p className="text-default-400 text-xs mt-2">お題案投稿タブで案を投稿し、選択してお題化できます。</p>
             </div>
@@ -719,7 +728,15 @@ export default function Home() {
           )}
         </Tab>
 
-        <Tab key="proposal" title="💡 お題案投稿">
+        <Tab
+          key="proposal"
+          title={
+            <span className="flex items-center gap-1">
+              <Lightbulb size={14} />
+              お題案投稿
+            </span>
+          }
+        >
           <div className="p-4 space-y-4">
             {session && (
               <Card shadow="sm" className="border border-default-200">
@@ -775,7 +792,7 @@ export default function Home() {
 
             <Card shadow="sm" className="border border-default-200">
               <CardBody className="p-4 space-y-3">
-                <p className="text-sm text-default-500">お題の決定は「📌 お題」タブ右下の + ボタンから行えます。</p>
+                <p className="text-sm text-default-500">お題の決定は「お題」タブ右下の + ボタンから行えます。</p>
               </CardBody>
             </Card>
 
@@ -818,12 +835,20 @@ export default function Home() {
           </div>
         </Tab>
 
-        <Tab key="members" title="👥 部員紹介">
+        <Tab
+          key="members"
+          title={
+            <span className="flex items-center gap-1">
+              <Users size={14} />
+              部員紹介
+            </span>
+          }
+        >
           <div className="p-4 space-y-3">
             {memberProfiles.length === 0 ? (
               <Card shadow="sm" className="border border-default-200">
                 <CardBody className="p-6 text-center space-y-2">
-                  <p className="text-2xl">👥</p>
+                  <Users size={28} className="mx-auto text-default-400" />
                   <p className="text-sm font-semibold text-default-600">部員プロフィールはまだありません</p>
                   <p className="text-xs text-default-400">設定タブでペンネーム・自己紹介を登録すると表示されます。</p>
                 </CardBody>
@@ -893,7 +918,10 @@ export default function Home() {
           >
             {/* ヘッダー */}
             <div className="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 p-6">
-              <h2 className="text-xl font-bold">📌 お題を決定</h2>
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Pin size={18} />
+                お題を決定
+              </h2>
               <button
                 onClick={() => setIsTopicDecisionModalOpen(false)}
                 className="text-2xl text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -908,7 +936,7 @@ export default function Home() {
                 <div className="text-center py-8">
                   <p className="text-lg font-semibold text-slate-700 dark:text-slate-300">候補がまだありません</p>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-                    「💡 お題案投稿」タブからお題案を投稿してください。
+                    「お題案投稿」タブからお題案を投稿してください。
                   </p>
                 </div>
               ) : (
@@ -1048,7 +1076,17 @@ export default function Home() {
             {/* ヘッダー */}
             <div className="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 p-6 sticky top-0 bg-white dark:bg-slate-900">
               <h2 className="text-xl font-bold">
-                {postingMode === "topic" ? "📌 お題を作成" : "💾 作品を投稿"}
+                {postingMode === "topic" ? (
+                  <span className="flex items-center gap-2">
+                    <Pin size={18} />
+                    お題を作成
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Save size={18} />
+                    作品を投稿
+                  </span>
+                )}
               </h2>
               <button
                 onClick={onClose}

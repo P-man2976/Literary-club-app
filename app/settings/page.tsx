@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Button, Card, CardBody, Input, Avatar } from "@heroui/react";
 import { getUserIconUrl } from "@/app/lib/imageUtils";
+import { AlertTriangle, Check, ChevronRight } from "lucide-react";
 
 export default function SettingsPage() {
   const { data: session } = useSession();
@@ -514,7 +515,7 @@ export default function SettingsPage() {
                         <p className={`font-bold ${theme === "light" ? "text-primary" : ""}`}>ライト</p>
                         <p className="text-xs text-default-500">明るいテーマ</p>
                       </div>
-                      {theme === "light" && <span className="text-primary">✓</span>}
+                      {theme === "light" && <Check size={16} className="text-primary" />}
                     </div>
                   </Button>
                   <div className="border-t border-divider" />
@@ -533,7 +534,7 @@ export default function SettingsPage() {
                         <p className={`font-bold ${theme === "dark" ? "text-primary" : ""}`}>ダーク</p>
                         <p className="text-xs text-default-500">暗いテーマ</p>
                       </div>
-                      {theme === "dark" && <span className="text-primary">✓</span>}
+                      {theme === "dark" && <Check size={16} className="text-primary" />}
                     </div>
                   </Button>
                   <div className="border-t border-divider" />
@@ -553,7 +554,7 @@ export default function SettingsPage() {
                         <p className={`font-bold ${theme === "system" ? "text-primary" : ""}`}>端末の設定に合わせる</p>
                         <p className="text-xs text-default-500">システムのテーマに従う</p>
                       </div>
-                      {theme === "system" && <span className="text-primary">✓</span>}
+                      {theme === "system" && <Check size={16} className="text-primary" />}
                     </div>
                   </Button>
                 </>
@@ -593,16 +594,18 @@ export default function SettingsPage() {
                   
                   {notificationPermission === "denied" && (
                     <div className="bg-danger-50 border border-danger-200 rounded-lg p-3">
-                      <p className="text-xs text-danger-700">
-                        ⚠️ 通知がブロックされています。ブラウザの設定から許可してください。
+                      <p className="text-xs text-danger-700 flex items-center gap-2">
+                        <AlertTriangle size={14} />
+                        通知がブロックされています。ブラウザの設定から許可してください。
                       </p>
                     </div>
                   )}
                   
                   {notificationEnabled && notificationPermission === "granted" && (
                     <div className="bg-success-50 border border-success-200 rounded-lg p-3">
-                      <p className="text-xs text-success-700">
-                        ✓ 通知が有効です
+                      <p className="text-xs text-success-700 flex items-center gap-2">
+                        <Check size={14} />
+                        通知が有効です
                       </p>
                     </div>
                   )}
@@ -610,9 +613,9 @@ export default function SettingsPage() {
                   <div className="space-y-2">
                     <p className="text-xs text-default-500 font-semibold">通知を受け取るタイミング:</p>
                     <ul className="text-xs text-default-400 space-y-1 pl-4">
-                      <li>• あなたの投稿にいいねがついたとき</li>
-                      <li>• あなたの投稿にコメントがついたとき</li>
-                      <li>• お題の締め切り24時間前と当日</li>
+                      <li className="flex items-center gap-2"><Check size={12} /> あなたの投稿にいいねがついたとき</li>
+                      <li className="flex items-center gap-2"><Check size={12} /> あなたの投稿にコメントがついたとき</li>
+                      <li className="flex items-center gap-2"><Check size={12} /> お題の締め切り24時間前と当日</li>
                     </ul>
                   </div>
                 </>
@@ -637,7 +640,7 @@ export default function SettingsPage() {
                   <p className="font-bold">自分の投稿一覧</p>
                   <p className="text-xs text-default-500">削除・閲覧数の確認</p>
                 </div>
-                <span className="text-default-400">→</span>
+                <ChevronRight size={18} className="text-default-400" />
               </div>
             </CardBody>
           </Card>
