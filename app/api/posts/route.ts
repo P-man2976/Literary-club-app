@@ -60,8 +60,54 @@ export async function GET() {
       );
     }
 
-    const posts = result.results || [];
-    return NextResponse.json(posts);
+    const posts = (result.results || []) as any[];
+
+    if (posts.length === 0) {
+      return NextResponse.json([]);
+    }
+
+    const postIds = posts.map((p) => p.id);
+    const placeholders = postIds.map(() => "?").join(",");
+
+    const [commentsAgg, likesAgg] = await Promise.all([
+      db.execute<{ postId: string; count: number }>({
+        sql: `
+          SELECT postId, COUNT(*) as count
+          FROM comments
+          WHERE postId IN (${placeholders})
+          GROUP BY postId
+        `,
+        params: postIds,
+      }),
+      db.execute<{ postId: string; count: number }>({
+        sql: `
+          SELECT postId, COUNT(*) as count
+          FROM likes
+          WHERE postId IN (${placeholders})
+          GROUP BY postId
+        `,
+        params: postIds,
+      }),
+    ]);
+
+    const commentCountMap = new Map<string, number>();
+    const likesCountMap = new Map<string, number>();
+
+    (commentsAgg.results || []).forEach((row: any) => {
+      commentCountMap.set(row.postId, Number(row.count || 0));
+    });
+
+    (likesAgg.results || []).forEach((row: any) => {
+      likesCountMap.set(row.postId, Number(row.count || 0));
+    });
+
+    const enrichedPosts = posts.map((post) => ({
+      ...post,
+      commentCount: commentCountMap.get(post.id) || 0,
+      likes: likesCountMap.get(post.id) || 0,
+    }));
+
+    return NextResponse.json(enrichedPosts);
   } catch (error: any) {
     console.error("❌ D1 Fetch Error:", error.message);
     return NextResponse.json(

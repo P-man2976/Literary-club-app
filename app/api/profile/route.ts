@@ -55,9 +55,11 @@ export async function POST(request: Request) {
     }
 
     const { penName, userIcon } = await request.json();
+    const hasPenName = penName !== undefined && penName !== null;
+    const hasUserIcon = userIcon !== undefined;
     
     // バリデーション
-    if (penName !== undefined && penName !== null) {
+    if (hasPenName) {
       if (penName.trim().length === 0) {
         return NextResponse.json({ error: "ペンネームを入力してください" }, { status: 400 });
       }
@@ -66,21 +68,36 @@ export async function POST(request: Request) {
       }
     }
 
-    if (userIcon !== undefined && userIcon !== null) {
+    if (hasUserIcon && userIcon !== null) {
       if (userIcon.length > 1000000) {
         return NextResponse.json({ error: "アイコン画像は1MB以下にしてください" }, { status: 400 });
       }
     }
 
-    if (!penName && !userIcon) {
+    if (!hasPenName && !hasUserIcon) {
       return NextResponse.json({ error: "更新するデータがありません" }, { status: 400 });
     }
 
     const url = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/d1/database/${CLOUDFLARE_D1_DATABASE_ID}/query`;
-    
-    // 常に両方の値を指定する：アイコンのみの場合は penName を空文字列、ペンネームのみの場合は userIcon を NULL に
-    const finalPenName = penName !== undefined && penName !== null ? penName.trim() : "";
-    const finalUserIcon = userIcon || null;
+
+    // 現在値を取得して、未指定項目は既存値を維持する
+    const currentRes = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sql: "SELECT penName, userIcon FROM userProfiles WHERE email = ?",
+        params: [session.user.email],
+      }),
+    });
+
+    const currentData = currentRes.ok ? await currentRes.json() : null;
+    const currentProfile = currentData?.result?.[0]?.results?.[0] || null;
+
+    const finalPenName = hasPenName ? penName.trim() : (currentProfile?.penName || null);
+    const finalUserIcon = hasUserIcon ? (userIcon || null) : (currentProfile?.userIcon || null);
 
     const response = await fetch(url, {
       method: "POST",

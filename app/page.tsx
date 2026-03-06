@@ -46,6 +46,7 @@ type Post = {
   isTopicPost?: number;
   deadline?: number | null;
   comments?: Comment[];
+  commentCount?: number;
   likes?: number;
   children?: Post[]; // 返信投稿を格納
 };
@@ -54,6 +55,7 @@ export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { isOpen, onClose } = useDisclosure();
+  const [isTopicDecisionModalOpen, setIsTopicDecisionModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"proposal" | "topics">("topics");
   const [openPostId, setOpenPostId] = useState<string | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -77,23 +79,11 @@ export default function Home() {
     const allPostsData: Post[] = await res.json();
     
     if (Array.isArray(allPostsData)) {
-      const postsWithAll = await Promise.all(allPostsData.map(async (post) => {
-        const [cRes, lRes] = await Promise.all([
-          fetch(`/api/comments?postId=${post.id}`),
-          fetch(`/api/likes?postId=${post.id}`)
-        ]);
-        const comments = await cRes.json();
-        const likesData = await lRes.json();
-        
-        return { ...post, comments, likes: likesData.count };
-      }));
+      const postsWithAll = allPostsData;
 
       const allEmails = new Set<string>();
       postsWithAll.forEach(post => {
         if (post.authorEmail) allEmails.add(post.authorEmail);
-        post.comments?.forEach((comment: any) => {
-          if (comment.authorEmail) allEmails.add(comment.authorEmail);
-        });
       });
 
       if (allEmails.size > 0) {
@@ -130,10 +120,6 @@ export default function Home() {
       setPosts(regular);
     }
   };
-
-  useEffect(() => {
-    fetchPosts();
-  }, []);
 
   useEffect(() => {
     const savedLikes = localStorage.getItem("lit-club-liked-ids");
@@ -297,6 +283,7 @@ export default function Home() {
         alert("お題を追加しました！");
         setProposalDeadline(null);
         setSelectedProposalId(null);
+        setIsTopicDecisionModalOpen(false);
         await fetchPosts();
       } else {
         const error = await response.text();
@@ -511,10 +498,11 @@ export default function Home() {
         variant="underlined"
         color="primary"
         classNames={{
-          base: "sticky top-[73px] bg-background z-20",
-          tabList: "w-full",
-          cursor: "w-full",
-          tab: "h-12",
+          base: "sticky top-[73px] bg-background z-20 border-b border-divider px-2",
+          tabList: "w-full gap-2",
+          cursor: "w-full h-[3px]",
+          tab: "h-12 data-[selected=true]:font-black data-[selected=true]:text-primary",
+          tabContent: "group-data-[selected=true]:text-primary group-data-[selected=false]:text-default-500",
         }}
       >
         <Tab key="topics" title="📌 お題">
@@ -540,10 +528,10 @@ export default function Home() {
                           <img
                             src={getDisplayIcon(topic.authorEmail) || ""}
                             alt="投稿者アイコン"
-                            className="w-6 h-6 rounded-full object-cover border border-default-300"
+                            className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full object-cover border border-default-300"
                           />
                         ) : (
-                          <div className="w-6 h-6 rounded-full bg-default-200 border border-default-300" />
+                          <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-default-200 border border-default-300" />
                         )}
                         <span className="font-bold">{getDisplayName(topic.authorEmail, topic.author)}</span>
                         <Chip size="sm" color="secondary" variant="flat">お題</Chip>
@@ -579,20 +567,20 @@ export default function Home() {
                                       src={participant.icon}
                                       alt={participant.name}
                                       title={participant.name}
-                                      className="w-6 h-6 rounded-full object-cover border-2 border-background"
+                                      className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full object-cover border-2 border-background"
                                     />
                                   ) : (
                                     <div
                                       key={participant.key}
                                       title={participant.name}
-                                      className="w-6 h-6 rounded-full bg-default-300 text-[10px] font-bold text-default-700 border-2 border-background flex items-center justify-center"
+                                      className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-default-300 text-[10px] font-bold text-default-700 border-2 border-background flex items-center justify-center"
                                     >
                                       {participant.name.slice(0, 1)}
                                     </div>
                                   )
                                 ))}
                               {getTopicParticipants(topic).length > 6 && (
-                                <div className="w-6 h-6 rounded-full bg-default-200 text-[10px] font-bold text-default-600 border-2 border-background flex items-center justify-center">
+                                <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-default-200 text-[10px] font-bold text-default-600 border-2 border-background flex items-center justify-center">
                                   +{getTopicParticipants(topic).length - 6}
                                 </div>
                               )}
@@ -613,6 +601,17 @@ export default function Home() {
                 </Card>
               ))}
             </div>
+          )}
+
+          {session && (
+            <button
+              className="fixed right-6 bottom-24 z-40 w-14 h-14 rounded-full bg-primary text-white text-3xl leading-none font-light shadow-lg hover:scale-105 transition-transform"
+              onClick={() => setIsTopicDecisionModalOpen(true)}
+              aria-label="お題を決定"
+              title="お題を決定"
+            >
+              +
+            </button>
           )}
         </Tab>
 
@@ -652,6 +651,7 @@ export default function Home() {
                             alert("お題案を投稿しました！");
                             setNewPost({ title: "", body: "", tag: "お題案" });
                             await fetchPosts();
+                            router.refresh();
                           }
                         });
                       }}
@@ -671,86 +671,88 @@ export default function Home() {
 
             <Card shadow="sm" className="border border-default-200">
               <CardBody className="p-4 space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2">
-                  <select
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white"
-                    value={selectedProposalId || ""}
-                    onChange={(e) => {
-                      setSelectedProposalId(e.target.value || null);
-                      setProposalDeadline(null);
-                    }}
-                  >
-                    <option value="">お題案を選択</option>
-                    {topicProposals.map((proposal) => (
-                      <option key={proposal.id} value={proposal.id}>
-                        {proposal.title}
-                      </option>
-                    ))}
-                  </select>
-                  <Button
-                    color="warning"
-                    variant="flat"
-                    onPress={selectRandomProposal}
-                    isDisabled={topicProposals.length === 0}
-                  >
-                    ランダム
-                  </Button>
-                  <button
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50"
-                    disabled={!selectedProposalId || !proposalDeadline}
-                    onClick={() => {
-                      if (selectedProposalId && proposalDeadline) {
-                        convertProposalToTopic(selectedProposalId, proposalDeadline);
-                      }
-                    }}
-                  >
-                    お題化
-                  </button>
-                </div>
-
-                <input
-                  type="datetime-local"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      setProposalDeadline(new Date(e.target.value).getTime());
-                    } else {
-                      setProposalDeadline(null);
-                    }
-                  }}
-                />
-
-                {selectedProposal ? (
-                  <div className="rounded-lg border border-default-200 bg-default-50 p-3">
-                    <p className="text-sm font-semibold">{selectedProposal.title}</p>
-                    <p className="text-xs text-default-500 mt-1 line-clamp-3">{selectedProposal.body}</p>
-                  </div>
-                ) : (
-                  <p className="text-xs text-default-500">一覧から選択またはランダムで1件選べます。</p>
-                )}
+                <p className="text-sm text-default-500">お題の決定は「📌 お題」タブ右下の + ボタンから行えます。</p>
               </CardBody>
             </Card>
-
-            {topicProposals.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {topicProposals.slice(0, 8).map((proposal) => (
-                  <button
-                    key={proposal.id}
-                    className={`text-left rounded-lg border p-3 transition-colors ${selectedProposalId === proposal.id ? "border-success bg-success-50" : "border-default-200 hover:bg-default-50"}`}
-                    onClick={() => {
-                      setSelectedProposalId(proposal.id);
-                      setProposalDeadline(null);
-                    }}
-                  >
-                    <p className="text-sm font-semibold line-clamp-1">{proposal.title}</p>
-                    <p className="text-xs text-default-500">{new Date(proposal.createdAt).toLocaleDateString()}</p>
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         </Tab>
       </Tabs>
+
+      <Modal isOpen={isTopicDecisionModalOpen} onClose={() => setIsTopicDecisionModalOpen(false)} size="2xl">
+        <ModalContent>
+          {() => (
+            <>
+              <ModalHeader>📌 お題を決定</ModalHeader>
+              <ModalBody>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                    <select
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white"
+                      value={selectedProposalId || ""}
+                      onChange={(e) => {
+                        setSelectedProposalId(e.target.value || null);
+                        setProposalDeadline(null);
+                      }}
+                    >
+                      <option value="">お題案を選択</option>
+                      {topicProposals.map((proposal) => (
+                        <option key={proposal.id} value={proposal.id}>
+                          {proposal.title}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      color="warning"
+                      variant="flat"
+                      onPress={selectRandomProposal}
+                      isDisabled={topicProposals.length === 0}
+                    >
+                      ランダム
+                    </Button>
+                  </div>
+
+                  <input
+                    type="datetime-local"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setProposalDeadline(new Date(e.target.value).getTime());
+                      } else {
+                        setProposalDeadline(null);
+                      }
+                    }}
+                  />
+
+                  {selectedProposal ? (
+                    <div className="rounded-lg border border-default-200 bg-default-50 p-3">
+                      <p className="text-sm font-semibold">{selectedProposal.title}</p>
+                      <p className="text-xs text-default-500 mt-1 line-clamp-4">{selectedProposal.body}</p>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-default-500">お題案を選択してください。</p>
+                  )}
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={() => setIsTopicDecisionModalOpen(false)}>
+                  キャンセル
+                </Button>
+                <Button
+                  color="primary"
+                  isDisabled={!selectedProposalId || !proposalDeadline}
+                  onPress={() => {
+                    if (selectedProposalId && proposalDeadline) {
+                      convertProposalToTopic(selectedProposalId, proposalDeadline);
+                    }
+                  }}
+                >
+                  この内容でお題化
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
 
       {/* 投稿モーダル */}
       <Modal isOpen={isOpen} onClose={onClose} size="2xl">

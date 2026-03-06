@@ -99,37 +99,42 @@ export default function SettingsPage() {
       return;
     }
 
-    if (file.size > 500000) {
-      alert("画像は500KB以下にしてください");
+    if (file.size > 1000000) {
+      alert("画像は1MB以下にしてください");
       return;
     }
 
     try {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const base64Data = event.target?.result as string;
-        
-        setUploadingIcon(true);
-        const res = await fetch("/api/profile", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            userIcon: base64Data,
-            penName: penName // 既存のペンネームも一緒に保存
-          }),
-        });
+      setUploadingIcon(true);
 
-        if (res.ok) {
-          const data = await res.json();
-          setUserIcon(data.userIcon);
-          setIsEditingIcon(false);
-          alert("アイコンを保存しました！");
-        } else {
-          const error = await res.json();
-          alert(error.error || "保存に失敗しました");
-        }
-      };
-      reader.readAsDataURL(file);
+      const uploadForm = new FormData();
+      uploadForm.append("file", file);
+
+      const uploadRes = await fetch("/api/images/upload", {
+        method: "POST",
+        body: uploadForm,
+      });
+
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok) {
+        alert(uploadData.error || "画像アップロードに失敗しました");
+        return;
+      }
+
+      const res = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userIcon: uploadData.imageUrl }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setUserIcon(data.userIcon);
+        setIsEditingIcon(false);
+        alert("アイコンを保存しました！");
+      } else {
+        alert(data.error || "保存に失敗しました");
+      }
     } catch (error) {
       console.error("アイコン保存エラー:", error);
       alert("保存に失敗しました");

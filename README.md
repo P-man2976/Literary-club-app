@@ -63,6 +63,19 @@ HUGGINGFACE_MODEL=mistralai/Mistral-7B-Instruct-v0.2
 HUGGINGFACE_BASE_URL=https://api-inference.huggingface.co/models
 ```
 
+### アイコン画像アップロード（Cloudflare Images）
+
+base64保存ではなく画像URL保存にするため、Cloudflare Images を利用します。
+
+```bash
+# 既存のCloudflare APIトークンに Images 書き込み権限が必要
+CLOUDFLARE_ACCOUNT_ID=your_account_id
+CLOUDFLARE_API_TOKEN=your_api_token
+
+# 任意: variants が返らない環境向け
+CLOUDFLARE_IMAGES_DELIVERY_BASE=https://imagedelivery.net/<hash>
+```
+
 ### 本番へデプロイ
 
 📖 **詳細は [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) を参照**
