@@ -82,8 +82,45 @@ export async function POST(request: Request) {
       );
     }
 
+    const replyAuthorEmails = Array.from(
+      new Set(
+        replies
+          .map((reply) => String(reply.authorEmail || "").trim())
+          .filter((email) => email.length > 0)
+      )
+    );
+
+    const blockedAuthorEmails = new Set<string>();
+    if (replyAuthorEmails.length > 0) {
+      const placeholders = replyAuthorEmails.map(() => "?").join(",");
+      const profileResult = await db.execute<any>({
+        sql: `SELECT email, allowAiRead FROM userProfiles WHERE email IN (${placeholders})`,
+        params: replyAuthorEmails,
+      });
+
+      if (profileResult.success && Array.isArray(profileResult.results)) {
+        profileResult.results.forEach((row: any) => {
+          if (Number(row?.allowAiRead ?? 1) === 0 && row?.email) {
+            blockedAuthorEmails.add(String(row.email));
+          }
+        });
+      }
+    }
+
+    const filteredReplies = replies.filter((reply) => {
+      if (!reply.authorEmail) return true;
+      return !blockedAuthorEmails.has(String(reply.authorEmail));
+    });
+
+    if (filteredReplies.length === 0) {
+      return NextResponse.json(
+        { error: "AI利用許可のある投稿がないため分析できません" },
+        { status: 400 }
+      );
+    }
+
     const authorKeys = new Set<string>();
-    for (const reply of replies) {
+    for (const reply of filteredReplies) {
       const key = reply.authorEmail || `name:${reply.author}`;
       authorKeys.add(key);
     }
@@ -104,7 +141,7 @@ export async function POST(request: Request) {
           createdAt: p.createdAt,
         }));
 
-      const sample = replies.find((r) => (r.authorEmail || `name:${r.author}`) === key);
+      const sample = filteredReplies.find((r) => (r.authorEmail || `name:${r.author}`) === key);
       return {
         author: sample?.author || "匿名",
         authorEmail: sample?.authorEmail || null,
@@ -119,7 +156,7 @@ export async function POST(request: Request) {
         body: topic.body,
         deadline: topic.deadline || null,
       },
-      replies: replies.map((r) => ({
+      replies: filteredReplies.map((r) => ({
         id: r.id,
         title: r.title,
         body: String(r.body || "").slice(0, 1200),

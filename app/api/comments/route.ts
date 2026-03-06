@@ -165,3 +165,35 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+// コメント削除 (DELETE)
+export async function DELETE(request: Request) {
+  try {
+    const db = getD1Client();
+    const data = await request.json();
+    const { commentId, authorEmail } = data;
+
+    if (!commentId || !authorEmail) {
+      return NextResponse.json(
+        { error: "commentId and authorEmail are required" },
+        { status: 400 }
+      );
+    }
+
+    const result = await db.deleteComment({
+      commentId,
+      authorEmail,
+    });
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error || "Failed to delete comment" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ message: "Success" });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

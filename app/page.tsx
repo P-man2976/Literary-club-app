@@ -64,6 +64,7 @@ const fetcher = (url: string) => fetch(url).then((res) => {
 });
 
 export default function Home() {
+  const aiReadingSettingKey = "lit-club-ai-reading-enabled";
   const { data: session, status } = useSession();
   const router = useRouter();
   const [sessionLoadTimedOut, setSessionLoadTimedOut] = useState(false);
@@ -91,6 +92,7 @@ export default function Home() {
   const [editingProposalId, setEditingProposalId] = useState<string | null>(null);
   const [editingProposalTitle, setEditingProposalTitle] = useState("");
   const [editingProposalBody, setEditingProposalBody] = useState("");
+  const [aiReadingEnabled, setAiReadingEnabled] = useState(true);
 
   // SWRでデータ取得
   const { data: allPostsData, error: postsError, isLoading: postsLoading, mutate: mutatePosts } = useSWR<Post[]>('/api/posts', fetcher, {
@@ -163,6 +165,15 @@ export default function Home() {
 
     return () => window.clearTimeout(timeoutId);
   }, [status]);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(aiReadingSettingKey);
+      setAiReadingEnabled(saved !== "0");
+    } catch {
+      setAiReadingEnabled(true);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -602,6 +613,16 @@ export default function Home() {
   const selectedDecisionCandidate = selectedProposal || selectedPoolTopic;
   const hasDecisionCandidates = topicProposals.length > 0 || pastTopicPool.length > 0;
 
+  const formatDateTime = (timestamp: number) => {
+    return new Date(timestamp).toLocaleString("ja-JP", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   const selectRandomCandidate = () => {
     if (decisionCandidates.length === 0) {
       alert("候補がまだありません");
@@ -788,6 +809,11 @@ export default function Home() {
                       className="cursor-pointer"
                     >
                       <h2 className="text-lg font-bold">{topic.title}</h2>
+                      {topic.deadline && (
+                        <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-1">
+                          締切: {formatDateTime(topic.deadline)}
+                        </p>
+                      )}
                       <p className="text-sm text-gray-600 line-clamp-2">{topic.body}</p>
                       <p className="text-xs text-gray-400">クリックして詳細ページを表示...</p>
                     </div>
@@ -1014,12 +1040,14 @@ export default function Home() {
                         <p className="text-sm font-medium text-default-700">{member.selfIntro || "未設定"}</p>
                       </div>
 
-                      <div className="rounded-lg bg-primary-50/70 dark:bg-primary-900/30 p-3">
-                        <p className="text-xs text-default-500 dark:text-slate-300 mb-1">AI短文分析</p>
-                        <p className="text-sm text-default-700 dark:text-slate-100">
-                          {member.aiSummary || "過去投稿ベースのAI分析は準備中です。"}
-                        </p>
-                      </div>
+                      {(aiReadingEnabled || member.email !== session?.user?.email) && (
+                        <div className="rounded-lg bg-primary-50/70 dark:bg-primary-900/30 p-3">
+                          <p className="text-xs text-default-500 dark:text-slate-300 mb-1">AI短文分析</p>
+                          <p className="text-sm text-default-700 dark:text-slate-100">
+                            {member.aiSummary || "過去投稿ベースのAI分析は準備中です。"}
+                          </p>
+                        </div>
+                      )}
 
                       <div className="flex flex-wrap gap-2">
                         {displayTags.map((tag, index) => (

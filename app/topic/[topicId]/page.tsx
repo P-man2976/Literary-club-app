@@ -59,6 +59,7 @@ type TopicAnalysis = {
 };
 
 export default function TopicPage() {
+  const aiReadingSettingKey = "lit-club-ai-reading-enabled";
   const { data: session } = useSession();
   const params = useParams();
   const router = useRouter();
@@ -85,6 +86,7 @@ export default function TopicPage() {
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editingPostTitle, setEditingPostTitle] = useState("");
   const [editingPostBody, setEditingPostBody] = useState("");
+  const [aiReadingEnabled, setAiReadingEnabled] = useState(true);
 
   const handleBodyScroll = (postId: string) => {
     setScrollingPostId(postId);
@@ -214,6 +216,15 @@ export default function TopicPage() {
     }
   }, [topicId]);
 
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(aiReadingSettingKey);
+      setAiReadingEnabled(saved !== "0");
+    } catch {
+      setAiReadingEnabled(true);
+    }
+  }, []);
+
   // ペンネーム取得
   useEffect(() => {
     const fetchPenName = async () => {
@@ -267,6 +278,14 @@ export default function TopicPage() {
 
   const getDeadlineStatus = (deadline: number | null | undefined) => {
     if (!deadline) return null;
+
+    const deadlineText = new Date(deadline).toLocaleString("ja-JP", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
     
     const now = Date.now();
     const timeLeft = deadline - now;
@@ -274,13 +293,13 @@ export default function TopicPage() {
     const daysLeft = timeLeft / (1000 * 60 * 60 * 24);
 
     if (timeLeft < 0) {
-      return { status: "expired", label: "締切済", bgColor: "bg-gray-100", textColor: "text-gray-600" };
+      return { status: "expired", label: `締切済 (${deadlineText})`, bgColor: "bg-gray-100", textColor: "text-gray-600" };
     } else if (hoursLeft < 24) {
-      return { status: "urgent", label: "あと24時間", bgColor: "bg-red-100", textColor: "text-red-600" };
+      return { status: "urgent", label: `あと24時間 (締切: ${deadlineText})`, bgColor: "bg-red-100", textColor: "text-red-600" };
     } else if (daysLeft < 3) {
-      return { status: "soon", label: "まもなく締切", bgColor: "bg-orange-100", textColor: "text-orange-600" };
+      return { status: "soon", label: `まもなく締切 (締切: ${deadlineText})`, bgColor: "bg-orange-100", textColor: "text-orange-600" };
     } else {
-      return { status: "active", label: `締切: ${new Date(deadline).toLocaleDateString()}`, bgColor: "bg-blue-100", textColor: "text-blue-600" };
+      return { status: "active", label: `締切: ${deadlineText}`, bgColor: "bg-blue-100", textColor: "text-blue-600" };
     }
   };
 
@@ -430,8 +449,17 @@ export default function TopicPage() {
   const handleLike = async (postId: string) => {
     const isLiked = likedPosts.includes(postId);
     const userId = session?.user?.email || "guest";
+    const likeDelta = isLiked ? -1 : 1;
 
     const method = isLiked ? "DELETE" : "POST";
+
+    // 先にUIだけ反映して体感レスポンスを上げる
+    setReplies((prev) =>
+      prev.map((reply) => {
+        if (reply.id !== postId) return reply;
+        return { ...reply, likes: Math.max((reply.likes || 0) + likeDelta, 0) };
+      })
+    );
 
     try {
       const response = await fetch("/api/likes", {
@@ -450,10 +478,23 @@ export default function TopicPage() {
 
         setLikedPosts(newLikedPosts);
         localStorage.setItem("lit-club-liked-ids", JSON.stringify(newLikedPosts));
-        fetchTopicAndReplies();
+      } else {
+        // 失敗時はカウントを戻す
+        setReplies((prev) =>
+          prev.map((reply) => {
+            if (reply.id !== postId) return reply;
+            return { ...reply, likes: Math.max((reply.likes || 0) - likeDelta, 0) };
+          })
+        );
       }
     } catch (error) {
       console.error("いいね操作エラー:", error);
+      setReplies((prev) =>
+        prev.map((reply) => {
+          if (reply.id !== postId) return reply;
+          return { ...reply, likes: Math.max((reply.likes || 0) - likeDelta, 0) };
+        })
+      );
     }
   };
 
@@ -593,6 +634,32 @@ export default function TopicPage() {
     } catch (error) {
       console.error("コメント編集エラー:", error);
       alert("編集に失敗しました");
+    }
+  };
+
+  const deleteComment = async (commentId: string) => {
+    if (!confirm("このコメントを削除しますか？")) return;
+
+    try {
+      const response = await fetch("/api/comments", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          commentId,
+          authorEmail: session?.user?.email || null,
+        }),
+      });
+
+      if (response.ok) {
+        alert("コメントを削除しました");
+        fetchTopicAndReplies();
+      } else {
+        const error = await response.json();
+        alert(error.error || "削除に失敗しました");
+      }
+    } catch (error) {
+      console.error("コメント削除エラー:", error);
+      alert("削除に失敗しました");
     }
   };
 
@@ -762,6 +829,10 @@ export default function TopicPage() {
               {analysisLoading ? "生成中..." : "分析を生成"}
             </button>
           </div>
+
+          {!aiReadingEnabled && (
+            <p className="text-sm text-slate-500 dark:text-slate-200 mb-3">あなたの設定はOFFのため、あなたの投稿は講評対象から除外されます。</p>
+          )}
 
           {replies.length === 0 && (
             <p className="text-sm text-slate-500 dark:text-slate-200">投稿が集まると分析できます。</p>
@@ -1082,7 +1153,7 @@ export default function TopicPage() {
                               <textarea
                                 value={editingCommentText}
                                 onChange={(e) => setEditingCommentText(e.target.value)}
-                                className="w-full px-3 py-2 border border-default-300 dark:border-default-600 bg-default-50 dark:bg-default-800 text-default-900 dark:text-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 rows={3}
                               />
                               <div className="flex gap-2">
@@ -1102,7 +1173,7 @@ export default function TopicPage() {
                             </div>
                           ) : (
                             <>
-                              <p className="text-default-600 dark:text-slate-200 mb-2">{comment.text}</p>
+                              <p className="text-default-600 dark:text-slate-200 mb-2 whitespace-pre-wrap">{comment.text}</p>
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => toggleCommentLike(comment.commentId)}
@@ -1115,12 +1186,20 @@ export default function TopicPage() {
                                   <Heart size={12} className={commentLikes[comment.commentId] ? "" : "dark:fill-default-500 dark:stroke-default-500"} /> {commentLikes[comment.commentId] ? 1 : 0}
                                 </button>
                                 {session?.user?.email === comment.authorEmail && (
-                                  <button
-                                    onClick={() => startEditingComment(comment.commentId, comment.text)}
-                                    className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition"
-                                  >
-                                    編集
-                                  </button>
+                                  <>
+                                    <button
+                                      onClick={() => startEditingComment(comment.commentId, comment.text)}
+                                      className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition"
+                                    >
+                                      編集
+                                    </button>
+                                    <button
+                                      onClick={() => deleteComment(comment.commentId)}
+                                      className="text-xs px-2 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200 transition"
+                                    >
+                                      削除
+                                    </button>
+                                  </>
                                 )}
                               </div>
                             </>
@@ -1135,12 +1214,12 @@ export default function TopicPage() {
                 {session && (
                   <div className="pt-4 border-t border-default-200 dark:border-default-700">
                     <div className="flex gap-2">
-                      <input
-                        type="text"
+                      <textarea
                         placeholder="コメントを入力..."
                         value={commentTexts[reply.id] || ""}
                         onChange={(e) => setCommentTexts({ ...commentTexts, [reply.id]: e.target.value })}
-                        className="flex-1 px-3 py-2 border border-default-300 dark:border-default-600 bg-default-50 dark:bg-default-800 text-default-900 dark:text-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows={2}
                       />
                       <button
                         onClick={() => saveComment(reply.id)}

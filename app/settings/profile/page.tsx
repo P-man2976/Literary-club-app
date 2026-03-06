@@ -15,6 +15,9 @@ export default function ProfileSettingsPage() {
   const [pendingPenName, setPendingPenName] = useState("");
   const [isEditingPenName, setIsEditingPenName] = useState(false);
   const [loadingPenName, setLoadingPenName] = useState(true);
+  const [selfIntro, setSelfIntro] = useState("");
+  const [pendingSelfIntro, setPendingSelfIntro] = useState("");
+  const [isEditingSelfIntro, setIsEditingSelfIntro] = useState(false);
   const [userIcon, setUserIcon] = useState<string | null>(null);
   const [isEditingIcon, setIsEditingIcon] = useState(false);
   const [uploadingIcon, setUploadingIcon] = useState(false);
@@ -26,6 +29,7 @@ export default function ProfileSettingsPage() {
         if (!res.ok) return;
         const data = await res.json();
         setPenName(data.penName || "");
+        setSelfIntro(data.selfIntro || "");
         setUserIcon(data.userIcon || null);
       } catch (error) {
         console.error("プロフィール取得エラー:", error);
@@ -62,6 +66,35 @@ export default function ProfileSettingsPage() {
       alert("ペンネームを保存しました");
     } catch (error) {
       console.error("ペンネーム保存エラー:", error);
+      alert("保存に失敗しました");
+    }
+  };
+
+  const saveSelfIntro = async () => {
+    if (pendingSelfIntro.trim().length > 20) {
+      alert("一言は20文字以内にしてください");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selfIntro: pendingSelfIntro.trim() }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        alert(error.error || "保存に失敗しました");
+        return;
+      }
+
+      const data = await res.json();
+      setSelfIntro(data.selfIntro || "");
+      setIsEditingSelfIntro(false);
+      alert("一言を保存しました");
+    } catch (error) {
+      console.error("一言保存エラー:", error);
       alert("保存に失敗しました");
     }
   };
@@ -215,6 +248,37 @@ export default function ProfileSettingsPage() {
                   </div>
                 ) : (
                   <p className="font-medium">{loadingPenName ? "読み込み中..." : (penName || "未設定")}</p>
+                )}
+              </div>
+
+              <div className="border-t border-divider pt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-default-500 font-bold">部員紹介用の一言</p>
+                  {!isEditingSelfIntro && (
+                    <Button
+                      size="sm"
+                      color="primary"
+                      variant="light"
+                      onPress={() => {
+                        setPendingSelfIntro(selfIntro);
+                        setIsEditingSelfIntro(true);
+                      }}
+                    >
+                      {selfIntro ? "変更" : "設定"}
+                    </Button>
+                  )}
+                </div>
+                {isEditingSelfIntro ? (
+                  <div className="space-y-3">
+                    <Input value={pendingSelfIntro} onValueChange={setPendingSelfIntro} placeholder="一言を入力..." maxLength={20} size="sm" />
+                    <p className="text-xs text-default-400 text-right">{pendingSelfIntro.length}/20</p>
+                    <div className="flex gap-2">
+                      <Button color="primary" onPress={saveSelfIntro} className="flex-1">保存</Button>
+                      <Button variant="flat" onPress={() => setIsEditingSelfIntro(false)} className="flex-1">キャンセル</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="font-medium">{loadingPenName ? "読み込み中..." : (selfIntro || "未設定")}</p>
                 )}
               </div>
             </CardBody>

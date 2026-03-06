@@ -104,29 +104,54 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const db = getD1Client();
-    const now = Date.now();
-    const oneDayLater = now + 24 * 60 * 60 * 1000;
+    const jstOffsetMs = 9 * 60 * 60 * 1000;
+    const nowUtcMs = Date.now();
+    const nowJst = new Date(nowUtcMs + jstOffsetMs);
+    const nowJstHour = nowJst.getUTCHours();
+    const nowJstMinute = nowJst.getUTCMinutes();
 
-    // 24時間以内に締め切りが来るお題を取得
-    const upcomingResult = await db.execute({
-      sql: `SELECT id, title, author, authorEmail, deadline FROM posts 
-            WHERE isTopicPost = 1 AND deadline IS NOT NULL 
-            AND deadline > ? AND deadline <= ?`,
-      params: [now, oneDayLater],
-    });
+    // JST正午にのみ送信（Cronが毎時実行でも誤送信しないようにする）
+    if (nowJstHour !== 12 || nowJstMinute > 10) {
+      return NextResponse.json({
+        message: "Skipped: not JST noon window",
+        jstHour: nowJstHour,
+        jstMinute: nowJstMinute,
+      });
+    }
 
-    // 締め切り当日のお題を取得（同日0時～23時59分59秒）
-    const todayStart = new Date().setHours(0, 0, 0, 0);
-    const todayEnd = new Date().setHours(23, 59, 59, 999);
+    const getJstDayRange = (offsetDays: number) => {
+      const targetJst = new Date(nowJst);
+      targetJst.setUTCDate(targetJst.getUTCDate() + offsetDays);
 
-    const todayResult = await db.execute({
-      sql: `SELECT id, title, author, authorEmail, deadline FROM posts 
-            WHERE isTopicPost = 1 AND deadline IS NOT NULL 
+      const year = targetJst.getUTCFullYear();
+      const month = targetJst.getUTCMonth();
+      const day = targetJst.getUTCDate();
+
+      const startUtcMs = Date.UTC(year, month, day, 0, 0, 0, 0) - jstOffsetMs;
+      const endUtcMs = Date.UTC(year, month, day, 23, 59, 59, 999) - jstOffsetMs;
+      return { startUtcMs, endUtcMs };
+    };
+
+    const threeDaysRange = getJstDayRange(3);
+    const todayRange = getJstDayRange(0);
+
+    // 締切3日前のお題を取得（JST日付基準）
+    const threeDaysBeforeResult = await db.execute({
+      sql: `SELECT id, title, author, authorEmail, deadline FROM posts
+            WHERE isTopicPost = 1 AND deadline IS NOT NULL
             AND deadline >= ? AND deadline <= ?`,
-      params: [todayStart, todayEnd],
+      params: [threeDaysRange.startUtcMs, threeDaysRange.endUtcMs],
     });
 
-    const upcomingTopics = (upcomingResult.results || []) as Array<{
+    // 締切当日のお題を取得（JST日付基準）
+    const todayResult = await db.execute({
+      sql: `SELECT id, title, author, authorEmail, deadline FROM posts
+            WHERE isTopicPost = 1 AND deadline IS NOT NULL
+            AND deadline >= ? AND deadline <= ?`,
+      params: [todayRange.startUtcMs, todayRange.endUtcMs],
+    });
+
+    const threeDaysBeforeTopics = (threeDaysBeforeResult.results || []) as Array<{
       id: string;
       title: string;
       authorEmail: string;
@@ -143,12 +168,21 @@ export async function GET() {
     // 通知を送信する処理
     const notifications: Array<{ userEmail: string; title: string; body: string; url: string }> = [];
 
-    // 24時間前の通知
-    for (const topic of upcomingTopics) {
+    const formatDateTime = (timestamp: number) =>
+      new Date(timestamp).toLocaleString("ja-JP", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+    // 3日前の通知
+    for (const topic of threeDaysBeforeTopics) {
       notifications.push({
         userEmail: topic.authorEmail,
-        title: "締め切りリマインダー",
-        body: `「${topic.title}」の締め切りまであと24時間です`,
+        title: "締め切り3日前",
+        body: `「${topic.title}」の締め切りは ${formatDateTime(topic.deadline)} です`,
         url: `/topic/${topic.id}`,
       });
     }
@@ -158,7 +192,7 @@ export async function GET() {
       notifications.push({
         userEmail: topic.authorEmail,
         title: "締め切り当日",
-        body: `「${topic.title}」の締め切りは今日です！`,
+        body: `「${topic.title}」の締め切りは本日 ${formatDateTime(topic.deadline)} です`,
         url: `/topic/${topic.id}`,
       });
     }
@@ -175,7 +209,7 @@ export async function GET() {
     return NextResponse.json({
       message: "Deadline notifications processed",
       sentCount: notifications.length,
-      upcoming: upcomingTopics.length,
+      threeDaysBefore: threeDaysBeforeTopics.length,
       today: todayTopics.length,
     });
   } catch (error: any) {

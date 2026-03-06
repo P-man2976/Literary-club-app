@@ -298,6 +298,36 @@ export class D1Client {
     });
   }
 
+  async deleteComment(comment: {
+    commentId: string;
+    authorEmail: string;
+  }) {
+    const checkResult = await this.execute({
+      sql: `SELECT authorEmail FROM comments WHERE commentId = ?`,
+      params: [comment.commentId],
+    });
+
+    if (!checkResult.success || !checkResult.results || checkResult.results.length === 0) {
+      return {
+        success: false,
+        error: "Comment not found",
+      };
+    }
+
+    const existingComment = checkResult.results[0] as any;
+    if (existingComment.authorEmail !== comment.authorEmail) {
+      return {
+        success: false,
+        error: "Unauthorized to delete this comment",
+      };
+    }
+
+    return this.execute({
+      sql: `DELETE FROM comments WHERE commentId = ?`,
+      params: [comment.commentId],
+    });
+  }
+
   async updatePost(post: {
     postId: string;
     title: string;

@@ -118,17 +118,26 @@ export async function GET() {
     }
 
     const url = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/d1/database/${CLOUDFLARE_D1_DATABASE_ID}/query`;
-    const result = await d1Query(
+    let result = await d1Query(
       url,
-      "SELECT penName, userIcon, selfIntro, aiSummary, aiTagsJson, aiUpdatedAt FROM userProfiles WHERE email = ?",
+      "SELECT penName, userIcon, selfIntro, aiSummary, aiTagsJson, aiUpdatedAt, allowAiRead FROM userProfiles WHERE email = ?",
       [session.user.email]
     );
 
     if (!result.ok) {
-      return NextResponse.json(
-        { error: "userProfiles schema is not migrated. Run latest migrations first." },
-        { status: 500 }
+      // Backward compatibility for schema before allowAiRead column
+      result = await d1Query(
+        url,
+        "SELECT penName, userIcon, selfIntro, aiSummary, aiTagsJson, aiUpdatedAt FROM userProfiles WHERE email = ?",
+        [session.user.email]
       );
+
+      if (!result.ok) {
+        return NextResponse.json(
+          { error: "userProfiles schema is not migrated. Run latest migrations first." },
+          { status: 500 }
+        );
+      }
     }
 
     const profile = result.results[0] || null;
@@ -141,6 +150,7 @@ export async function GET() {
       aiSummary: profile?.aiSummary || "",
       aiTags: Array.isArray(aiTags) ? aiTags : [],
       aiUpdatedAt: profile?.aiUpdatedAt || null,
+      allowAiRead: profile?.allowAiRead === 0 ? false : true,
       email: session.user.email,
     });
   } catch (error) {
@@ -156,13 +166,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { penName, userIcon, selfIntro, refreshAi } = await request.json();
+    const { penName, userIcon, selfIntro, refreshAi, allowAiRead } = await request.json();
     const hasPenName = penName !== undefined && penName !== null;
     const hasUserIcon = userIcon !== undefined;
     const hasSelfIntro = selfIntro !== undefined;
+    const hasAllowAiRead = allowAiRead !== undefined;
 
-    if (!hasPenName && !hasUserIcon && !hasSelfIntro) {
+    if (!hasPenName && !hasUserIcon && !hasSelfIntro && !hasAllowAiRead) {
       return NextResponse.json({ error: "更新するデータがありません" }, { status: 400 });
+    }
+
+    if (hasAllowAiRead && typeof allowAiRead !== "boolean") {
+      return NextResponse.json({ error: "allowAiRead は boolean で指定してください" }, { status: 400 });
     }
 
     if (hasPenName) {
@@ -193,17 +208,26 @@ export async function POST(request: Request) {
     }
 
     const url = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/d1/database/${CLOUDFLARE_D1_DATABASE_ID}/query`;
-    const currentRes = await d1Query(
+    let currentRes = await d1Query(
       url,
-      "SELECT penName, userIcon, selfIntro, aiSummary, aiTagsJson, aiUpdatedAt FROM userProfiles WHERE email = ?",
+      "SELECT penName, userIcon, selfIntro, aiSummary, aiTagsJson, aiUpdatedAt, allowAiRead FROM userProfiles WHERE email = ?",
       [session.user.email]
     );
 
     if (!currentRes.ok) {
-      return NextResponse.json(
-        { error: "userProfiles schema is not migrated. Run latest migrations first." },
-        { status: 500 }
+      // Backward compatibility for schema before allowAiRead column
+      currentRes = await d1Query(
+        url,
+        "SELECT penName, userIcon, selfIntro, aiSummary, aiTagsJson, aiUpdatedAt FROM userProfiles WHERE email = ?",
+        [session.user.email]
       );
+
+      if (!currentRes.ok) {
+        return NextResponse.json(
+          { error: "userProfiles schema is not migrated. Run latest migrations first." },
+          { status: 500 }
+        );
+      }
     }
 
     const current = currentRes.results[0] || null;
@@ -212,6 +236,9 @@ export async function POST(request: Request) {
       : (current?.penName || session.user.name || "匿名部員");
     const finalUserIcon = hasUserIcon ? (userIcon || null) : (current?.userIcon || null);
     const finalSelfIntro = hasSelfIntro ? String(selfIntro || "").trim() : (current?.selfIntro || "");
+    const finalAllowAiRead = hasAllowAiRead
+      ? (allowAiRead ? 1 : 0)
+      : (current?.allowAiRead === 0 ? 0 : 1);
 
     const nowSec = Math.floor(Date.now() / 1000);
     const currentAiUpdatedAt = Number(current?.aiUpdatedAt || 0);
@@ -222,7 +249,7 @@ export async function POST(request: Request) {
       !currentAiUpdatedAt ||
       nowSec - currentAiUpdatedAt > refreshIntervalSec;
 
-    const aiGenerated = shouldRefreshAi
+    const aiGenerated = shouldRefreshAi && finalAllowAiRead === 1
       ? await buildPostsBasedAnalysisSkeleton(session.user.email, url)
       : null;
 
@@ -238,10 +265,10 @@ export async function POST(request: Request) {
 
     const finalAiUpdatedAt = shouldRefreshAi ? nowSec : (currentAiUpdatedAt || nowSec);
 
-    const saveRes = await d1Query(
+    let saveRes = await d1Query(
       url,
-      `INSERT INTO userProfiles (email, penName, userIcon, selfIntro, aiSummary, aiTagsJson, aiUpdatedAt, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%s', 'now'), strftime('%s', 'now'))
+      `INSERT INTO userProfiles (email, penName, userIcon, selfIntro, aiSummary, aiTagsJson, aiUpdatedAt, allowAiRead, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%s', 'now'), strftime('%s', 'now'))
        ON CONFLICT(email) DO UPDATE SET
          penName = ?,
          userIcon = ?,
@@ -249,6 +276,7 @@ export async function POST(request: Request) {
          aiSummary = ?,
          aiTagsJson = ?,
          aiUpdatedAt = ?,
+         allowAiRead = ?,
          updatedAt = strftime('%s', 'now')`,
       [
         session.user.email,
@@ -258,14 +286,48 @@ export async function POST(request: Request) {
         finalAiSummary,
         JSON.stringify(finalAiTags),
         finalAiUpdatedAt,
+        finalAllowAiRead,
         finalPenName,
         finalUserIcon,
         finalSelfIntro,
         finalAiSummary,
         JSON.stringify(finalAiTags),
         finalAiUpdatedAt,
+        finalAllowAiRead,
       ]
     );
+
+    if (!saveRes.ok && String(saveRes.error || "").toLowerCase().includes("allowairead")) {
+      // Backward compatibility for schema before allowAiRead column
+      saveRes = await d1Query(
+        url,
+        `INSERT INTO userProfiles (email, penName, userIcon, selfIntro, aiSummary, aiTagsJson, aiUpdatedAt, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%s', 'now'), strftime('%s', 'now'))
+         ON CONFLICT(email) DO UPDATE SET
+           penName = ?,
+           userIcon = ?,
+           selfIntro = ?,
+           aiSummary = ?,
+           aiTagsJson = ?,
+           aiUpdatedAt = ?,
+           updatedAt = strftime('%s', 'now')`,
+        [
+          session.user.email,
+          finalPenName,
+          finalUserIcon,
+          finalSelfIntro,
+          finalAiSummary,
+          JSON.stringify(finalAiTags),
+          finalAiUpdatedAt,
+          finalPenName,
+          finalUserIcon,
+          finalSelfIntro,
+          finalAiSummary,
+          JSON.stringify(finalAiTags),
+          finalAiUpdatedAt,
+        ]
+      );
+    }
 
     if (!saveRes.ok) {
       return NextResponse.json({ error: saveRes.error || "Failed to save profile" }, { status: 500 });
@@ -279,6 +341,7 @@ export async function POST(request: Request) {
       aiSummary: finalAiSummary,
       aiTags: finalAiTags,
       aiUpdatedAt: finalAiUpdatedAt,
+      allowAiRead: finalAllowAiRead === 1,
     });
   } catch (error) {
     console.error("Profile POST error:", error);

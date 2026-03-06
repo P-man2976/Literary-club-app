@@ -9,6 +9,7 @@ import { Button, Card, CardBody } from "@heroui/react";
 import { AlertTriangle, Check, ChevronRight } from "lucide-react";
 
 export default function SettingsPage() {
+  const aiReadingSettingKey = "lit-club-ai-reading-enabled";
   const { data: session } = useSession();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
@@ -16,6 +17,7 @@ export default function SettingsPage() {
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
   const [notificationSupported, setNotificationSupported] = useState(false);
   const [notificationEnabled, setNotificationEnabled] = useState(false);
+  const [aiReadingEnabled, setAiReadingEnabled] = useState(true);
 
   useEffect(() => {
     setMounted(true);
@@ -25,7 +27,62 @@ export default function SettingsPage() {
       setNotificationPermission(Notification.permission);
       setNotificationEnabled(Notification.permission === "granted");
     }
+
+    try {
+      const saved = localStorage.getItem(aiReadingSettingKey);
+      setAiReadingEnabled(saved !== "0");
+    } catch {
+      setAiReadingEnabled(true);
+    }
+
+    const fetchAiSetting = async () => {
+      try {
+        const response = await fetch("/api/profile");
+        if (!response.ok) return;
+
+        const profile = await response.json();
+        const enabled = profile?.allowAiRead !== false;
+        setAiReadingEnabled(enabled);
+        localStorage.setItem(aiReadingSettingKey, enabled ? "1" : "0");
+      } catch {
+        // Keep local fallback if profile API fails.
+      }
+    };
+
+    fetchAiSetting();
   }, []);
+
+  const toggleAiReading = async () => {
+    const next = !aiReadingEnabled;
+    setAiReadingEnabled(next);
+
+    try {
+      localStorage.setItem(aiReadingSettingKey, next ? "1" : "0");
+    } catch {
+      // Ignore storage errors on restricted browsers.
+    }
+
+    try {
+      const response = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ allowAiRead: next }),
+      });
+
+      if (!response.ok) {
+        throw new Error("failed to save");
+      }
+    } catch {
+      // Save failed: rollback UI and local cache.
+      setAiReadingEnabled(!next);
+      try {
+        localStorage.setItem(aiReadingSettingKey, !next ? "1" : "0");
+      } catch {
+        // Ignore storage errors.
+      }
+      alert("AI講評設定の保存に失敗しました");
+    }
+  };
 
   const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -231,6 +288,38 @@ export default function SettingsPage() {
                   <p className="text-xs text-warning-700">お使いのブラウザまたはデバイスは通知に対応していません。</p>
                 </div>
               )}
+            </CardBody>
+          </Card>
+        </section>
+
+        <section>
+          <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-3">AI講評</h2>
+          <Card className="rounded-2xl">
+            <CardBody className="gap-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="font-bold">自分の作品をAI講評に使う</p>
+                  <p className="text-xs text-default-500">OFFにすると、あなたの投稿は他人のAI講評にも含まれません</p>
+                </div>
+                <button
+                  onClick={toggleAiReading}
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                    aiReadingEnabled ? "bg-primary" : "bg-gray-300"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                      aiReadingEnabled ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
+                <p className="text-xs text-slate-600 dark:text-slate-200">
+                  注意: AI講評をONにした場合、講評生成のために入力内容が外部AI APIへ送信されます。通常は学習用途で再利用されない前提ですが、最終的には利用中のAI提供元のポリシーに従います。
+                </p>
+              </div>
             </CardBody>
           </Card>
         </section>

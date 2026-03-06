@@ -94,7 +94,7 @@ export async function DELETE(request: Request) {
     const db = getD1Client();
     const { postId, userId } = await request.json();
 
-    const result = await db.removeLike(postId, userId || "guest");
+    const result = await db.removeLike(postId, userId || "anonymous");
 
     if (!result.success) {
       return NextResponse.json(
