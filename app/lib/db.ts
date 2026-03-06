@@ -77,11 +77,13 @@ export class D1Client {
     author: string;
     tag: string;
     createdAt: number;
+    parentPostId?: string | null;
+    isTopicPost?: number;
   }) {
     return this.execute({
       sql: `
-        INSERT INTO posts (id, title, body, author, tag, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO posts (id, title, body, author, tag, createdAt, updatedAt, parentPostId, isTopicPost)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       params: [
         post.id,
@@ -91,6 +93,8 @@ export class D1Client {
         post.tag,
         post.createdAt,
         Date.now(),
+        post.parentPostId || null,
+        post.isTopicPost || 0,
       ],
     });
   }
@@ -98,6 +102,19 @@ export class D1Client {
   async getPosts() {
     return this.execute({
       sql: `SELECT * FROM posts ORDER BY createdAt DESC`,
+    });
+  }
+
+  async getTopicPosts() {
+    return this.execute({
+      sql: `SELECT * FROM posts WHERE isTopicPost = 1 ORDER BY createdAt DESC`,
+    });
+  }
+
+  async getPostsByParentId(parentPostId: string) {
+    return this.execute({
+      sql: `SELECT * FROM posts WHERE parentPostId = ? ORDER BY createdAt ASC`,
+      params: [parentPostId],
     });
   }
 
@@ -166,6 +183,13 @@ export class D1Client {
     return this.execute({
       sql: `SELECT 1 FROM likes WHERE postId = ? AND userId = ? LIMIT 1`,
       params: [postId, userId],
+    });
+  }
+
+  async deletePost(postId: string) {
+    return this.execute({
+      sql: `DELETE FROM posts WHERE id = ?`,
+      params: [postId],
     });
   }
 }

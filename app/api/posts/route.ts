@@ -7,6 +7,8 @@ export async function POST(request: Request) {
     const db = getD1Client();
     const data = await request.json();
 
+    console.log("📝 受信したデータ:", data);
+
     const postId = uuidv4();
     const result = await db.insertPost({
       id: postId,
@@ -15,9 +17,14 @@ export async function POST(request: Request) {
       author: data.author,
       tag: data.tag || "創作",
       createdAt: Date.now(),
+      parentPostId: data.parentPostId || null,
+      isTopicPost: data.isTopicPost || 0,
     });
 
+    console.log("📊 DB実行結果:", result);
+
     if (!result.success) {
+      console.error("❌ DB保存失敗:", result.error);
       return NextResponse.json(
         { error: result.error || "Failed to save post" },
         { status: 500 }
@@ -27,9 +34,9 @@ export async function POST(request: Request) {
     console.log("✅ D1 Save Success!");
     return NextResponse.json({ message: "Success", id: postId });
   } catch (error: any) {
-    console.error("❌ D1 Save Error:", error.message);
+    console.error("❌ D1 Save Error:", error);
     return NextResponse.json(
-      { error: error.message },
+      { error: error.message || String(error) },
       { status: 500 }
     );
   }
@@ -51,6 +58,39 @@ export async function GET() {
     return NextResponse.json(posts);
   } catch (error: any) {
     console.error("❌ D1 Fetch Error:", error.message);
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const db = getD1Client();
+    const { searchParams } = new URL(request.url);
+    const postId = searchParams.get("postId");
+
+    if (!postId) {
+      return NextResponse.json(
+        { error: "postId is required" },
+        { status: 400 }
+      );
+    }
+
+    const result = await db.deletePost(postId);
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error || "Failed to delete post" },
+        { status: 500 }
+      );
+    }
+
+    console.log("✅ D1 Delete Success!");
+    return NextResponse.json({ message: "Success" });
+  } catch (error: any) {
+    console.error("❌ D1 Delete Error:", error.message);
     return NextResponse.json(
       { error: error.message },
       { status: 500 }

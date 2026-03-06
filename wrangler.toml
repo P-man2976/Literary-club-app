@@ -1,0 +1,9 @@
+name = "my-lit-club-app"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# D1 Database Binding
+[[d1_databases]]
+binding = "DB"
+database_name = "my-lit-club-app"
+database_id = "bb6d05ac-ed80-4bdc-bb90-fb530c65b483"
