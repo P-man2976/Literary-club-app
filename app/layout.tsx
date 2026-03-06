@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NextAuthProvider } from "./components/NextAuthProvider";
+import { PullToRefresh } from "./components/PullToRefresh";
 import { Providers } from "@/app/providers"; 
 
 const geistSans = Geist({
@@ -39,6 +40,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <PullToRefresh />
         <Providers>
           <NextAuthProvider>
             {children}

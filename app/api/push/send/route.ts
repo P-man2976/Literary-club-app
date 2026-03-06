@@ -1,9 +1,23 @@
 import { NextResponse } from "next/server";
 import { getD1Client } from "@/app/lib/db";
+import webpush from "web-push";
+
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || "mailto:admin@example.com";
 
 // プッシュ通知を送信（Cloudflare Workers Cronから呼ばれる想定）
 export async function POST(request: Request) {
   try {
+    if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+      return NextResponse.json(
+        { error: "VAPID keys are not configured" },
+        { status: 503 }
+      );
+    }
+
+    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+
     const db = getD1Client();
     const data = await request.json();
     const { userEmail, title, body, url, tag } = data;
@@ -34,10 +48,6 @@ export async function POST(request: Request) {
     const sendPromises = subscriptions.map(async (sub) => {
       try {
         const keys = JSON.parse(sub.keys);
-
-        // Web Push APIを使って通知を送信
-        // 注: 実際の実装では web-push ライブラリを使用する必要があります
-        // ここでは簡易的なフレームワークのみ示します
         const payload = JSON.stringify({
           title,
           body: body || "",
@@ -45,18 +55,36 @@ export async function POST(request: Request) {
           tag: tag || "default",
         });
 
-        // TODO: web-push ライブラリを使った実装
-        // const webpush = require('web-push');
-        // await webpush.sendNotification(
-        //   { endpoint: sub.endpoint, keys },
-        //   payload
-        // );
+        await webpush.sendNotification(
+          {
+            endpoint: sub.endpoint,
+            keys: {
+              p256dh: keys.p256dh,
+              auth: keys.auth,
+            },
+          },
+          payload
+        );
 
-        console.log("Notification sent to:", sub.endpoint);
         return { success: true, endpoint: sub.endpoint };
-      } catch (error) {
-        console.error("Failed to send notification:", error);
-        return { success: false, endpoint: sub.endpoint, error };
+      } catch (error: any) {
+        const statusCode = error?.statusCode;
+
+        // 期限切れサブスクリプションはDBから削除
+        if (statusCode === 404 || statusCode === 410) {
+          await db.execute({
+            sql: `DELETE FROM pushSubscriptions WHERE endpoint = ?`,
+            params: [sub.endpoint],
+          });
+        }
+
+        console.error("Failed to send notification:", statusCode, error?.message || error);
+        return {
+          success: false,
+          endpoint: sub.endpoint,
+          statusCode: statusCode || 500,
+          error: error?.message || "Unknown error",
+        };
       }
     });
 

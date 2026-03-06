@@ -6,6 +6,7 @@ export async function POST(request: Request) {
   try {
     const db = getD1Client();
     const { postId, userId } = await request.json();
+    const requestUrl = new URL(request.url);
 
     const result = await db.insertLike(
       postId,
@@ -17,6 +18,38 @@ export async function POST(request: Request) {
         { error: result.error || "Failed to like post" },
         { status: 500 }
       );
+    }
+
+    // 自分以外の投稿にいいねした場合、投稿者へ通知
+    try {
+      const postResult = await db.execute<any>({
+        sql: `SELECT id, title, authorEmail, parentPostId FROM posts WHERE id = ? LIMIT 1`,
+        params: [postId],
+      });
+
+      const targetPost = postResult.results?.[0] as any;
+      const targetAuthorEmail = targetPost?.authorEmail || null;
+      const likerId = userId || "anonymous";
+
+      if (targetAuthorEmail && targetAuthorEmail !== likerId) {
+        const topicId = targetPost?.parentPostId || targetPost?.id;
+        const postTitle = targetPost?.title || "投稿";
+
+        await fetch(`${requestUrl.origin}/api/push/send`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userEmail: targetAuthorEmail,
+            title: "新しいいいね",
+            body: `あなたの「${postTitle}」にいいねが付きました`,
+            url: `/topic/${topicId}`,
+            tag: "like-notification",
+          }),
+        });
+      }
+    } catch (notifyError) {
+      // 通知失敗でいいね処理を失敗させない
+      console.error("Like notification error:", notifyError);
     }
 
     return NextResponse.json({ message: "Liked" });

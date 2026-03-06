@@ -195,10 +195,19 @@ export default function SettingsPage() {
       // Service Worker登録を確認
       const registration = await navigator.serviceWorker.ready;
 
+      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!vapidPublicKey) {
+        alert("通知設定エラー: VAPID公開鍵が未設定です");
+        return;
+      }
+
       // プッシュ通知のサブスクリプションを作成
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
       });
+
+      const subscriptionJson = subscription.toJSON();
 
       // サブスクリプションをサーバーに保存
       const response = await fetch("/api/push/subscribe", {
@@ -207,10 +216,7 @@ export default function SettingsPage() {
         body: JSON.stringify({
           userEmail: session?.user?.email,
           endpoint: subscription.endpoint,
-          keys: {
-            p256dh: arrayBufferToBase64(subscription.getKey("p256dh")),
-            auth: arrayBufferToBase64(subscription.getKey("auth")),
-          },
+          keys: subscriptionJson.keys,
         }),
       });
 
@@ -225,15 +231,17 @@ export default function SettingsPage() {
     }
   };
 
-  // ArrayBufferをBase64に変換
-  const arrayBufferToBase64 = (buffer: ArrayBuffer | null): string => {
-    if (!buffer) return "";
-    const bytes = new Uint8Array(buffer);
-    let binary = "";
-    for (let i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i]);
+  const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const rawData = atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; i++) {
+      outputArray[i] = rawData.charCodeAt(i);
     }
-    return btoa(binary);
+
+    return outputArray;
   };
 
   if (!session) return <div className="p-10 text-center">ログインが必要です</div>;

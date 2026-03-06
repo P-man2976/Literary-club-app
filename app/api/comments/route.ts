@@ -7,6 +7,7 @@ export async function POST(request: Request) {
   try {
     const db = getD1Client();
     const data = await request.json();
+    const requestUrl = new URL(request.url);
 
     const commentId = uuidv4();
     const result = await db.insertComment({
@@ -23,6 +24,39 @@ export async function POST(request: Request) {
         { error: result.error || "Failed to save comment" },
         { status: 500 }
       );
+    }
+
+    // 自分以外の投稿にコメントした場合、投稿者へ通知
+    try {
+      const postResult = await db.execute<any>({
+        sql: `SELECT id, title, authorEmail, parentPostId FROM posts WHERE id = ? LIMIT 1`,
+        params: [data.postId],
+      });
+
+      const targetPost = postResult.results?.[0] as any;
+      const targetAuthorEmail = targetPost?.authorEmail || null;
+      const commenterEmail = data.authorEmail || null;
+
+      if (targetAuthorEmail && targetAuthorEmail !== commenterEmail) {
+        const topicId = targetPost?.parentPostId || targetPost?.id;
+        const postTitle = targetPost?.title || "投稿";
+        const commenterName = data.author || "部員";
+
+        await fetch(`${requestUrl.origin}/api/push/send`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userEmail: targetAuthorEmail,
+            title: "新しいコメント",
+            body: `${commenterName}さんが「${postTitle}」にコメントしました`,
+            url: `/topic/${topicId}`,
+            tag: "comment-notification",
+          }),
+        });
+      }
+    } catch (notifyError) {
+      // 通知失敗でコメント投稿を失敗させない
+      console.error("Comment notification error:", notifyError);
     }
 
     return NextResponse.json({ message: "Success", commentId });
