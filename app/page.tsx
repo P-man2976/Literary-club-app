@@ -57,6 +57,7 @@ type MemberProfile = {
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [sessionLoadTimedOut, setSessionLoadTimedOut] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const onClose = () => setIsOpen(false);
   const [isTopicDecisionModalOpen, setIsTopicDecisionModalOpen] = useState(false);
@@ -140,6 +141,19 @@ export default function Home() {
   useEffect(() => {
     fetchPosts();
   }, []);
+
+  useEffect(() => {
+    if (status !== "loading") {
+      setSessionLoadTimedOut(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setSessionLoadTimedOut(true);
+    }, 12000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [status]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -498,7 +512,26 @@ export default function Home() {
   };
 
 
-  if (status === "loading") return <div className="p-10 text-center text-default-500">読み込み中...</div>;
+  if (status === "loading" && !sessionLoadTimedOut) {
+    return <div className="p-10 text-center text-default-500">読み込み中...</div>;
+  }
+
+  if (status === "loading" && sessionLoadTimedOut) {
+    return (
+      <div className="p-10 text-center space-y-4">
+        <p className="text-default-700 font-semibold">セッション確認に時間がかかっています</p>
+        <p className="text-default-500 text-sm">通信状況により認証確認が遅れる場合があります。</p>
+        <div className="flex justify-center gap-2">
+          <Button color="primary" onPress={() => window.location.reload()}>
+            再読み込み
+          </Button>
+          <Button variant="flat" onPress={() => signIn("google")}>
+            ログインし直す
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const selectedProposal = selectedProposalId
     ? topicProposals.find((proposal) => proposal.id === selectedProposalId) || null

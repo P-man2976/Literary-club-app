@@ -1,5 +1,5 @@
 // Service Worker for PWA offline support and push notifications
-const CACHE_NAME = 'lit-club-v2';
+const CACHE_NAME = 'lit-club-v3';
 const urlsToCache = [
   '/',
 ];
@@ -42,6 +42,22 @@ self.addEventListener('fetch', (event) => {
   // Always bypass SW cache for API to avoid stale DB data.
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // For document navigation, use network-first to avoid stale app shell.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          const clonedResponse = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, clonedResponse);
+          });
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request).then((response) => response || caches.match('/')))
+    );
     return;
   }
   
