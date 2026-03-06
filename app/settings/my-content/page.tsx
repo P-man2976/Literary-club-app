@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 type Post = {
   id: string;
   author: string;
+  authorEmail?: string | null;
   title: string;
   body: string;
   tag: string;
@@ -40,8 +41,8 @@ export default function MyContentPage() {
         const allPostsData: Post[] = await res.json();
         setAllPosts(allPostsData); // 全投稿を保存（子投稿カウント用）
         
-        // 自分の投稿のみをフィルタ
-        const myPosts = allPostsData.filter(post => post.author === session?.user?.name);
+        // 自分の投稿のみをフィルタ（メールアドレスで照合）
+        const myPosts = allPostsData.filter(post => post.authorEmail === session?.user?.email);
         
         // 各投稿のコメントといいね情報を取得
         const postsWithDetails = await Promise.all(myPosts.map(async (post) => {
@@ -63,10 +64,10 @@ export default function MyContentPage() {
       }
     };
 
-    if (session?.user?.name) {
+    if (session?.user?.email) {
       fetchMyPosts();
     }
-  }, [session?.user?.name]);
+  }, [session?.user?.email]);
 
   // 投稿を削除
   const deletePost = async (postId: string) => {

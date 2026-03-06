@@ -4,10 +4,37 @@
 
 **文学部アプリ** - 創作作品の共有・コメント・いいね機能
 
-- **フロントエンド**：Next.js 16
+- **フロントエンド**：Next.js 16 + HeroUI
 - **認証**：NextAuth（Google ログイン）
 - **データベース**：Cloudflare D1（SQLite）
 - **ホスト**：Cloudflare Pages（無料）
+- **PWA対応**：オフライン対応、ホーム画面追加可能
+- **プッシュ通知**：締め切りリマインダー
+
+---
+
+## ✨ 主な機能
+
+### 基本機能
+- 🔐 Google ログイン認証
+- 📝 お題の投稿・作品の投稿
+- 💬 コメント機能（編集可能、編集済みラベル表示）
+- ❤️ いいね機能
+- 👤 カスタムアイコン・ペンネーム設定
+- 🌓 ライト/ダーク/システムテーマ切り替え
+
+### お題機能
+- 📌 お題の作成と投稿
+- ⏰ 締め切り設定（任意）
+- 🔔 締め切りリマインダー（24時間前、当日）
+- 🚫 締め切り後の投稿制限
+- 👥 参加者アイコン表示
+
+### PWA機能
+- 📱 ホーム画面に追加可能
+- 🔔 プッシュ通知対応
+- 📴 オフライン対応（Service Worker）
+- 🎨 ネイティブアプリ風UI
 
 ---
 
@@ -24,6 +51,17 @@ bun dev
 ```
 
 [http://localhost:3000](http://localhost:3000) をブラウザで開く
+
+### AI講評機能の環境変数（無料API）
+
+お題詳細ページの「AI講評」は Hugging Face Inference API（無料枠あり）を使用します。
+
+```bash
+HUGGINGFACE_API_TOKEN=your_hf_token
+HUGGINGFACE_MODEL=mistralai/Mistral-7B-Instruct-v0.2
+# 任意（通常は不要）
+HUGGINGFACE_BASE_URL=https://api-inference.huggingface.co/models
+```
 
 ### 本番へデプロイ
 
@@ -46,6 +84,7 @@ git push origin main
 |-------------|------|
 | [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | デプロイ完全ガイド（6 ステップ） |
 | [MIGRATION_SUMMARY.md](MIGRATION_SUMMARY.md) | DynamoDB → D1 移行レポート |
+| [PWA_ICON_SETUP.md](PWA_ICON_SETUP.md) | PWA アイコン設定手順 |
 
 ---
 

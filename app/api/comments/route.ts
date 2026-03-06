@@ -60,3 +60,37 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+// コメント編集 (PUT)
+export async function PUT(request: Request) {
+  try {
+    const db = getD1Client();
+    const data = await request.json();
+    const { commentId, text, authorEmail } = data;
+
+    if (!commentId || !text || !authorEmail) {
+      return NextResponse.json(
+        { error: "commentId, text, and authorEmail are required" },
+        { status: 400 }
+      );
+    }
+
+    const result = await db.updateComment({
+      commentId,
+      text,
+      authorEmail,
+      editedAt: Date.now(),
+    });
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error || "Failed to update comment" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ message: "Success" });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

@@ -73,6 +73,7 @@ export class D1Client {
   async insertPost(post: {
     id: string;
     title: string;
+    subtitle?: string | null;
     body: string;
     author: string;
     authorEmail?: string | null;
@@ -80,11 +81,13 @@ export class D1Client {
     createdAt: number;
     parentPostId?: string | null;
     isTopicPost?: number;
+    deadline?: number | null;
   }) {
+    // 現在のDBスキーマには subtitle カラムがないため、常に除外
     return this.execute({
       sql: `
-        INSERT INTO posts (id, title, body, author, authorEmail, tag, createdAt, updatedAt, parentPostId, isTopicPost)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO posts (id, title, body, author, authorEmail, tag, createdAt, updatedAt, parentPostId, isTopicPost, deadline)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       params: [
         post.id,
@@ -97,6 +100,7 @@ export class D1Client {
         Date.now(),
         post.parentPostId || null,
         post.isTopicPost || 0,
+        post.deadline || null,
       ],
     });
   }
@@ -194,6 +198,40 @@ export class D1Client {
     return this.execute({
       sql: `DELETE FROM posts WHERE id = ?`,
       params: [postId],
+    });
+  }
+
+  async updateComment(comment: {
+    commentId: string;
+    text: string;
+    authorEmail: string;
+    editedAt: number;
+  }) {
+    // まず、コメントの作成者が正しいか確認
+    const checkResult = await this.execute({
+      sql: `SELECT authorEmail FROM comments WHERE commentId = ?`,
+      params: [comment.commentId],
+    });
+
+    if (!checkResult.success || !checkResult.results || checkResult.results.length === 0) {
+      return {
+        success: false,
+        error: "Comment not found",
+      };
+    }
+
+    const existingComment = checkResult.results[0] as any;
+    if (existingComment.authorEmail !== comment.authorEmail) {
+      return {
+        success: false,
+        error: "Unauthorized to edit this comment",
+      };
+    }
+
+    // 更新を実行
+    return this.execute({
+      sql: `UPDATE comments SET text = ?, editedAt = ? WHERE commentId = ?`,
+      params: [comment.text, comment.editedAt, comment.commentId],
     });
   }
 }

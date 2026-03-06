@@ -10,6 +10,7 @@ type Comment = {
   author: string;
   authorEmail?: string | null;
   createdAt: number;
+  editedAt?: number | null;
 };
 
 type Post = {
@@ -17,13 +18,34 @@ type Post = {
   id: string;
   author: string;
   title: string;
+  subtitle?: string;
   body: string;
   tag: string;
   createdAt: number;
   parentPostId?: string | null;
   isTopicPost?: number;
+  deadline?: number | null;
   comments?: Comment[];
   likes?: number;
+};
+
+type TopicAnalysis = {
+  overview: string;
+  strengths: string[];
+  suggestions: string[];
+  authorFeedback: Array<{
+    author: string;
+    praise: string;
+    critique: string;
+    nextStep: string;
+  }>;
+  postFeedback: Array<{
+    postId: string;
+    title: string;
+    praise: string;
+    critique: string;
+    nextStep: string;
+  }>;
 };
 
 export default function TopicPage() {
@@ -42,6 +64,11 @@ export default function TopicPage() {
   const [penName, setPenName] = useState("");
   const [penNameMap, setPenNameMap] = useState<{ [email: string]: string }>({});
   const [userIconMap, setUserIconMap] = useState<{ [email: string]: string }>({});
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState("");
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<TopicAnalysis | null>(null);
 
   // トピック詳細と返信を取得
   const fetchTopicAndReplies = async () => {
@@ -178,6 +205,30 @@ export default function TopicPage() {
     return participants;
   };
 
+  const getDeadlineStatus = (deadline: number | null | undefined) => {
+    if (!deadline) return null;
+    
+    const now = Date.now();
+    const timeLeft = deadline - now;
+    const hoursLeft = timeLeft / (1000 * 60 * 60);
+    const daysLeft = timeLeft / (1000 * 60 * 60 * 24);
+
+    if (timeLeft < 0) {
+      return { status: "expired", label: "締切済", bgColor: "bg-gray-100", textColor: "text-gray-600" };
+    } else if (hoursLeft < 24) {
+      return { status: "urgent", label: "あと24時間", bgColor: "bg-red-100", textColor: "text-red-600" };
+    } else if (daysLeft < 3) {
+      return { status: "soon", label: "まもなく締切", bgColor: "bg-orange-100", textColor: "text-orange-600" };
+    } else {
+      return { status: "active", label: `締切: ${new Date(deadline).toLocaleDateString()}`, bgColor: "bg-blue-100", textColor: "text-blue-600" };
+    }
+  };
+
+  const isDeadlineExpired = (deadline: number | null | undefined) => {
+    if (!deadline) return false;
+    return Date.now() > deadline;
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -236,6 +287,12 @@ export default function TopicPage() {
   const saveReply = async () => {
     if (!newPost.title || !newPost.body) {
       alert("タイトルと本文を入力してください");
+      return;
+    }
+
+    // 締め切りチェック
+    if (topic && isDeadlineExpired(topic.deadline)) {
+      alert("このお題の締め切りが過ぎているため、投稿できません");
       return;
     }
 
@@ -314,8 +371,15 @@ export default function TopicPage() {
       });
 
       if (response.ok) {
-        alert("削除しました！");
-        fetchTopicAndReplies();
+        // お題そのものを削除した場合はメインページに遷移
+        if (postId === topicId) {
+          await new Promise(resolve => setTimeout(resolve, 300));
+          router.push("/");
+        } else {
+          // 返信を削除した場合はページを更新
+          alert("削除しました！");
+          fetchTopicAndReplies();
+        }
       }
     } catch (error) {
       console.error("削除エラー:", error);
@@ -350,6 +414,74 @@ export default function TopicPage() {
 
   const toggleCommentLike = (commentId: string) => {
     setCommentLikes({ ...commentLikes, [commentId]: !commentLikes[commentId] });
+  };
+
+  const startEditingComment = (commentId: string, currentText: string) => {
+    setEditingCommentId(commentId);
+    setEditingCommentText(currentText);
+  };
+
+  const cancelEditingComment = () => {
+    setEditingCommentId(null);
+    setEditingCommentText("");
+  };
+
+  const editComment = async (commentId: string) => {
+    if (!editingCommentText.trim()) {
+      alert("コメントを入力してください");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/comments", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          commentId: commentId,
+          text: editingCommentText,
+          authorEmail: session?.user?.email || null,
+        }),
+      });
+
+      if (response.ok) {
+        alert("コメントを編集しました！");
+        cancelEditingComment();
+        fetchTopicAndReplies();
+      } else {
+        const error = await response.json();
+        alert(error.error || "編集に失敗しました");
+      }
+    } catch (error) {
+      console.error("コメント編集エラー:", error);
+      alert("編集に失敗しました");
+    }
+  };
+
+  const generateAnalysis = async () => {
+    setAnalysisLoading(true);
+    setAnalysisError(null);
+
+    try {
+      const res = await fetch("/api/analysis/topic", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topicId }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setAnalysisError(data?.error || "分析の生成に失敗しました");
+        return;
+      }
+
+      setAnalysisResult(data as TopicAnalysis);
+    } catch (error) {
+      console.error("analysis error:", error);
+      setAnalysisError("分析の生成に失敗しました");
+    } finally {
+      setAnalysisLoading(false);
+    }
   };
 
   if (loading) {
@@ -397,7 +529,15 @@ export default function TopicPage() {
         {/* トピック表示 */}
         <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 mb-8 border-l-4 border-purple-500 dark:border-purple-400">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">お題投稿</p>
-          <h2 className="text-xl font-bold text-purple-600 dark:text-purple-400 mb-4">{topic.title}</h2>
+          {getDeadlineStatus(topic.deadline) && (
+            <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${getDeadlineStatus(topic.deadline)!.bgColor} ${getDeadlineStatus(topic.deadline)!.textColor}`}>
+              {getDeadlineStatus(topic.deadline)!.label}
+            </div>
+          )}
+          <h2 className="text-xl font-bold text-purple-600 dark:text-purple-400 mb-2">{topic.title}</h2>
+          {topic.subtitle && (
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 italic">{topic.subtitle}</p>
+          )}
           <p className="text-gray-700 dark:text-gray-300 mb-4 whitespace-pre-wrap">{topic.body}</p>
           <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
             <span className="flex items-center gap-2">
@@ -442,52 +582,137 @@ export default function TopicPage() {
           </div>
         </div>
 
+        {/* AI分析 */}
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 mb-8 border border-slate-200 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">AI講評</h3>
+            <button
+              onClick={generateAnalysis}
+              disabled={analysisLoading || replies.length === 0}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {analysisLoading ? "生成中..." : "分析を生成"}
+            </button>
+          </div>
+
+          {replies.length === 0 && (
+            <p className="text-sm text-slate-500 dark:text-slate-400">投稿が集まると分析できます。</p>
+          )}
+
+          {analysisError && (
+            <p className="text-sm text-red-600 dark:text-red-400 mb-3">{analysisError}</p>
+          )}
+
+          {analysisResult && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">総評</p>
+                <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap">{analysisResult.overview}</p>
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">良かった点</p>
+                <ul className="list-disc pl-5 text-sm text-slate-600 dark:text-slate-300 space-y-1">
+                  {analysisResult.strengths?.map((item, idx) => (
+                    <li key={`strength-${idx}`}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">改善提案</p>
+                <ul className="list-disc pl-5 text-sm text-slate-600 dark:text-slate-300 space-y-1">
+                  {analysisResult.suggestions?.map((item, idx) => (
+                    <li key={`suggestion-${idx}`}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">投稿者ごとの講評</p>
+                <div className="space-y-2">
+                  {analysisResult.authorFeedback?.map((item, idx) => (
+                    <div key={`author-${idx}`} className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{item.author}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">ほめる: {item.praise}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">批評: {item.critique}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">次の一歩: {item.nextStep}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">投稿ごとの講評</p>
+                <div className="space-y-2">
+                  {analysisResult.postFeedback?.map((item, idx) => (
+                    <div key={`post-${item.postId || idx}`} className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{item.title}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">ほめる: {item.praise}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">批評: {item.critique}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">次の一歩: {item.nextStep}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* 投稿フォーム（ファイルインポート専用） */}
         {session && (
           <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 mb-8">
             <h3 className="text-lg font-bold dark:text-slate-100 mb-4">✍️ このお題に投稿する</h3>
             
-            <div className="mb-4">
-              <label className="block text-sm font-semibold dark:text-slate-300 mb-2">📄 ファイルを選択</label>
-              <input
-                type="file"
-                accept=".txt,.pdf,.docx"
-                onChange={handleFileChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded cursor-pointer"
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">対応形式: テキスト (.txt), PDF, Word (.docx)</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">ファイルのタイトルと内容から自動で投稿が作成されます</p>
-            </div>
-
-            {newPost.title && (
+            {isDeadlineExpired(topic.deadline) ? (
+              <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <p className="text-red-600 dark:text-red-400 font-semibold">⚠️ このお題の締め切りが過ぎているため、投稿できません</p>
+              </div>
+            ) : (
               <>
-                <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-xs text-blue-500 font-bold mb-2">📋 ファイル解析済み</p>
-                  <p className="text-sm font-bold text-blue-900 truncate">{newPost.title}</p>
-                  <p className="text-xs text-blue-700 mt-2 line-clamp-3">{newPost.body}</p>
-                </div>
-
                 <div className="mb-4">
-                  <label className="block text-sm font-semibold mb-2">タグ</label>
-                  <select
-                    value={newPost.tag || "創作"}
-                    onChange={(e) => setNewPost({ ...newPost, tag: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option>創作</option>
-                    <option>随筆</option>
-                    <option>詩</option>
-                    <option>感想</option>
-                    <option>その他</option>
-                  </select>
+                  <label className="block text-sm font-semibold dark:text-slate-300 mb-2">📄 ファイルを選択</label>
+                  <input
+                    type="file"
+                    accept=".txt,.pdf,.docx"
+                    onChange={handleFileChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded cursor-pointer"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">対応形式: テキスト (.txt), PDF, Word (.docx)</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">ファイルのタイトルと内容から自動で投稿が作成されます</p>
                 </div>
 
-                <button
-                  onClick={saveReply}
-                  className="w-full px-4 py-3 bg-blue-500 text-white font-bold rounded hover:bg-blue-600 transition"
-                >
-                  ✨ 投稿
-                </button>
+                {newPost.title && (
+                  <>
+                    <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-xs text-blue-500 font-bold mb-2">📋 ファイル解析済み</p>
+                      <p className="text-sm font-bold text-blue-900 truncate">{newPost.title}</p>
+                      <p className="text-xs text-blue-700 mt-2 line-clamp-3">{newPost.body}</p>
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold mb-2">タグ</label>
+                      <select
+                        value={newPost.tag || "創作"}
+                        onChange={(e) => setNewPost({ ...newPost, tag: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option>創作</option>
+                        <option>随筆</option>
+                        <option>詩</option>
+                        <option>感想</option>
+                        <option>その他</option>
+                      </select>
+                    </div>
+
+                    <button
+                      onClick={saveReply}
+                      className="w-full px-4 py-3 bg-blue-500 text-white font-bold rounded hover:bg-blue-600 transition"
+                    >
+                      ✨ 投稿
+                    </button>
+                  </>
+                )}
               </>
             )}
           </div>
@@ -569,7 +794,7 @@ export default function TopicPage() {
                     >
                       ❤️ {reply.likes || 0}
                     </button>
-                    {session?.user?.email === reply.author && (
+                    {session?.user?.email === reply.authorEmail && (
                       <button
                         onClick={() => deletePost(reply.id)}
                         className="px-4 py-2 bg-red-100 text-red-600 rounded font-semibold hover:bg-red-200"
@@ -599,20 +824,62 @@ export default function TopicPage() {
                                 <div className="w-5 h-5 rounded-full bg-gray-200 border border-gray-300" />
                               )}
                               {getDisplayName(comment.authorEmail, comment.author)}
+                              {comment.editedAt && (
+                                <span className="text-xs text-gray-400">(編集済み)</span>
+                              )}
                             </span>
                             <span className="text-xs text-gray-400">{new Date(comment.createdAt * 1000).toLocaleString()}</span>
                           </div>
-                          <p className="text-gray-600 mb-2">{comment.text}</p>
-                          <button
-                            onClick={() => toggleCommentLike(comment.commentId)}
-                            className={`text-xs px-2 py-1 rounded transition ${
-                              commentLikes[comment.commentId]
-                                ? "bg-red-100 text-red-600"
-                                : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-                            }`}
-                          >
-                            ❤️ {commentLikes[comment.commentId] ? 1 : 0}
-                          </button>
+                          
+                          {/* 編集モード */}
+                          {editingCommentId === comment.commentId ? (
+                            <div className="space-y-2">
+                              <textarea
+                                value={editingCommentText}
+                                onChange={(e) => setEditingCommentText(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                rows={3}
+                              />
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => editComment(comment.commentId)}
+                                  className="px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600"
+                                >
+                                  保存
+                                </button>
+                                <button
+                                  onClick={cancelEditingComment}
+                                  className="px-3 py-1 bg-gray-300 text-gray-700 rounded text-xs hover:bg-gray-400"
+                                >
+                                  キャンセル
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="text-gray-600 mb-2">{comment.text}</p>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => toggleCommentLike(comment.commentId)}
+                                  className={`text-xs px-2 py-1 rounded transition ${
+                                    commentLikes[comment.commentId]
+                                      ? "bg-red-100 text-red-600"
+                                      : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                                  }`}
+                                >
+                                  ❤️ {commentLikes[comment.commentId] ? 1 : 0}
+                                </button>
+                                {session?.user?.email === comment.authorEmail && (
+                                  <button
+                                    onClick={() => startEditingComment(comment.commentId, comment.text)}
+                                    className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition"
+                                  >
+                                    編集
+                                  </button>
+                                )}
+                              </div>
+                            </>
+                          )}
                         </div>
                       ))}
                     </div>

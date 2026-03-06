@@ -44,6 +44,7 @@ type Post = {
   createdAt: number;
   parentPostId?: string | null;
   isTopicPost?: number;
+  deadline?: number | null;
   comments?: Comment[];
   likes?: number;
   children?: Post[]; // 返信投稿を格納
@@ -53,11 +54,12 @@ export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { isOpen, onClose } = useDisclosure();
-  const [activeTab, setActiveTab] = useState<"all" | "topics">("all");
+  const [activeTab, setActiveTab] = useState<"proposal" | "topics">("topics");
   const [openPostId, setOpenPostId] = useState<string | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [topicPosts, setTopicPosts] = useState<Post[]>([]);
+  const [topicProposals, setTopicProposals] = useState<Post[]>([]);
   const [newPost, setNewPost] = useState<Partial<Post>>({ title: "", body: "", tag: "創作" });
   const [userIcon, setUserIcon] = useState<string | null>(null);
   const [postingMode, setPostingMode] = useState<"regular" | "topic" | "reply">("regular");
@@ -67,6 +69,8 @@ export default function Home() {
   const [penName, setPenName] = useState("");
   const [penNameMap, setPenNameMap] = useState<{ [email: string]: string }>({});
   const [userIconMap, setUserIconMap] = useState<{ [email: string]: string }>({});
+  const [selectedProposalId, setSelectedProposalId] = useState<string | null>(null);
+  const [proposalDeadline, setProposalDeadline] = useState<number | null>(null);
 
   const fetchPosts = async () => {
     const res = await fetch("/api/posts");
@@ -113,7 +117,8 @@ export default function Home() {
       setAllPosts(allSorted);
       
       const topics = postsWithAll.filter(p => p.isTopicPost === 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-      const regular = postsWithAll.filter(p => !p.parentPostId && p.isTopicPost !== 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      const proposals = postsWithAll.filter(p => p.tag === "お題案" && p.isTopicPost !== 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      const regular = postsWithAll.filter(p => !p.parentPostId && p.isTopicPost !== 1 && p.tag !== "お題案").sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       
       const topicsWithChildren = topics.map(topic => {
         const children = postsWithAll.filter(p => p.parentPostId === topic.id);
@@ -121,6 +126,7 @@ export default function Home() {
       });
       
       setTopicPosts(topicsWithChildren);
+      setTopicProposals(proposals);
       setPosts(regular);
     }
   };
@@ -262,6 +268,43 @@ export default function Home() {
       }
     } catch (error) {
       console.error("削除に失敗しました", error);
+    }
+  };
+
+  // お題案をお題に変換
+  const convertProposalToTopic = async (proposalId: string, deadline: number) => {
+    try {
+      const proposal = topicProposals.find(p => p.id === proposalId);
+      if (!proposal) {
+        alert("お題案が見つかりません");
+        return;
+      }
+
+      const topicData: any = {
+        ...proposal,
+        isTopicPost: 1,
+        deadline: deadline,
+        tag: "お題",
+      };
+
+      const response = await fetch("/api/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(topicData),
+      });
+
+      if (response.ok) {
+        alert("お題を追加しました！");
+        setProposalDeadline(null);
+        setSelectedProposalId(null);
+        await fetchPosts();
+      } else {
+        const error = await response.text();
+        alert("エラー: " + error);
+      }
+    } catch (error) {
+      console.error("お題への変換に失敗しました", error);
+      alert("お題への変換に失敗しました");
     }
   };
 
@@ -414,6 +457,21 @@ export default function Home() {
 
   if (status === "loading") return <div className="p-10 text-center text-default-500">読み込み中...</div>;
 
+  const selectedProposal = selectedProposalId
+    ? topicProposals.find((proposal) => proposal.id === selectedProposalId) || null
+    : null;
+
+  const selectRandomProposal = () => {
+    if (topicProposals.length === 0) {
+      alert("お題案がまだありません");
+      return;
+    }
+    const randomIndex = Math.floor(Math.random() * topicProposals.length);
+    const randomProposal = topicProposals[randomIndex];
+    setSelectedProposalId(randomProposal.id);
+    setProposalDeadline(null);
+  };
+
   return (
     <main className="min-h-screen max-w-2xl mx-auto pb-40">
       {/* ヘッダー */}
@@ -449,7 +507,7 @@ export default function Home() {
       {/* タブナビゲーション */}
       <Tabs 
         selectedKey={activeTab}
-        onSelectionChange={(key) => setActiveTab(key as "all" | "topics")}
+        onSelectionChange={(key) => setActiveTab(key as "proposal" | "topics")}
         variant="underlined"
         color="primary"
         classNames={{
@@ -459,116 +517,12 @@ export default function Home() {
           tab: "h-12",
         }}
       >
-        <Tab key="all" title="📚 すべて">
-          {allPosts.length === 0 ? (
-            <div className="p-10 text-center">
-              <p className="text-4xl mb-4">📚</p>
-              <p className="text-default-500 text-sm font-medium">まだ投稿がありません</p>
-              <p className="text-default-400 text-xs mt-2">右下の+ボタンから最初の作品を投稿しましょう！</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-divider">
-              {allPosts.map((post) => (
-                <Card 
-                  key={post.id}
-                  shadow="none"
-                  radius="none"
-                  className="border-0"
-                >
-                  <CardBody className="p-4 gap-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {getDisplayIcon(post.authorEmail) ? (
-                          <img
-                            src={getDisplayIcon(post.authorEmail) || ""}
-                            alt="投稿者アイコン"
-                            className="w-6 h-6 rounded-full object-cover border border-default-300"
-                          />
-                        ) : (
-                          <div className="w-6 h-6 rounded-full bg-default-200 border border-default-300" />
-                        )}
-                        <span className="font-bold">{getDisplayName(post.authorEmail, post.author)}</span>
-                        {post.isTopicPost === 1 ? (
-                          <Chip size="sm" color="secondary" variant="flat">お題</Chip>
-                        ) : post.parentPostId ? (
-                          <Chip size="sm" color="success" variant="flat">返信</Chip>
-                        ) : (
-                          <Chip size="sm" variant="flat">{post.tag}</Chip>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          variant="light"
-                          onPress={() => handleLike(post.id, { stopPropagation: () => {} } as any)}
-                          color={likedPosts.includes(post.id) ? "danger" : "default"}
-                        >
-                          <div className="flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={likedPosts.includes(post.id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
-                            </svg>
-                            <span className="text-xs font-bold">{post.likes || 0}</span>
-                          </div>
-                        </Button>
-                        <div className="flex items-center gap-1 text-default-400 text-sm">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-1.9A9 9 0 1 1 5.9 5.9l1.1 1.1"/></svg>
-                          <span className="text-xs font-bold">{post.comments?.length || 0}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div 
-                      onClick={() => setOpenPostId(openPostId === post.id ? null : post.id)}
-                      className="cursor-pointer"
-                    >
-                      <h2 className="text-lg font-bold">{post.title}</h2>
-                      <p className="text-xs text-default-400">
-                      {new Date(post.createdAt).toLocaleString('ja-JP', {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                      </p>
-                    </div>
-                    {openPostId === post.id ? (
-                      <Card className="mt-2" shadow="sm">
-                        <CardBody>
-                          <div className="flex justify-between items-start gap-2">
-                            <p className="whitespace-pre-wrap text-sm flex-1">
-                              {post.body}
-                            </p>
-                            {session?.user?.name === post.author && (
-                              <Button
-                                isIconOnly
-                                size="sm"
-                                color="danger"
-                                variant="light"
-                                onPress={() => deletePost(post.id)}
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                              </Button>
-                            )}
-                          </div>
-                        </CardBody>
-                      </Card>
-                    ) : (
-                      <p className="text-default-400 text-xs">クリックして内容を読む...</p>
-                    )}
-                  </CardBody>
-                </Card>
-              ))}
-            </div>
-          )}
-        </Tab>
-
         <Tab key="topics" title="📌 お題">
           {topicPosts.length === 0 ? (
             <div className="p-10 text-center">
               <p className="text-4xl mb-4">📌</p>
               <p className="text-default-500 text-sm font-medium">まだお題がありません</p>
-              <p className="text-default-400 text-xs mt-2">右下の+ボタンから最初のお題を作成しましょう！</p>
+              <p className="text-default-400 text-xs mt-2">お題案投稿タブで案を投稿し、選択してお題化できます。</p>
             </div>
           ) : (
             <div className="divide-y divide-divider">
@@ -660,6 +614,141 @@ export default function Home() {
               ))}
             </div>
           )}
+        </Tab>
+
+        <Tab key="proposal" title="💡 お題案投稿">
+          <div className="p-4 space-y-4">
+            {session && (
+              <Card shadow="sm" className="border border-default-200">
+                <CardBody className="p-4 space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                    <input
+                      type="text"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                      placeholder="お題案タイトル"
+                      value={newPost.title || ""}
+                      onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                    />
+                    <button
+                      className="px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 disabled:opacity-50"
+                      disabled={!newPost.title || !newPost.body}
+                      onClick={() => {
+                        if (!newPost.title || !newPost.body) {
+                          alert("タイトルと内容は必須です");
+                          return;
+                        }
+                        const proposalData = {
+                          ...newPost,
+                          author: penName || session?.user?.name || "匿名部員",
+                          authorEmail: session?.user?.email || null,
+                          tag: "お題案",
+                        };
+                        fetch("/api/posts", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify(proposalData),
+                        }).then(async (res) => {
+                          if (res.ok) {
+                            alert("お題案を投稿しました！");
+                            setNewPost({ title: "", body: "", tag: "お題案" });
+                            await fetchPosts();
+                          }
+                        });
+                      }}
+                    >
+                      投稿
+                    </button>
+                  </div>
+                  <textarea
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 min-h-[88px]"
+                    placeholder="内容"
+                    value={newPost.body || ""}
+                    onChange={(e) => setNewPost({ ...newPost, body: e.target.value })}
+                  />
+                </CardBody>
+              </Card>
+            )}
+
+            <Card shadow="sm" className="border border-default-200">
+              <CardBody className="p-4 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2">
+                  <select
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white"
+                    value={selectedProposalId || ""}
+                    onChange={(e) => {
+                      setSelectedProposalId(e.target.value || null);
+                      setProposalDeadline(null);
+                    }}
+                  >
+                    <option value="">お題案を選択</option>
+                    {topicProposals.map((proposal) => (
+                      <option key={proposal.id} value={proposal.id}>
+                        {proposal.title}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    color="warning"
+                    variant="flat"
+                    onPress={selectRandomProposal}
+                    isDisabled={topicProposals.length === 0}
+                  >
+                    ランダム
+                  </Button>
+                  <button
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50"
+                    disabled={!selectedProposalId || !proposalDeadline}
+                    onClick={() => {
+                      if (selectedProposalId && proposalDeadline) {
+                        convertProposalToTopic(selectedProposalId, proposalDeadline);
+                      }
+                    }}
+                  >
+                    お題化
+                  </button>
+                </div>
+
+                <input
+                  type="datetime-local"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setProposalDeadline(new Date(e.target.value).getTime());
+                    } else {
+                      setProposalDeadline(null);
+                    }
+                  }}
+                />
+
+                {selectedProposal ? (
+                  <div className="rounded-lg border border-default-200 bg-default-50 p-3">
+                    <p className="text-sm font-semibold">{selectedProposal.title}</p>
+                    <p className="text-xs text-default-500 mt-1 line-clamp-3">{selectedProposal.body}</p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-default-500">一覧から選択またはランダムで1件選べます。</p>
+                )}
+              </CardBody>
+            </Card>
+
+            {topicProposals.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {topicProposals.slice(0, 8).map((proposal) => (
+                  <button
+                    key={proposal.id}
+                    className={`text-left rounded-lg border p-3 transition-colors ${selectedProposalId === proposal.id ? "border-success bg-success-50" : "border-default-200 hover:bg-default-50"}`}
+                    onClick={() => {
+                      setSelectedProposalId(proposal.id);
+                      setProposalDeadline(null);
+                    }}
+                  >
+                    <p className="text-sm font-semibold line-clamp-1">{proposal.title}</p>
+                    <p className="text-xs text-default-500">{new Date(proposal.createdAt).toLocaleDateString()}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </Tab>
       </Tabs>
 

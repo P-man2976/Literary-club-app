@@ -10,7 +10,9 @@ export async function POST(request: Request) {
     console.log("📝 受信したデータ:", data);
 
     const postId = uuidv4();
-    const result = await db.insertPost({
+    
+    // 基本的なポストデータ（subtitleなし）
+    const postData: any = {
       id: postId,
       title: data.title,
       body: data.body,
@@ -20,7 +22,10 @@ export async function POST(request: Request) {
       createdAt: Date.now(),
       parentPostId: data.parentPostId || null,
       isTopicPost: data.isTopicPost || 0,
-    });
+      deadline: data.deadline || null,
+    };
+    
+    const result = await db.insertPost(postData);
 
     console.log("📊 DB実行結果:", result);
 
