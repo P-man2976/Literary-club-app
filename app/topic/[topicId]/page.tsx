@@ -523,7 +523,7 @@ export default function TopicPage() {
     <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 md:p-6">
       <div className="max-w-2xl mx-auto">
         {/* ヘッダー */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex items-center mb-8">
           <button
             onClick={() => router.back()}
             className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold"
@@ -531,16 +531,6 @@ export default function TopicPage() {
             ← 戻る
           </button>
           <h1 className="text-2xl font-bold text-center flex-1 text-slate-900 dark:text-slate-100">お題詳細</h1>
-          <div>
-            {session ? (
-              <button
-                onClick={() => signOut()}
-                className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-semibold"
-              >
-                ログアウト
-              </button>
-            ) : null}
-          </div>
         </div>
 
         {/* トピック表示 */}

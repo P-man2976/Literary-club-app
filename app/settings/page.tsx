@@ -27,6 +27,7 @@ export default function SettingsPage() {
   const [loadingIcon, setLoadingIcon] = useState(true);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
   const [notificationSupported, setNotificationSupported] = useState(false);
+  const [notificationEnabled, setNotificationEnabled] = useState(false);
 
   // Hydration対策
   useEffect(() => {
@@ -36,6 +37,7 @@ export default function SettingsPage() {
     if ("Notification" in window && "serviceWorker" in navigator) {
       setNotificationSupported(true);
       setNotificationPermission(Notification.permission);
+      setNotificationEnabled(Notification.permission === "granted");
     }
   }, []);
 
@@ -189,6 +191,7 @@ export default function SettingsPage() {
 
       if (permission !== "granted") {
         alert("通知が許可されませんでした");
+        setNotificationEnabled(false);
         return;
       }
 
@@ -221,6 +224,7 @@ export default function SettingsPage() {
       });
 
       if (response.ok) {
+        setNotificationEnabled(true);
         alert("通知を有効にしました！");
       } else {
         alert("サブスクリプションの保存に失敗しました");
@@ -228,6 +232,40 @@ export default function SettingsPage() {
     } catch (error) {
       console.error("通知有効化エラー:", error);
       alert("通知の有効化に失敗しました");
+    }
+  };
+
+  // プッシュ通知を無効化
+  const disableNotifications = async () => {
+    if (!notificationSupported) return;
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+
+      if (subscription) {
+        await subscription.unsubscribe();
+        
+        // サーバーからサブスクリプションを削除
+        await fetch(`/api/push/subscribe?userEmail=${session?.user?.email}&endpoint=${encodeURIComponent(subscription.endpoint)}`, {
+          method: "DELETE",
+        });
+      }
+
+      setNotificationEnabled(false);
+      alert("通知を無効にしました");
+    } catch (error) {
+      console.error("通知無効化エラー:", error);
+      alert("通知の無効化に失敗しました");
+    }
+  };
+
+  // トグルハンドラー
+  const toggleNotifications = async () => {
+    if (notificationEnabled) {
+      await disableNotifications();
+    } else {
+      await enableNotifications();
     }
   };
 
@@ -529,56 +567,52 @@ export default function SettingsPage() {
           <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-4">通知</h2>
           <Card>
             <CardBody className="gap-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-bold">プッシュ通知</p>
-                  <p className="text-xs text-default-500">締め切りリマインダーを受け取る</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {notificationPermission === "granted" ? (
-                    <span className="text-xs px-2 py-1 bg-success-100 text-success-700 rounded-full font-semibold">
-                      有効
-                    </span>
-                  ) : notificationPermission === "denied" ? (
-                    <span className="text-xs px-2 py-1 bg-danger-100 text-danger-700 rounded-full font-semibold">
-                      無効
-                    </span>
-                  ) : (
-                    <span className="text-xs px-2 py-1 bg-default-100 text-default-600 rounded-full font-semibold">
-                      未設定
-                    </span>
-                  )}
-                </div>
-              </div>
-              
               {notificationSupported ? (
                 <>
-                  {notificationPermission === "granted" ? (
-                    <div className="bg-success-50 border border-success-200 rounded-lg p-3">
-                      <p className="text-xs text-success-700">
-                        ✓ 通知が有効です。お題の締め切り24時間前と当日に通知を受け取ります。
-                      </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="font-bold">プッシュ通知</p>
+                      <p className="text-xs text-default-500">いいね・コメント・締め切りのリマインダー</p>
                     </div>
-                  ) : notificationPermission === "denied" ? (
+                    <button
+                      onClick={toggleNotifications}
+                      disabled={notificationPermission === "denied"}
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                        notificationEnabled
+                          ? "bg-primary"
+                          : "bg-default-300"
+                      } ${notificationPermission === "denied" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                          notificationEnabled ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  
+                  {notificationPermission === "denied" && (
                     <div className="bg-danger-50 border border-danger-200 rounded-lg p-3">
                       <p className="text-xs text-danger-700">
                         ⚠️ 通知がブロックされています。ブラウザの設定から許可してください。
                       </p>
                     </div>
-                  ) : (
-                    <Button
-                      color="primary"
-                      onPress={enableNotifications}
-                      className="w-full"
-                    >
-                      通知を有効にする
-                    </Button>
                   )}
+                  
+                  {notificationEnabled && notificationPermission === "granted" && (
+                    <div className="bg-success-50 border border-success-200 rounded-lg p-3">
+                      <p className="text-xs text-success-700">
+                        ✓ 通知が有効です
+                      </p>
+                    </div>
+                  )}
+                  
                   <div className="space-y-2">
-                    <p className="text-xs text-default-500 font-semibold">通知タイミング:</p>
+                    <p className="text-xs text-default-500 font-semibold">通知を受け取るタイミング:</p>
                     <ul className="text-xs text-default-400 space-y-1 pl-4">
-                      <li>• 締め切りの24時間前</li>
-                      <li>• 締め切り当日</li>
+                      <li>• あなたの投稿にいいねがついたとき</li>
+                      <li>• あなたの投稿にコメントがついたとき</li>
+                      <li>• お題の締め切り24時間前と当日</li>
                     </ul>
                   </div>
                 </>
