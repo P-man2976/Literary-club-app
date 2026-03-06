@@ -1,8 +1,7 @@
 // Service Worker for PWA offline support and push notifications
-const CACHE_NAME = 'lit-club-v1';
+const CACHE_NAME = 'lit-club-v2';
 const urlsToCache = [
   '/',
-  '/api/posts',
 ];
 
 // Install event - cache resources
@@ -10,8 +9,8 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('Opened cache');
-      // Only cache API endpoints, skip static files in dev
-      return cache.addAll(['/api/posts']).catch((error) => {
+      // Cache only app shell. API responses should stay network-fresh.
+      return cache.addAll(urlsToCache).catch((error) => {
         console.log('Cache addAll failed (this is OK in dev):', error);
       });
     })
@@ -39,6 +38,12 @@ self.addEventListener('activate', (event) => {
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
+
+  // Always bypass SW cache for API to avoid stale DB data.
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
   
   // Skip caching for static files in development
   if (url.pathname.includes('_next/static') || url.pathname.includes('hot')) {
