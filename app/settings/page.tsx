@@ -2,9 +2,11 @@
 
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
   const { data: session } = useSession();
+  const router = useRouter();
 
   if (!session) return <div className="p-10 text-center">ログインが必要です</div>;
 
@@ -46,11 +48,14 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* 投稿管理セクション */}
+        {/* コンテンツ管理セクション */}
         <section>
           <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">コンテンツ管理</h2>
           <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
-            <button className="w-full p-4 flex items-center justify-between hover:bg-slate-50 text-left">
+            <button 
+              onClick={() => router.push("/settings/my-content")}
+              className="w-full p-4 flex items-center justify-between hover:bg-slate-50 text-left transition-colors"
+            >
               <div>
                 <p className="text-slate-900 font-bold">自分の投稿一覧</p>
                 <p className="text-xs text-slate-500">削除・閲覧数の確認</p>

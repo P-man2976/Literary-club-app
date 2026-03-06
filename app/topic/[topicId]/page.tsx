@@ -35,6 +35,8 @@ export default function TopicPage() {
   const [newPost, setNewPost] = useState<Partial<Post>>({ title: "", body: "", tag: "創作" });
   const [likedPosts, setLikedPosts] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [commentTexts, setCommentTexts] = useState<{ [key: string]: string }>({});
+  const [commentLikes, setCommentLikes] = useState<{ [key: string]: boolean }>({});
 
   // トピック詳細と返信を取得
   const fetchTopicAndReplies = async () => {
@@ -233,6 +235,35 @@ export default function TopicPage() {
     }
   };
 
+  const saveComment = async (postId: string) => {
+    const text = commentTexts[postId];
+    if (!text) return;
+
+    try {
+      const response = await fetch("/api/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          postId: postId,
+          text: text,
+          author: session?.user?.name || "匿名部員",
+        }),
+      });
+
+      if (response.ok) {
+        setCommentTexts({ ...commentTexts, [postId]: "" });
+        alert("コメントを送信しました！");
+        fetchTopicAndReplies();
+      }
+    } catch (error) {
+      console.error("コメント送信エラー:", error);
+    }
+  };
+
+  const toggleCommentLike = (commentId: string) => {
+    setCommentLikes({ ...commentLikes, [commentId]: !commentLikes[commentId] });
+  };
+
   if (loading) {
     return <div className="text-center py-10">読み込み中...</div>;
   }
@@ -309,7 +340,7 @@ export default function TopicPage() {
         {/* 投稿フォーム（ファイルインポート専用） */}
         {session && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h3 className="text-lg font-bold mb-4">このお題に投稿する</h3>
+            <h3 className="text-lg font-bold mb-4">✍️ このお題に投稿する</h3>
             
             <div className="mb-4">
               <label className="block text-sm font-semibold mb-2">📄 ファイルを選択</label>
@@ -357,43 +388,96 @@ export default function TopicPage() {
           </div>
         )}
 
-        {/* 返信一覧 */}
+        {/* 投稿一覧 */}
         <div>
-          <h3 className="text-lg font-bold mb-4">このお題への返信 ({replies.length})</h3>
+          <h3 className="text-lg font-bold mb-4">このお題への投稿 ({replies.length})</h3>
           {replies.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">まだ返信がありません</p>
+            <p className="text-gray-500 text-center py-8">まだ投稿がありません</p>
           ) : (
             replies.map((reply) => (
               <div
                 key={reply.id}
                 className="bg-white rounded-lg shadow-md p-6 mb-4 border-l-4 border-blue-500"
               >
-                <h4 className="text-lg font-bold text-blue-600 mb-2">{reply.title}</h4>
-                <p className="text-gray-700 mb-4 whitespace-pre-wrap">{reply.body}</p>
-                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                  <span>{reply.author}</span>
-                  <span>{new Date(reply.createdAt * 1000).toLocaleString()}</span>
-                </div>
-                <div className="flex gap-4">
-                  <button
-                    onClick={() => handleLike(reply.id)}
-                    className={`px-4 py-2 rounded font-semibold transition ${
-                      likedPosts.includes(reply.id)
-                        ? "bg-red-100 text-red-600"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
-                    ❤️ {reply.likes || 0}
-                  </button>
-                  {session?.user?.email === reply.author && (
+                {/* 投稿本体 */}
+                <div className="mb-4">
+                  <h4 className="text-lg font-bold text-blue-600 mb-2">{reply.title}</h4>
+                  <p className="text-gray-700 mb-4 whitespace-pre-wrap">{reply.body}</p>
+                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                    <span>{reply.author}</span>
+                    <span>{new Date(reply.createdAt * 1000).toLocaleString()}</span>
+                  </div>
+                  <div className="flex gap-4">
                     <button
-                      onClick={() => deletePost(reply.id)}
-                      className="px-4 py-2 bg-red-100 text-red-600 rounded font-semibold hover:bg-red-200"
+                      onClick={() => handleLike(reply.id)}
+                      className={`px-4 py-2 rounded font-semibold transition ${
+                        likedPosts.includes(reply.id)
+                          ? "bg-red-100 text-red-600"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
                     >
-                      削除
+                      ❤️ {reply.likes || 0}
                     </button>
-                  )}
+                    {session?.user?.email === reply.author && (
+                      <button
+                        onClick={() => deletePost(reply.id)}
+                        className="px-4 py-2 bg-red-100 text-red-600 rounded font-semibold hover:bg-red-200"
+                      >
+                        削除
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {/* コメント一覧 */}
+                {reply.comments && reply.comments.length > 0 && (
+                  <div className="mb-4 pt-4 border-t border-gray-200">
+                    <p className="text-xs font-bold text-gray-400 mb-3">💬 コメント ({reply.comments.length})</p>
+                    <div className="space-y-3">
+                      {reply.comments.map((comment) => (
+                        <div key={comment.commentId} className="bg-gray-50 p-3 rounded-lg text-sm">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-semibold text-gray-700">{comment.author}</span>
+                            <span className="text-xs text-gray-400">{new Date(comment.createdAt * 1000).toLocaleString()}</span>
+                          </div>
+                          <p className="text-gray-600 mb-2">{comment.text}</p>
+                          <button
+                            onClick={() => toggleCommentLike(comment.commentId)}
+                            className={`text-xs px-2 py-1 rounded transition ${
+                              commentLikes[comment.commentId]
+                                ? "bg-red-100 text-red-600"
+                                : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                            }`}
+                          >
+                            ❤️ {commentLikes[comment.commentId] ? 1 : 0}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* コメント入力フォーム */}
+                {session && (
+                  <div className="pt-4 border-t border-gray-200">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="コメントを入力..."
+                        value={commentTexts[reply.id] || ""}
+                        onChange={(e) => setCommentTexts({ ...commentTexts, [reply.id]: e.target.value })}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <button
+                        onClick={() => saveComment(reply.id)}
+                        disabled={!commentTexts[reply.id]}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold text-sm hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                      >
+                        送信
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))
           )}

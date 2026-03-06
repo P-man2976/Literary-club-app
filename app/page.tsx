@@ -504,7 +504,7 @@ export default function Home() {
                       </button>
                       <div className="flex items-center gap-1 text-slate-400">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-1.9A9 9 0 1 1 5.9 5.9l1.1 1.1"/></svg>
-                        <span className="text-xs font-bold">{(topic.children?.length || 0) + (topic.comments?.length || 0)}</span>
+                        <span className="text-xs font-bold">{topic.children?.length || 0} 投稿</span>
                       </div>
                     </div>
                   </div>
