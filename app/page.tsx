@@ -607,10 +607,10 @@ export default function Home() {
         variant="underlined"
         color="primary"
         classNames={{
-          base: "sticky top-[73px] bg-background z-20 border-b border-divider px-2",
-          tabList: "w-full gap-2",
+          base: "sticky top-[73px] bg-background z-20 border-b border-divider px-0",
+          tabList: "w-full !grid !grid-cols-3 gap-0 md:!flex md:justify-center md:gap-2",
           cursor: "w-full h-[3px]",
-          tab: "h-12 data-[selected=true]:font-black data-[selected=true]:text-primary",
+          tab: "h-12 w-full max-w-none justify-center data-[selected=true]:font-black data-[selected=true]:text-primary md:flex-none md:w-[180px]",
           tabContent: "group-data-[selected=true]:text-primary group-data-[selected=false]:text-default-500",
         }}
       >
@@ -630,13 +630,12 @@ export default function Home() {
               <p className="text-default-400 text-xs mt-2">お題案投稿タブで案を投稿し、選択してお題化できます。</p>
             </div>
           ) : (
-            <div className="divide-y divide-divider">
+            <div className="p-3 space-y-3">
               {topicPosts.map((topic) => (
                 <Card 
                   key={topic.id}
-                  shadow="none"
-                  radius="none"
-                  className="border-0"
+                  shadow="sm"
+                  className="border border-default-200 rounded-2xl"
                 >
                   <CardBody className="p-4 gap-2">
                     <div className="flex items-center justify-between">
@@ -739,7 +738,7 @@ export default function Home() {
         >
           <div className="p-4 space-y-4">
             {session && (
-              <Card shadow="sm" className="border border-default-200">
+              <Card shadow="sm" className="border border-default-200 rounded-2xl">
                 <CardBody className="p-4 space-y-3">
                   <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
                     <input
@@ -790,7 +789,7 @@ export default function Home() {
               </Card>
             )}
 
-            <Card shadow="sm" className="border border-default-200">
+            <Card shadow="sm" className="border border-default-200 rounded-2xl">
               <CardBody className="p-4 space-y-3">
                 <p className="text-sm text-default-500">お題の決定は「お題」タブ右下の + ボタンから行えます。</p>
               </CardBody>
@@ -800,7 +799,7 @@ export default function Home() {
               <div className="space-y-3">
                 <h3 className="text-lg font-bold">過去のお題案</h3>
                 {topicProposals.map((proposal) => (
-                  <Card key={proposal.id} shadow="sm" className="border border-default-200 cursor-pointer hover:shadow-md transition-shadow">
+                  <Card key={proposal.id} shadow="sm" className="border border-default-200 rounded-2xl cursor-pointer hover:shadow-md transition-shadow">
                     <CardBody className="p-4 space-y-2">
                       <h4 className="font-semibold text-base text-default-700">{proposal.title}</h4>
                       <p className="text-sm text-default-600 line-clamp-3">{proposal.body}</p>
@@ -846,7 +845,7 @@ export default function Home() {
         >
           <div className="p-4 space-y-3">
             {memberProfiles.length === 0 ? (
-              <Card shadow="sm" className="border border-default-200">
+              <Card shadow="sm" className="border border-default-200 rounded-2xl">
                 <CardBody className="p-6 text-center space-y-2">
                   <Users size={28} className="mx-auto text-default-400" />
                   <p className="text-sm font-semibold text-default-600">部員プロフィールはまだありません</p>
@@ -863,7 +862,7 @@ export default function Home() {
                   : ["#文芸部", "#創作", "#部員紹介"];
 
                 return (
-                  <Card key={member.email} shadow="sm" className="border border-default-200">
+                  <Card key={member.email} shadow="sm" className="border border-default-200 rounded-2xl">
                     <CardBody className="p-4 space-y-3">
                       <div className="flex items-center gap-3">
                         {iconUrl ? (

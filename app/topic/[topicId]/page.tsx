@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getUserIconUrl } from "@/app/lib/imageUtils";
 import {
   ArrowLeft,
@@ -800,7 +800,9 @@ export default function TopicPage() {
                 {/* 投稿本体 */}
                 <div className="mb-4">
                   <h4 className="text-lg font-bold text-blue-600 mb-2">{reply.title}</h4>
-                  <p className="text-gray-700 mb-4 whitespace-pre-wrap">{reply.body}</p>
+                  <div className="mb-4 overflow-x-auto border border-gray-200 rounded-lg p-4 bg-gray-50" style={{ direction: 'rtl' }}>
+                    <p className="text-gray-700 whitespace-pre-wrap" style={{ writingMode: 'vertical-rl', height: '400px', minWidth: 'fit-content', direction: 'ltr' }}>{reply.body}</p>
+                  </div>
                   <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
                     <span className="flex items-center gap-2">
                       {getDisplayIcon(reply.authorEmail) ? (
