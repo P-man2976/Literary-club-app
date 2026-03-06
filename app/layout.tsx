@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 // 先ほど作成したProviderを読み込む
 import { NextAuthProvider } from "./components/NextAuthProvider"; 
+import { ThemeProvider } from "next-themes"; 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,12 +27,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja">
+    <html lang="ja" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {/* これで全体を包む */}
-        <NextAuthProvider>
-          {children}
-        </NextAuthProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <NextAuthProvider>
+            {children}
+          </NextAuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
