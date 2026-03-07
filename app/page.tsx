@@ -19,7 +19,7 @@ import {
   Badge,
   Spinner
 } from "@heroui/react";
-import { Lightbulb, Pin, Save, Users, AlertCircle, Settings } from "lucide-react";
+import { Lightbulb, Pin, Save, Users, AlertCircle, Settings, MessageCircle, Heart } from "lucide-react";
 
 
 // 型定義
@@ -71,12 +71,16 @@ export default function Home() {
   const [isOpen, setIsOpen] = useState(false);
   const onClose = () => setIsOpen(false);
   const [isTopicDecisionModalOpen, setIsTopicDecisionModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"proposal" | "topics" | "members">("topics");
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"posts" | "topics" | "members">("posts");
   const [openPostId, setOpenPostId] = useState<string | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [topicPosts, setTopicPosts] = useState<Post[]>([]);
   const [topicProposals, setTopicProposals] = useState<Post[]>([]);
+  const [freePosts, setFreePosts] = useState<Post[]>([]);
+  const [topicReplies, setTopicReplies] = useState<Post[]>([]);
   const [newPost, setNewPost] = useState<Partial<Post>>({ title: "", body: "", tag: "創作" });
   const [userIcon, setUserIcon] = useState<string | null>(null);
   const [postingMode, setPostingMode] = useState<"regular" | "topic" | "reply">("regular");
@@ -132,9 +136,14 @@ export default function Home() {
     const allSorted = postsWithAll.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     setAllPosts(allSorted);
 
+    // お題
     const topics = postsWithAll.filter(p => p.isTopicPost === 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    // お題案
     const proposals = postsWithAll.filter(p => p.tag === "お題案" && p.isTopicPost !== 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    const regular = postsWithAll.filter(p => !p.parentPostId && p.isTopicPost !== 1 && p.tag !== "お題案").sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    // 自由投稿（お題に紐づかない投稿）
+    const free = postsWithAll.filter(p => !p.parentPostId && p.isTopicPost !== 1 && p.tag !== "お題案").sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    // お題への投稿（返信）
+    const replies = postsWithAll.filter(p => p.parentPostId && p.isTopicPost !== 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
     const topicsWithChildren = topics.map(topic => {
       const children = postsWithAll.filter(p => p.parentPostId === topic.id);
@@ -143,7 +152,9 @@ export default function Home() {
 
     setTopicPosts(topicsWithChildren);
     setTopicProposals(proposals);
-    setPosts(regular);
+    setPosts(free);
+    setFreePosts(free);
+    setTopicReplies(replies);
   }, [allPostsData]);
 
   // 部員プロフィールデータの処理
@@ -715,7 +726,7 @@ export default function Home() {
       {/* タブナビゲーション */}
       <Tabs 
         selectedKey={activeTab}
-        onSelectionChange={(key) => setActiveTab(key as "proposal" | "topics" | "members")}
+        onSelectionChange={(key) => setActiveTab(key as "posts" | "topics" | "members")}
         variant="underlined"
         color="primary"
         className="w-full"
@@ -728,6 +739,103 @@ export default function Home() {
         }}
       >
         <Tab
+          key="posts"
+          title={
+            <span className="flex items-center gap-1">
+              <Save size={14} />
+              投稿
+            </span>
+          }
+        >
+          {/* 投稿タブのコンテンツ */}
+          <div className="p-3 space-y-3">
+            {(freePosts.length === 0 && topicReplies.length === 0) ? (
+              <div className="p-10 text-center">
+                <Save size={34} className="mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-500 text-sm font-medium">まだ投稿がありません</p>
+                <p className="text-gray-400 text-xs mt-2">右下のボタンから投稿を作成できます。</p>
+              </div>
+            ) : (
+              <>
+                {/* 全投稿を統合して時系列順に表示 */}
+                {[...topicReplies, ...freePosts]
+                  .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+                  .map((post) => {
+                  const parentTopic = post.parentPostId ? topicPosts.find(t => t.id === post.parentPostId) : null;
+                  const isTopicReply = !!post.parentPostId;
+                  return (
+                    <Card 
+                      key={post.id}
+                      shadow="sm"
+                      className="border border-gray-200 rounded-2xl"
+                    >
+                      <CardBody className="p-4 gap-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {getDisplayIcon(post.authorEmail) ? (
+                              <img
+                                src={getDisplayIcon(post.authorEmail) || ""}
+                                alt="投稿者アイコン"
+                                className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full object-cover border border-gray-300"
+                              />
+                            ) : (
+                              <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-200 border border-gray-300" />
+                            )}
+                            <span className="font-bold">{getDisplayName(post.authorEmail, post.author)}</span>
+                            {isTopicReply && parentTopic ? (
+                              <Chip size="sm" color="secondary" variant="flat">
+                                お題: {parentTopic.title}
+                              </Chip>
+                            ) : (
+                              <Chip size="sm" color="primary" variant="flat">自由投稿</Chip>
+                            )}
+                          </div>
+                          <span className="text-xs text-gray-400">
+                            {new Date(post.createdAt).toLocaleDateString('ja-JP')}
+                          </span>
+                        </div>
+                        
+                        <div 
+                          onClick={() => router.push(`/topic/${post.id}`)}
+                          className="cursor-pointer"
+                        >
+                          <h3 className="text-lg font-bold mb-1">{post.title}</h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 whitespace-pre-wrap">{post.body}</p>
+                          <p className="text-xs text-gray-400 mt-1">クリックして詳細を表示...</p>
+                        </div>
+
+                        {/* コメント数・いいね数表示 */}
+                        <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 dark:text-gray-400">
+                          <span className="flex items-center gap-1">
+                            <MessageCircle size={14} />
+                            {post.commentCount || 0} コメント
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Heart size={14} />
+                            {post.likes || 0} いいね
+                          </span>
+                        </div>
+                      </CardBody>
+                    </Card>
+                  );
+                })}
+              </>
+            )}
+          </div>
+
+          {/* 投稿作成フロートボタン */}
+          {session && (
+            <button
+              className="fixed right-6 bottom-24 z-40 h-12 rounded-full bg-primary text-white text-sm font-bold px-4 shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
+              onClick={() => setIsPostModalOpen(true)}
+              aria-label="投稿を作成"
+            >
+              + 投稿
+            </button>
+          )}
+        </Tab>
+
+        <Tab
           key="topics"
           title={
             <span className="flex items-center gap-1">
@@ -736,260 +844,222 @@ export default function Home() {
             </span>
           }
         >
-          {topicPosts.length === 0 ? (
-            <div className="p-10 text-center">
-              <Pin size={34} className="mx-auto mb-4 text-gray-400" />
-              <p className="text-gray-500 text-sm font-medium">まだお題がありません</p>
-              <p className="text-gray-400 text-xs mt-2">お題案投稿タブで案を投稿し、選択してお題化できます。</p>
-            </div>
-          ) : (
-            <div className="p-3 space-y-3">
-              {topicPosts.map((topic) => (
-                <Card 
-                  key={topic.id}
-                  shadow="sm"
-                  className="border border-gray-200 rounded-2xl"
-                >
-                  <CardBody className="p-4 gap-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {getDisplayIcon(topic.authorEmail) ? (
-                          <img
-                            src={getDisplayIcon(topic.authorEmail) || ""}
-                            alt="投稿者アイコン"
-                            className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full object-cover border border-gray-300"
-                          />
-                        ) : (
-                          <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-200 border border-gray-300" />
-                        )}
-                        <span className="font-bold">{getDisplayName(topic.authorEmail, topic.author)}</span>
-                        <Chip size="sm" color="secondary" variant="flat">お題</Chip>
-                      </div>
-                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1 text-gray-400 text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-1.9A9 9 0 1 1 5.9 5.9l1.1 1.1"/></svg>
-                            <span className="text-xs font-bold">{topic.children?.length || 0} 投稿</span>
+          {/* お題タブのコンテンツ */}
+          <div className="p-3 space-y-3">
+            {topicPosts.length === 0 ? (
+              <div className="p-10 text-center">
+                <Pin size={34} className="mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-500 text-sm font-medium">まだお題がありません</p>
+                <p className="text-gray-400 text-xs mt-2">右下のボタンからお題案を投稿し、お題を決定できます。</p>
+              </div>
+            ) : (
+              <>
+                {/* 今週のお題（最新のお題） */}
+                {topicPosts.length > 0 && (
+                  <div className="space-y-2">
+                    <h2 className="text-lg font-bold px-2">今週のお題</h2>
+                    <Card 
+                      shadow="sm"
+                      className="border-2 border-primary rounded-2xl bg-primary-50/30 dark:bg-primary-900/20"
+                    >
+                      <CardBody className="p-4 gap-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {getDisplayIcon(topicPosts[0].authorEmail) ? (
+                              <img
+                                src={getDisplayIcon(topicPosts[0].authorEmail) || ""}
+                                alt="投稿者アイコン"
+                                className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full object-cover border border-gray-300"
+                              />
+                            ) : (
+                              <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-200 border border-gray-300" />
+                            )}
+                            <span className="font-bold">{getDisplayName(topicPosts[0].authorEmail, topicPosts[0].author)}</span>
+                            <Chip size="sm" color="secondary" variant="solid">今週のお題</Chip>
                           </div>
-                          {getTopicParticipants(topic).length > 0 && (
-                            <div className="flex items-center -space-x-2">
-                              {getTopicParticipants(topic)
-                                .slice(0, 6)
-                                .map((participant) => (
-                                  participant.icon ? (
-                                    <img
-                                      key={participant.key}
-                                      src={participant.icon}
-                                      alt={participant.name}
-                                      title={participant.name}
-                                      className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full object-cover border-2 border-background"
-                                    />
-                                  ) : (
-                                    <div
-                                      key={participant.key}
-                                      title={participant.name}
-                                      className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-300 text-[10px] font-bold text-gray-700 border-2 border-background flex items-center justify-center"
-                                    >
-                                      {participant.name.slice(0, 1)}
+                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1 text-gray-400 text-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-1.9A9 9 0 1 1 5.9 5.9l1.1 1.1"/></svg>
+                                <span className="text-xs font-bold">{topicPosts[0].children?.length || 0} 投稿</span>
+                              </div>
+                              {getTopicParticipants(topicPosts[0]).length > 0 && (
+                                <div className="flex items-center -space-x-2">
+                                  {getTopicParticipants(topicPosts[0])
+                                    .slice(0, 6)
+                                    .map((participant) => (
+                                      participant.icon ? (
+                                        <img
+                                          key={participant.key}
+                                          src={participant.icon}
+                                          alt={participant.name}
+                                          title={participant.name}
+                                          className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full object-cover border-2 border-background"
+                                        />
+                                      ) : (
+                                        <div
+                                          key={participant.key}
+                                          title={participant.name}
+                                          className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-300 text-[10px] font-bold text-gray-700 border-2 border-background flex items-center justify-center"
+                                        >
+                                          {participant.name.slice(0, 1)}
+                                        </div>
+                                      )
+                                    ))}
+                                  {getTopicParticipants(topicPosts[0]).length > 6 && (
+                                    <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-200 text-[10px] font-bold text-gray-600 border-2 border-background flex items-center justify-center">
+                                      +{getTopicParticipants(topicPosts[0]).length - 6}
                                     </div>
-                                  )
-                                ))}
-                              {getTopicParticipants(topic).length > 6 && (
-                                <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-200 text-[10px] font-bold text-gray-600 border-2 border-background flex items-center justify-center">
-                                  +{getTopicParticipants(topic).length - 6}
+                                  )}
                                 </div>
                               )}
                             </div>
-                          )}
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                    <div 
-                      onClick={() => router.push(`/topic/${topic.id}`)}
-                      className="cursor-pointer"
-                    >
-                      <h2 className="text-lg font-bold">{topic.title}</h2>
-                      {topic.deadline && (
-                        <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-1">
-                          締切: {formatDateTime(topic.deadline)}
-                        </p>
-                      )}
-                      <p className="text-sm text-gray-600 line-clamp-2">{topic.body}</p>
-                      <p className="text-xs text-gray-400">クリックして詳細ページを表示...</p>
-                    </div>
-                  </CardBody>
-                </Card>
-              ))}
-            </div>
-          )}
-
-          {session && (
-            <button
-              className="fixed right-6 bottom-24 z-40 h-12 rounded-full bg-primary text-white text-sm font-bold px-4 shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
-              onClick={() => {
-                if (!hasDecisionCandidates) {
-                  alert("候補がありません。まずお題案を投稿してください。");
-                  return;
-                }
-                setSelectedProposalId(null);
-                setSelectedPoolTopicId(null);
-                setProposalDeadline(null);
-                setIsTopicDecisionModalOpen(true);
-              }}
-              aria-label="お題を決定"
-              title={hasDecisionCandidates ? "お題を決定" : "候補がありません"}
-            >
-              + お題作成
-            </button>
-          )}
-        </Tab>
-
-        <Tab
-          key="proposal"
-          title={
-            <span className="flex items-center gap-1">
-              <Lightbulb size={14} />
-              お題案投稿
-            </span>
-          }
-        >
-          <div className="p-4 space-y-4">
-            {session && (
-              <Card shadow="sm" className="border border-default-200 rounded-2xl">
-                <CardBody className="p-4 space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2">
-                    <input
-                      type="text"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                      placeholder="お題案タイトル"
-                      value={newPost.title || ""}
-                      onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-                    />
-                    <button
-                      className="px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 disabled:opacity-50"
-                      disabled={!newPost.title || !newPost.body}
-                      onClick={() => {
-                        if (!newPost.title || !newPost.body) {
-                          alert("タイトルと内容は必須です");
-                          return;
-                        }
-                        const proposalData = {
-                          ...newPost,
-                          author: penName || session?.user?.name || "匿名部員",
-                          authorEmail: session?.user?.email || null,
-                          tag: "お題案",
-                        };
-                        fetch("/api/posts", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify(proposalData),
-                        }).then(async (res) => {
-                          if (res.ok) {
-                            alert("お題案を投稿しました！");
-                            setNewPost({ title: "", body: "", tag: "お題案" });
-                            await mutatePosts();
-                            router.refresh();
-                          }
-                        });
-                      }}
-                    >
-                      投稿
-                    </button>
-                  </div>
-                  <textarea
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 min-h-[88px]"
-                    placeholder="内容"
-                    value={newPost.body || ""}
-                    onChange={(e) => setNewPost({ ...newPost, body: e.target.value })}
-                  />
-                </CardBody>
-              </Card>
-            )}
-
-            <Card shadow="sm" className="border border-gray-200 rounded-2xl">
-              <CardBody className="p-4 space-y-3">
-                <p className="text-sm text-gray-500">お題の決定は「お題」タブ右下の + ボタンから行えます。</p>
-              </CardBody>
-            </Card>
-
-            {topicProposals.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="text-lg font-bold">過去のお題案</h3>
-                {topicProposals.map((proposal) => (
-                  editingProposalId === proposal.id ? (
-                    <Card key={proposal.id} shadow="sm" className="border border-gray-200 rounded-2xl">
-                      <CardBody className="p-4 space-y-3">
-                        <h4 className="font-semibold text-base">お題案を編集</h4>
-                        <input
-                          type="text"
-                          value={editingProposalTitle}
-                          onChange={(e) => setEditingProposalTitle(e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        <textarea
-                          value={editingProposalBody}
-                          onChange={(e) => setEditingProposalBody(e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => saveEditedProposal(proposal.id)}
-                            className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-semibold hover:bg-blue-600"
-                          >
-                            保存
-                          </button>
-                          <button
-                            onClick={cancelEditingProposal}
-                            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-400"
-                          >
-                            キャンセル
-                          </button>
+                        <div 
+                          onClick={() => router.push(`/topic/${topicPosts[0].id}`)}
+                          className="cursor-pointer"
+                        >
+                          <h2 className="text-lg font-bold">{topicPosts[0].title}</h2>
+                          {topicPosts[0].deadline && (
+                            <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-1">
+                              締切: {formatDateTime(topicPosts[0].deadline)}
+                            </p>
+                          )}
+                          <p className="text-sm text-gray-600 line-clamp-2">{topicPosts[0].body}</p>
+                          <p className="text-xs text-gray-400">クリックして詳細ページを表示...</p>
                         </div>
                       </CardBody>
                     </Card>
-                  ) : (
-                  <Card key={proposal.id} shadow="sm" className="border border-default-200 rounded-2xl cursor-pointer hover:shadow-md transition-shadow">
-                    <CardBody className="p-4 space-y-2">
-                      <h4 className="font-semibold text-base text-default-700">{proposal.title}</h4>
-                      <p className="text-sm text-default-600 line-clamp-3">{proposal.body}</p>
-                      <div className="flex items-center justify-between text-xs text-default-500 pt-2">
-                        <span>投稿者: {getDisplayName(proposal.authorEmail, proposal.author)}</span>
-                        <span>{new Date(proposal.createdAt).toLocaleDateString('ja-JP')}</span>
-                      </div>
-                      {session?.user?.email === proposal.authorEmail && (
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            onClick={() => startEditingProposal(proposal.id, proposal.title, proposal.body)}
-                            className="text-xs text-blue-500 hover:text-blue-700 font-semibold"
-                          >
-                            編集
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (confirm("このお題案を削除しますか？")) {
-                                fetch(`/api/posts?postId=${proposal.id}`, {
-                                  method: "DELETE",
-                                }).then((res) => {
-                                  if (res.ok) {
-                                    alert("削除しました！");
-                                    mutatePosts();
-                                  }
-                                });
-                              }
-                            }}
-                            className="text-xs text-red-500 hover:text-red-700 font-semibold"
-                          >
-                            削除
-                          </button>
+                  </div>
+                )}
+
+                {/* お題決定ボタン */}
+                {session && (
+                  <Card shadow="sm" className="border border-blue-300 dark:border-blue-700 rounded-2xl bg-blue-50/50 dark:bg-blue-900/10">
+                    <CardBody className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-sm text-blue-900 dark:text-blue-200">新しいお題を決定</p>
+                          <p className="text-xs text-blue-700 dark:text-blue-300">お題案からランダム選択、または手動で選んでお題化できます</p>
                         </div>
-                      )}
+                        <button
+                          onClick={() => {
+                            if (!hasDecisionCandidates) {
+                              alert("お題案がありません。まず右下のボタンからお題案を投稿してください。");
+                              return;
+                            }
+                            setSelectedProposalId(null);
+                            setSelectedPoolTopicId(null);
+                            setProposalDeadline(null);
+                            setIsTopicDecisionModalOpen(true);
+                          }}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 text-sm whitespace-nowrap"
+                        >
+                          お題決定
+                        </button>
+                      </div>
                     </CardBody>
                   </Card>
-                  )
-                ))}
-              </div>
+                )}
+
+                {/* 過去のお題 */}
+                {topicPosts.length > 1 && (
+                  <div className="space-y-2">
+                    <h3 className="text-base font-bold px-2 mt-4">過去のお題</h3>
+                    {topicPosts.slice(1).map((topic) => (
+                      <Card 
+                        key={topic.id}
+                        shadow="sm"
+                        className="border border-gray-200 rounded-2xl"
+                      >
+                        <CardBody className="p-4 gap-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {getDisplayIcon(topic.authorEmail) ? (
+                                <img
+                                  src={getDisplayIcon(topic.authorEmail) || ""}
+                                  alt="投稿者アイコン"
+                                  className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full object-cover border border-gray-300"
+                                />
+                              ) : (
+                                <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-200 border border-gray-300" />
+                              )}
+                              <span className="font-bold">{getDisplayName(topic.authorEmail, topic.author)}</span>
+                              <Chip size="sm" color="default" variant="flat">過去のお題</Chip>
+                            </div>
+                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1 text-gray-400 text-sm">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-1.9A9 9 0 1 1 5.9 5.9l1.1 1.1"/></svg>
+                                  <span className="text-xs font-bold">{topic.children?.length || 0} 投稿</span>
+                                </div>
+                                {getTopicParticipants(topic).length > 0 && (
+                                  <div className="flex items-center -space-x-2">
+                                    {getTopicParticipants(topic)
+                                      .slice(0, 6)
+                                      .map((participant) => (
+                                        participant.icon ? (
+                                          <img
+                                            key={participant.key}
+                                            src={participant.icon}
+                                            alt={participant.name}
+                                            title={participant.name}
+                                            className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full object-cover border-2 border-background"
+                                          />
+                                        ) : (
+                                          <div
+                                            key={participant.key}
+                                            title={participant.name}
+                                            className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-300 text-[10px] font-bold text-gray-700 border-2 border-background flex items-center justify-center"
+                                          >
+                                            {participant.name.slice(0, 1)}
+                                          </div>
+                                        )
+                                      ))}
+                                    {getTopicParticipants(topic).length > 6 && (
+                                      <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-200 text-[10px] font-bold text-gray-600 border-2 border-background flex items-center justify-center">
+                                        +{getTopicParticipants(topic).length - 6}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div 
+                            onClick={() => router.push(`/topic/${topic.id}`)}
+                            className="cursor-pointer"
+                          >
+                            <h2 className="text-lg font-bold">{topic.title}</h2>
+                            {topic.deadline && (
+                              <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-1">
+                                締切: {formatDateTime(topic.deadline)}
+                              </p>
+                            )}
+                            <p className="text-sm text-gray-600 line-clamp-2">{topic.body}</p>
+                            <p className="text-xs text-gray-400">クリックして詳細ページを表示...</p>
+                          </div>
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
+
+          {/* お題案登録フロートボタン */}
+          {session && (
+            <button
+              className="fixed right-6 bottom-24 z-40 h-12 rounded-full bg-orange-500 text-white text-sm font-bold px-4 shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
+              onClick={() => setIsProposalModalOpen(true)}
+              aria-label="お題案を投稿"
+            >
+              <Lightbulb size={16} />
+              お題案
+            </button>
+          )}
         </Tab>
 
         <Tab
@@ -1095,7 +1165,7 @@ export default function Home() {
                 <div className="text-center py-8">
                   <p className="text-lg font-semibold text-slate-700 dark:text-slate-300">候補がまだありません</p>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-                    「お題案投稿」タブからお題案を投稿してください。
+                    「お題」タブ右下のボタンからお題案を投稿してください。
                   </p>
                 </div>
               ) : (
@@ -1318,6 +1388,236 @@ export default function Home() {
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {postingMode === "topic" ? "お題を公開" : "保存を実行"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* お題案投稿モーダル */}
+      {isProposalModalOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => setIsProposalModalOpen(false)}
+        >
+          <div 
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg max-w-2xl w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* ヘッダー */}
+            <div className="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 p-6">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Lightbulb size={18} />
+                お題案を投稿
+              </h2>
+              <button
+                onClick={() => setIsProposalModalOpen(false)}
+                className="text-2xl text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* ボディ */}
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2">お題案タイトル</label>
+                <input
+                  type="text"
+                  placeholder="例：夏祭りの思い出"
+                  value={newPost.title || ""}
+                  onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                  className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">詳細・説明</label>
+                <textarea
+                  placeholder="お題案の詳細や説明を入力..."
+                  value={newPost.body || ""}
+                  onChange={(e) => setNewPost({ ...newPost, body: e.target.value })}
+                  rows={4}
+                  className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                />
+              </div>
+            </div>
+
+            {/* フッター */}
+            <div className="flex justify-end gap-2 border-t border-gray-200 dark:border-slate-700 p-6">
+              <button
+                onClick={() => {
+                  setIsProposalModalOpen(false);
+                  setNewPost({ title: "", body: "", tag: "創作" });
+                }}
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg font-semibold"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={() => {
+                  if (!newPost.title || !newPost.body) {
+                    alert("タイトルと内容は必須です");
+                    return;
+                  }
+                  const proposalData = {
+                    ...newPost,
+                    author: penName || session?.user?.name || "匿名部員",
+                    authorEmail: session?.user?.email || null,
+                    tag: "お題案",
+                  };
+                  fetch("/api/posts", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(proposalData),
+                  }).then(async (res) => {
+                    if (res.ok) {
+                      alert("お題案を投稿しました！");
+                      setNewPost({ title: "", body: "", tag: "創作" });
+                      setIsProposalModalOpen(false);
+                      await mutatePosts();
+                      router.refresh();
+                    } else {
+                      alert("投稿に失敗しました");
+                    }
+                  }).catch(() => {
+                    alert("投稿に失敗しました");
+                  });
+                }}
+                disabled={!newPost.title || !newPost.body}
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                投稿
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 投稿作成モーダル（自由投稿 or お題投稿） */}
+      {isPostModalOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => setIsPostModalOpen(false)}
+        >
+          <div 
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg max-w-2xl w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* ヘッダー */}
+            <div className="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 p-6">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Save size={18} />
+                投稿を作成
+              </h2>
+              <button
+                onClick={() => setIsPostModalOpen(false)}
+                className="text-2xl text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* ボディ */}
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2">投稿先</label>
+                <select
+                  value={selectedTopicId || "free"}
+                  onChange={(e) => setSelectedTopicId(e.target.value === "free" ? null : e.target.value)}
+                  className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                >
+                  <option value="free">自由投稿</option>
+                  {topicPosts.map((topic) => (
+                    <option key={topic.id} value={topic.id}>
+                      お題: {topic.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">ファイルから読み込み（任意）</label>
+                <input 
+                  type="file" 
+                  accept=".txt,.pdf,.docx" 
+                  onChange={handleFileChange}
+                  className="w-full"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">対応形式: テキスト (.txt), PDF, Word (.docx)</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">タイトル</label>
+                <input
+                  type="text"
+                  placeholder="投稿のタイトル"
+                  value={newPost.title || ""}
+                  onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                  className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">本文</label>
+                <textarea
+                  placeholder="投稿の内容を入力..."
+                  value={newPost.body || ""}
+                  onChange={(e) => setNewPost({ ...newPost, body: e.target.value })}
+                  rows={8}
+                  className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                />
+              </div>
+            </div>
+
+            {/* フッター */}
+            <div className="flex justify-end gap-2 border-t border-gray-200 dark:border-slate-700 p-6">
+              <button
+                onClick={() => {
+                  setIsPostModalOpen(false);
+                  setNewPost({ title: "", body: "", tag: "創作" });
+                  setSelectedTopicId(null);
+                }}
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg font-semibold"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={() => {
+                  if (!newPost.title || !newPost.body) {
+                    alert("タイトルと本文は必須です");
+                    return;
+                  }
+                  const postData = {
+                    title: newPost.title,
+                    body: newPost.body,
+                    author: penName || session?.user?.name || "匿名部員",
+                    authorEmail: session?.user?.email || null,
+                    tag: selectedTopicId ? "作品" : "創作",
+                    parentPostId: selectedTopicId || null,
+                  };
+                  fetch("/api/posts", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(postData),
+                  }).then(async (res) => {
+                    if (res.ok) {
+                      alert("投稿しました！");
+                      setNewPost({ title: "", body: "", tag: "創作" });
+                      setSelectedTopicId(null);
+                      setIsPostModalOpen(false);
+                      await mutatePosts();
+                      router.refresh();
+                    } else {
+                      alert("投稿に失敗しました");
+                    }
+                  }).catch(() => {
+                    alert("投稿に失敗しました");
+                  });
+                }}
+                disabled={!newPost.title || !newPost.body}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                投稿
               </button>
             </div>
           </div>
