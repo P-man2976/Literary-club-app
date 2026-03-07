@@ -202,16 +202,13 @@ export default function SettingsPage() {
               {mounted && (
                 <>
                   <Button
-                    onPress={() => setTheme("light")}
+                    onPress={() => setTheme("library")}
                     variant="light"
-                    className={`w-full justify-start px-4 py-6 rounded-none ${theme === "light" ? "bg-primary-50" : ""}`}
+                    className={`w-full justify-start px-4 py-6 rounded-none ${theme === "library" ? "bg-primary-50" : ""}`}
                   >
                     <div className="flex items-center gap-3 w-full">
-                      <div className="flex-1 text-left">
-                        <p className={`font-bold ${theme === "light" ? "text-primary" : ""}`}>ライト</p>
-                        <p className="text-xs text-default-500">明るいテーマ</p>
-                      </div>
-                      {theme === "light" && <Check size={16} className="text-primary" />}
+                      <p className={`font-bold ${theme === "library" ? "text-primary" : ""}`}>LIBRARY</p>
+                      {theme === "library" && <Check size={16} className="text-primary" />}
                     </div>
                   </Button>
                   <div className="border-t border-divider" />
@@ -221,25 +218,19 @@ export default function SettingsPage() {
                     className={`w-full justify-start px-4 py-6 rounded-none ${theme === "dark" ? "bg-primary-50 dark:bg-primary-900/20" : ""}`}
                   >
                     <div className="flex items-center gap-3 w-full">
-                      <div className="flex-1 text-left">
-                        <p className={`font-bold ${theme === "dark" ? "text-primary" : ""}`}>ダーク</p>
-                        <p className="text-xs text-default-500">暗いテーマ</p>
-                      </div>
+                      <p className={`font-bold ${theme === "dark" ? "text-primary" : ""}`}>NEON</p>
                       {theme === "dark" && <Check size={16} className="text-primary" />}
                     </div>
                   </Button>
                   <div className="border-t border-divider" />
                   <Button
-                    onPress={() => setTheme("system")}
+                    onPress={() => setTheme("light")}
                     variant="light"
-                    className={`w-full justify-start px-4 py-6 rounded-none ${theme === "system" ? "bg-primary-50 dark:bg-primary-900/20" : ""}`}
+                    className={`w-full justify-start px-4 py-6 rounded-none ${theme === "light" ? "bg-primary-50" : ""}`}
                   >
                     <div className="flex items-center gap-3 w-full">
-                      <div className="flex-1 text-left">
-                        <p className={`font-bold ${theme === "system" ? "text-primary" : ""}`}>端末の設定に合わせる</p>
-                        <p className="text-xs text-default-500">システムのテーマに従う</p>
-                      </div>
-                      {theme === "system" && <Check size={16} className="text-primary" />}
+                      <p className={`font-bold ${theme === "light" ? "text-primary" : ""}`}>STREET</p>
+                      {theme === "light" && <Check size={16} className="text-primary" />}
                     </div>
                   </Button>
                 </>

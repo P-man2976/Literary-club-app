@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=Noto+Sans+JP:wght@700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=Noto+Sans+JP:wght@700;900&family=Noto+Serif+JP:wght@500;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -38,6 +38,158 @@ html.dark body {
   background-attachment: fixed;
   color: #E0F7FA;
   position: relative;
+}
+
+html.library body {
+  background: #F2F0E9;
+  background-attachment: fixed;
+  color: #1A1A1A;
+  position: relative;
+  font-family: 'Noto Serif JP', 'Yu Mincho', serif;
+}
+
+html.library body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(circle at 20% 25%, rgba(139,115,85,0.08) 0, rgba(139,115,85,0.08) 1px, transparent 1px),
+    radial-gradient(circle at 80% 70%, rgba(85,107,47,0.07) 0, rgba(85,107,47,0.07) 1px, transparent 1px),
+    linear-gradient(120deg, transparent 0%, rgba(26,26,26,0.03) 48%, transparent 52%);
+  background-size: 12px 12px, 14px 14px, 100% 100%;
+  opacity: 0.65;
+}
+
+html.library h1,
+html.library h2,
+html.library h3,
+html.library h4,
+html.library h5,
+html.library h6 {
+  color: #1A1A1A !important;
+  font-family: 'Noto Serif JP', 'Yu Mincho', serif;
+  letter-spacing: 0.01em;
+  font-style: normal;
+  text-transform: none;
+  text-shadow: none;
+}
+
+html.library .jsr-card {
+  border: 0.5px solid #8B7355 !important;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: none;
+  filter: none;
+  transform: none;
+  transition: border-color 0.2s ease;
+  border-radius: 2px !important;
+}
+
+html.library .jsr-card:hover {
+  transform: none;
+  animation: none;
+  border-color: #556B2F !important;
+  box-shadow: none;
+}
+
+html.library button {
+  background: #ECE7DB !important;
+  color: #1A1A1A !important;
+  border-width: 0.5px !important;
+  border-color: #8B7355 !important;
+  box-shadow: none !important;
+  font-style: normal;
+  border-radius: 2px !important;
+}
+
+html.library select,
+html.library input,
+html.library textarea,
+html.library [role="tab"],
+html.library [role="tablist"] {
+  border-radius: 2px !important;
+  box-shadow: none !important;
+}
+
+/* LIBRARYではビビッド色を抑えて、白黒+ベージュ/茶に統一 */
+html.library [class*="bg-pink"],
+html.library [class*="bg-cyan"],
+html.library [class*="bg-yellow"],
+html.library [class*="bg-orange"],
+html.library [class*="bg-purple"],
+html.library [class*="bg-green"],
+html.library [class*="bg-blue"] {
+  background: #ECE7DB !important;
+}
+
+html.library [class*="text-pink"],
+html.library [class*="text-cyan"],
+html.library [class*="text-yellow"],
+html.library [class*="text-orange"],
+html.library [class*="text-purple"],
+html.library [class*="text-green"],
+html.library [class*="text-blue"],
+html.library [class*="text-white"] {
+  color: #1A1A1A !important;
+}
+
+html.library [class*="border-white"],
+html.library [class*="border-pink"],
+html.library [class*="border-cyan"],
+html.library [class*="border-yellow"],
+html.library [class*="border-orange"],
+html.library [class*="border-purple"],
+html.library [class*="border-green"],
+html.library [class*="border-blue"] {
+  border-color: #8B7355 !important;
+}
+
+html.library .shake-hover:hover {
+  animation: none;
+  box-shadow: 0 0 0 1px rgba(139, 115, 85, 0.5);
+}
+
+html.library .spray-hover::before {
+  display: none;
+}
+
+html.library [class*="uppercase"] {
+  text-transform: none !important;
+}
+
+/* LIBRARY: お題決定モーダルはさらに静かな配色に */
+html.library .library-topic-modal {
+  background: #F8F5EE !important;
+  border: 0.5px solid #8B7355 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+html.library .library-topic-modal-header {
+  background: #ECE7DB !important;
+  border-bottom: 0.5px solid #8B7355 !important;
+  border-radius: 0 !important;
+}
+
+html.library .library-topic-modal-header h2,
+html.library .library-topic-modal-header button {
+  color: #1A1A1A !important;
+}
+
+/* LIBRARY: 囲いは基本的に角丸なし */
+html.library .rounded-2xl,
+html.library .rounded-xl,
+html.library .rounded-lg,
+html.library .rounded-md,
+html.library .rounded-sm,
+html.library :not(img).rounded-full {
+  border-radius: 0 !important;
+}
+
+/* アイコン画像だけは円形を維持 */
+html.library img.rounded-full {
+  border-radius: 9999px !important;
 }
 
 /* ダークモード時のアクセントカラー調整 */
@@ -91,8 +243,38 @@ html.light .jsr-card {
   transform: rotate(-1deg);
 }
 
+/* STREET: 一律ではなくランダムに重なる傾き */
+html.light .jsr-card:nth-of-type(4n + 1) {
+  transform: rotate(-1.8deg) translateX(-2px);
+}
+
+html.light .jsr-card:nth-of-type(4n + 2) {
+  transform: rotate(0.9deg) translateX(1px);
+}
+
+html.light .jsr-card:nth-of-type(4n + 3) {
+  transform: rotate(-0.4deg) translateX(-1px);
+}
+
+html.light .jsr-card:nth-of-type(4n) {
+  transform: rotate(1.4deg) translateX(2px);
+}
+
 .jsr-card:hover {
   transform: rotate(0deg) translateY(-4px);
+  filter: drop-shadow(8px 8px 0px rgba(0, 0, 0, 0.9));
+}
+
+@keyframes boing-card {
+  0% { transform: rotate(-1deg) scale(1); }
+  45% { transform: rotate(0deg) scale(1.03); }
+  100% { transform: rotate(-1deg) scale(1); }
+}
+
+/* ライトモード限定: カードをモインと拡大して元に戻す */
+html.light .jsr-card:hover {
+  transform: rotate(-1deg);
+  animation: boing-card 0.22s ease-out 1;
   filter: drop-shadow(8px 8px 0px rgba(0, 0, 0, 0.9));
 }
 
@@ -179,6 +361,13 @@ html.light h3 {
 
 html.light button {
   border: 3px solid #000000;
+}
+
+/* ヘッダーのロゴはライトモードでも重なり影を無効化 */
+html.light .site-title,
+html.light .site-title span {
+  color: inherit !important;
+  text-shadow: none !important;
 }
 
 /* 投稿本文など、斜体を適用しない要素 */

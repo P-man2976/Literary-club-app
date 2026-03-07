@@ -696,7 +696,14 @@ export default function Home() {
       {/* ヘッダー */}
       <header className="sticky top-0 bg-white/20 backdrop-blur-md border-4 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] p-4 z-30 mb-2">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-black uppercase tracking-tight">文芸部</h1>
+          <h1 className="site-title leading-none">
+            <span className="block text-[10px] md:text-xs font-black uppercase tracking-[0.15em] text-black/80 dark:text-cyan-200">
+              東京理科大学
+            </span>
+            <span className="block text-3xl font-black uppercase tracking-tight text-black dark:text-cyan-300">
+              文芸部
+            </span>
+          </h1>
           
           {session ? (
             <div className="flex items-center gap-3">
@@ -741,7 +748,7 @@ export default function Home() {
           base: "sticky top-[73px] w-full bg-transparent z-20 px-0 backdrop-blur-sm",
           tabList: "w-full !grid !grid-cols-3 !gap-2 px-2 bg-white/20 backdrop-blur-md border-4 border-white shadow-[0_6px_0_rgba(0,0,0,0.8)]",
           cursor: "w-full h-1 bg-black",
-          tab: "h-14 w-full max-w-none !mx-0 !px-0 justify-center rounded-none data-[selected=true]:font-black data-[selected=true]:text-black data-[selected=true]:bg-yellow-400 shake-hover transition-all",
+          tab: "h-14 w-full max-w-none !mx-0 !px-0 justify-center rounded-none data-[selected=true]:font-black data-[selected=true]:text-black data-[selected=true]:bg-yellow-400 dark:data-[selected=true]:bg-pink-500 shake-hover transition-all",
           tabContent: "group-data-[selected=true]:text-black group-data-[selected=false]:text-white font-black text-lg uppercase tracking-wider",
         }}
       >
@@ -944,11 +951,11 @@ export default function Home() {
 
                 {/* お題決定ボタン */}
                 {session && (
-                  <Card shadow="sm" className="border border-blue-300 dark:border-green-600 rounded-2xl bg-blue-50/50 dark:bg-green-950/30">
+                  <Card shadow="sm" className="jsr-card border border-blue-300 dark:border-green-600 rounded-2xl bg-blue-50/50 dark:bg-green-950/30">
                     <CardBody className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-black text-base text-black dark:text-green-300 uppercase">新しいお題を決定</p>
+                          <p className="font-black italic text-base text-black dark:text-green-300 uppercase">新しいお題を決定</p>
                           <p className="text-xs font-bold text-black/70 dark:text-green-200/70">お題案からランダム選択、または手動で選んでお題化できます</p>
                         </div>
                         <button
@@ -1119,9 +1126,9 @@ export default function Home() {
                       </div>
 
                       {(aiReadingEnabled || member.email !== session?.user?.email) && (
-                        <div className="rounded-lg bg-pink-200 dark:bg-[#FF008C] border-3 border-black dark:border-[#FF66B2] p-3">
-                          <p className="text-xs font-black uppercase text-black dark:text-white mb-1">AI短文分析</p>
-                          <p className="text-sm font-semibold text-black dark:text-white">
+                        <div className="rounded-lg bg-pink-200 dark:bg-[#00FFFF] border-3 border-black dark:border-cyan-300 p-3">
+                          <p className="text-xs font-black uppercase text-black dark:text-gray-900 mb-1">AI短文分析</p>
+                          <p className="text-sm font-semibold text-black dark:text-gray-900">
                             {member.aiSummary || "過去投稿ベースのAI分析は準備中です。"}
                           </p>
                         </div>
@@ -1146,33 +1153,33 @@ export default function Home() {
       {/* お題決定モーダル */}
       {isTopicDecisionModalOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/50 dark:bg-black/80 z-50 flex items-center justify-center p-4"
           onClick={() => setIsTopicDecisionModalOpen(false)}
         >
           <div 
-            className="bg-white rounded-2xl border-4 border-white shadow-[0_10px_0_rgba(0,0,0,0.9)] max-w-3xl w-full"
+            className="library-topic-modal bg-white dark:bg-gray-900 rounded-2xl border-4 border-white dark:border-green-400 shadow-[0_10px_0_rgba(0,0,0,0.9)] dark:shadow-[0_0_30px_rgba(0,255,255,0.5)] max-w-3xl w-full"
             onClick={(e) => e.stopPropagation()}
           >
             {/* ヘッダー */}
-            <div className="flex justify-between items-center border-b-4 border-black p-6 bg-gradient-to-r from-yellow-300 to-pink-400">
-              <h2 className="text-2xl font-black uppercase flex items-center gap-2">
+            <div className="library-topic-modal-header rounded-t-[14px] flex justify-between items-center border-b-4 border-black dark:border-green-400 p-6 bg-gradient-to-r from-yellow-300 to-pink-400 dark:bg-[#00FFFF]">
+              <h2 className="text-2xl font-black uppercase flex items-center gap-2 text-black dark:text-gray-900">
                 <HandDrawnTopicIcon size={24} />
                 お題を決定
               </h2>
               <button
                 onClick={() => setIsTopicDecisionModalOpen(false)}
-                className="text-3xl font-black text-black hover:text-red-600 transition-colors"
+                className="text-3xl font-black text-black dark:text-gray-900 hover:text-red-600 dark:hover:text-red-400 transition-colors"
               >
                 ×
               </button>
             </div>
 
             {/* ボディ */}
-            <div className="p-6">
+            <div className="p-6 dark:bg-gray-900 dark:text-green-300">
               {!hasDecisionCandidates ? (
                 <div className="text-center py-8">
-                  <p className="text-xl font-black uppercase text-black">候補がまだありません</p>
-                  <p className="text-sm font-bold text-black/70 mt-2">
+                  <p className="text-xl font-black uppercase text-black dark:text-green-300">候補がまだありません</p>
+                  <p className="text-sm font-bold text-black/70 dark:text-green-400 mt-2">
                     「お題」タブ右下のボタンからお題案を投稿してください。
                   </p>
                 </div>
@@ -1183,7 +1190,7 @@ export default function Home() {
                       <button
                         onClick={selectRandomCandidate}
                         disabled={decisionCandidates.length === 0}
-                        className="px-6 py-3 bg-orange-500 text-white rounded-lg font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        className="px-6 py-3 bg-orange-500 dark:bg-green-600 text-white rounded-lg font-black uppercase border-3 border-white dark:border-green-400 shadow-[0_4px_0_rgba(0,0,0,0.8)] dark:shadow-[0_0_15px_rgba(0,240,168,0.5)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] dark:hover:shadow-[0_0_25px_rgba(0,240,168,0.7)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                       >
                         ランダム
                       </button>
@@ -1191,14 +1198,14 @@ export default function Home() {
                         type="button"
                         disabled
                         title="AIお題作成は準備中です"
-                        className="px-6 py-3 bg-sky-600 text-white rounded-lg font-black uppercase opacity-50 cursor-not-allowed border-3 border-white"
+                        className="px-6 py-3 bg-sky-600 dark:bg-gray-700 text-white dark:text-gray-500 rounded-lg font-black uppercase opacity-50 cursor-not-allowed border-3 border-white dark:border-gray-600"
                       >
                         生成AI (準備中)
                       </button>
                     </div>
 
                     <select
-                      className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                      className="w-full border border-gray-300 dark:border-green-400 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-slate-900 dark:text-green-300 font-semibold"
                       value={selectedProposalId ? `proposal:${selectedProposalId}` : selectedPoolTopicId ? `pool:${selectedPoolTopicId}` : ""}
                       onChange={(e) => {
                         const selectedValue = e.target.value;
@@ -1230,7 +1237,7 @@ export default function Home() {
 
                   <input
                     type="datetime-local"
-                    className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                    className="w-full border border-gray-300 dark:border-green-400 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-slate-900 dark:text-green-300 font-semibold"
                     onChange={(e) => {
                       if (e.target.value) {
                         setProposalDeadline(new Date(e.target.value).getTime());
@@ -1241,16 +1248,16 @@ export default function Home() {
                   />
 
                   {selectedDecisionCandidate ? (
-                    <div className="rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 p-3">
-                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    <div className="rounded-lg border border-gray-200 dark:border-green-400 bg-gray-50 dark:bg-gray-900 p-3">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-green-300">
                         {selectedDecisionCandidate.title}
                       </p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-4">
+                      <p className="text-xs text-slate-600 dark:text-green-400 mt-1 line-clamp-4">
                         {selectedDecisionCandidate.body}
                       </p>
                     </div>
                   ) : (
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-slate-500 dark:text-green-400">
                       候補を選択してください。
                     </p>
                   )}
@@ -1259,10 +1266,10 @@ export default function Home() {
             </div>
 
             {/* フッター */}
-            <div className="flex justify-end gap-2 border-t border-gray-200 dark:border-slate-700 p-6">
+            <div className="flex justify-end gap-2 border-t border-gray-200 dark:border-green-400 p-6 dark:bg-gray-900">
               <button
                 onClick={() => setIsTopicDecisionModalOpen(false)}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg font-semibold"
+                className="px-4 py-2 text-gray-700 dark:text-green-300 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:shadow-[0_0_10px_rgba(0,240,168,0.5)] rounded-lg font-semibold border border-transparent dark:border-green-400 transition-all"
               >
                 キャンセル
               </button>
@@ -1277,7 +1284,7 @@ export default function Home() {
                     convertPoolTopicToTopic(selectedPoolTopicId, proposalDeadline);
                   }
                 }}
-                className="px-6 py-3 bg-pink-500 text-white rounded-lg font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="px-6 py-3 bg-pink-500 dark:bg-[#00FFFF] text-white dark:text-gray-900 rounded-lg font-black uppercase border-3 border-white dark:border-green-400 shadow-[0_4px_0_rgba(0,0,0,0.8)] dark:shadow-[0_0_20px_rgba(0,255,255,0.6)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] dark:hover:shadow-[0_0_30px_rgba(0,255,255,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 この内容でお題化
               </button>
