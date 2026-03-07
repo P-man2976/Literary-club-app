@@ -702,7 +702,10 @@ export default function Home() {
   return (
     <main className="min-h-screen max-w-3xl mx-auto pb-40 relative z-10">
       {/* ヘッダー */}
-      <header className="sticky top-0 bg-gradient-to-b from-black/75 via-black/45 to-transparent backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.6)] p-4 z-30 mb-2">
+      <header className={isChromeTheme
+        ? "sticky top-0 bg-gradient-to-b from-black/75 via-black/45 to-transparent backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.6)] p-4 z-30 mb-2"
+        : "sticky top-0 bg-white shadow-[0_4px_0_rgba(0,0,0,0.6)] p-4 z-30 mb-2"
+      }>
         <div className="flex justify-between items-center">
           <h1 className="site-title leading-none">
             <span className="block text-[10px] md:text-xs font-black uppercase tracking-[0.15em] text-black/80 dark:text-cyan-200">
@@ -761,14 +764,14 @@ export default function Home() {
         classNames={{
           base: "sticky top-[73px] w-full bg-transparent z-20 px-0 backdrop-blur-sm",
           tabList: isChromeTheme
-            ? "w-full !grid !grid-cols-3 !gap-0 px-0 bg-transparent border-0 shadow-none"
+            ? "w-full !grid !grid-cols-3 !gap-0 px-0 bg-transparent border-0 shadow-none outline-none ring-0 before:hidden after:hidden [&>*]:border-0 [&>*]:outline-none [&>*]:ring-0"
             : "w-full !grid !grid-cols-3 !gap-2 px-2 bg-white/20 backdrop-blur-md border border-white/40 shadow-[0_4px_0_rgba(0,0,0,0.6)]",
-          cursor: isChromeTheme ? "w-full h-[2px] bg-white" : "w-full h-1 bg-black",
+          cursor: isChromeTheme ? "hidden" : "w-full h-1 bg-black",
           tab: isChromeTheme
-            ? "h-14 w-full max-w-none !mx-0 !px-0 justify-center rounded-none bg-transparent border-0 shadow-none transition-all relative data-[selected=true]:font-black data-[selected=true]:bg-transparent"
+            ? "h-14 w-full max-w-none !mx-0 !px-0 justify-center rounded-none bg-transparent border-0 ring-0 shadow-none outline-none before:hidden after:hidden transition-all relative data-[selected=true]:font-black data-[selected=true]:bg-transparent data-[selected=true]:border-0 data-[selected=true]:ring-0 data-[selected=true]:shadow-[0_0_14px_rgba(255,255,255,0.9)]"
             : "h-14 w-full max-w-none !mx-0 !px-0 justify-center rounded-none data-[selected=true]:font-black data-[selected=true]:text-black data-[selected=true]:bg-yellow-400 dark:data-[selected=true]:bg-pink-500 shake-hover transition-all",
           tabContent: isChromeTheme
-            ? "group-data-[selected=true]:text-white group-data-[selected=false]:text-white/70 font-black text-lg uppercase tracking-wider"
+            ? "group-data-[selected=true]:text-white group-data-[selected=false]:text-white/70 group-data-[selected=true]:drop-shadow-[0_0_8px_rgba(255,255,255,0.9)] font-black text-lg uppercase tracking-wider"
             : "group-data-[selected=true]:text-black group-data-[selected=false]:text-white font-black text-lg uppercase tracking-wider",
         }}
       >
@@ -807,7 +810,10 @@ export default function Home() {
                     <Card 
                       key={post.id}
                       shadow="none"
-                      className="jsr-card bg-white dark:bg-gray-800 rounded-xl"
+                      className={isChromeTheme
+                        ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
+                        : "jsr-card bg-white dark:bg-gray-800 rounded-xl"
+                      }
                     >
                       <CardBody className="p-4 gap-3">
                         <div className="flex items-center justify-between">
@@ -822,9 +828,9 @@ export default function Home() {
                               <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-yellow-300 border-2 border-black dark:border-white" />
                             )}
                             <span className="font-black text-base uppercase text-black dark:text-green-300">{getDisplayName(post.authorEmail, post.author)}</span>
-                            {isTopicReply && parentTopic ? (
+                            {isTopicReply ? (
                               <Chip size="md" className="bg-purple-400 dark:bg-purple-800 text-white font-bold border-2 border-black dark:border-purple-500">
-                                お題: {parentTopic.title}
+                                お題
                               </Chip>
                             ) : (
                               <Chip size="md" className="bg-cyan-400 dark:bg-cyan-700 text-black dark:text-cyan-200 font-bold border-2 border-black dark:border-cyan-400">自由投稿</Chip>
@@ -866,7 +872,10 @@ export default function Home() {
           {/* 投稿作成フロートボタン */}
           {session && (
             <button
-              className="fixed right-6 bottom-24 z-40 h-14 rounded-full bg-yellow-400 text-black text-base font-black px-6 border-4 border-white shadow-[0_8px_0_rgba(0,0,0,0.9)] hover:shadow-[0_10px_0_rgba(0,0,0,0.9)] hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-[0_6px_0_rgba(0,0,0,0.9)] transition-all flex items-center gap-2 uppercase shake-hover"
+              className={isChromeTheme
+                ? "fixed right-6 bottom-24 z-40 h-14 rounded-full bg-gray-600 text-white text-base font-black px-6 border-0 shadow-[0_8px_0_rgba(20,20,20,0.9)] hover:shadow-[0_10px_0_rgba(20,20,20,0.9)] hover:bg-gray-500 hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-[0_6px_0_rgba(20,20,20,0.9)] transition-all flex items-center gap-2 uppercase"
+                : "fixed right-6 bottom-24 z-40 h-14 rounded-full bg-yellow-400 text-black text-base font-black px-6 border-4 border-white shadow-[0_8px_0_rgba(0,0,0,0.9)] hover:shadow-[0_10px_0_rgba(0,0,0,0.9)] hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-[0_6px_0_rgba(0,0,0,0.9)] transition-all flex items-center gap-2 uppercase shake-hover"
+              }
               onClick={() => setIsPostModalOpen(true)}
               aria-label="投稿を作成"
             >
@@ -907,10 +916,13 @@ export default function Home() {
                     <h2 className="text-2xl font-black px-2 uppercase tracking-wide text-black dark:text-green-300">今週のお題</h2>
                     <Card 
                       shadow="none"
-                      className="jsr-card bg-gradient-to-br from-pink-300 to-purple-400 dark:from-green-900 dark:to-cyan-900 rounded-2xl"
+                      className={isChromeTheme
+                        ? "bg-transparent border-0 border-b border-white/35 rounded-none shadow-none"
+                        : "jsr-card bg-gradient-to-br from-pink-300 to-purple-400 dark:from-green-900 dark:to-cyan-900 rounded-2xl"
+                      }
                     >
                       <CardBody className="p-5 gap-3">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center">
                           <div className="flex items-center gap-2">
                             {getDisplayIcon(topicPosts[0].authorEmail) ? (
                               <img
@@ -923,44 +935,6 @@ export default function Home() {
                             )}
                             <span className="font-black text-base uppercase text-black dark:text-white">{getDisplayName(topicPosts[0].authorEmail, topicPosts[0].author)}</span>
                             <Chip size="md" className="bg-black text-white font-black border-2 border-white dark:bg-green-500 dark:text-black dark:border-green-300">🔥 HOT</Chip>
-                          </div>
-                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center gap-2">
-                              <div className="flex items-center gap-1 text-black dark:text-white text-sm font-black">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-1.9A9 9 0 1 1 5.9 5.9l1.1 1.1"/></svg>
-                                <span className="text-sm font-black">{topicPosts[0].children?.length || 0}</span>
-                              </div>
-                              {getTopicParticipants(topicPosts[0]).length > 0 && (
-                                <div className="flex items-center -space-x-2">
-                                  {getTopicParticipants(topicPosts[0])
-                                    .slice(0, 6)
-                                    .map((participant) => (
-                                      participant.icon ? (
-                                        <img
-                                          key={participant.key}
-                                          src={participant.icon}
-                                          alt={participant.name}
-                                          title={participant.name}
-                                          className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full object-cover border-3 border-white"
-                                        />
-                                      ) : (
-                                        <div
-                                          key={participant.key}
-                                          title={participant.name}
-                                          className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-yellow-300 text-[11px] font-black text-black border-3 border-white flex items-center justify-center"
-                                        >
-                                          {participant.name.slice(0, 1)}
-                                        </div>
-                                      )
-                                    ))}
-                                  {getTopicParticipants(topicPosts[0]).length > 6 && (
-                                    <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-orange-400 text-[11px] font-black text-white border-3 border-white flex items-center justify-center">
-                                      +{getTopicParticipants(topicPosts[0]).length - 6}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
                           </div>
                         </div>
                         <div 
@@ -976,6 +950,41 @@ export default function Home() {
                           <p className="text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{topicPosts[0].body}</p>
                           <p className="text-xs text-gray-600 dark:text-gray-300">クリックして詳細ページを表示...</p>
                         </div>
+                        {getTopicParticipants(topicPosts[0]).length > 0 && (
+                          <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-black dark:text-white">参加者:</span>
+                              <div className="flex items-center -space-x-2">
+                              {getTopicParticipants(topicPosts[0])
+                                .slice(0, 6)
+                                .map((participant) => (
+                                  participant.icon ? (
+                                    <img
+                                      key={participant.key}
+                                      src={participant.icon}
+                                      alt={participant.name}
+                                      title={participant.name}
+                                      className="w-9 h-9 min-w-9 min-h-9 shrink-0 rounded-full object-cover border-3 border-white"
+                                    />
+                                  ) : (
+                                    <div
+                                      key={participant.key}
+                                      title={participant.name}
+                                      className="w-9 h-9 min-w-9 min-h-9 shrink-0 rounded-full bg-yellow-300 text-xs font-black text-black border-3 border-white flex items-center justify-center"
+                                    >
+                                      {participant.name.slice(0, 1)}
+                                    </div>
+                                  )
+                                ))}
+                              {getTopicParticipants(topicPosts[0]).length > 6 && (
+                                <div className="w-9 h-9 min-w-9 min-h-9 shrink-0 rounded-full bg-orange-400 text-xs font-black text-white border-3 border-white flex items-center justify-center">
+                                  +{getTopicParticipants(topicPosts[0]).length - 6}
+                                </div>
+                              )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </CardBody>
                     </Card>
                   </div>
@@ -983,7 +992,10 @@ export default function Home() {
 
                 {/* お題決定ボタン */}
                 {session && (
-                  <Card shadow="sm" className="jsr-card border border-blue-300 dark:border-green-600 rounded-2xl bg-blue-50/50 dark:bg-green-950/30">
+                  <Card shadow="sm" className={isChromeTheme
+                    ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
+                    : "jsr-card border border-blue-300 dark:border-green-600 rounded-2xl bg-blue-50/50 dark:bg-green-950/30"
+                  }>
                     <CardBody className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
@@ -1018,10 +1030,13 @@ export default function Home() {
                       <Card 
                         key={topic.id}
                         shadow="none"
-                        className="jsr-card bg-white dark:bg-gray-900 rounded-xl"
+                        className={isChromeTheme
+                          ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
+                          : "jsr-card bg-white dark:bg-gray-900 rounded-xl"
+                        }
                       >
                         <CardBody className="p-4 gap-2">
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center">
                             <div className="flex items-center gap-2">
                               {getDisplayIcon(topic.authorEmail) ? (
                                 <img
@@ -1034,44 +1049,6 @@ export default function Home() {
                               )}
                               <span className="font-black text-base uppercase text-black dark:text-green-300">{getDisplayName(topic.authorEmail, topic.author)}</span>
                               <Chip size="md" className="bg-gray-300 dark:bg-gray-700 text-black dark:text-yellow-300 font-bold border-2 border-black dark:border-green-600">過去</Chip>
-                            </div>
-                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                              <div className="flex items-center gap-2">
-                                <div className="flex items-center gap-1 text-gray-400 dark:text-gray-300 text-sm">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-1.9A9 9 0 1 1 5.9 5.9l1.1 1.1"/></svg>
-                                  <span className="text-xs font-bold">{topic.children?.length || 0} 投稿</span>
-                                </div>
-                                {getTopicParticipants(topic).length > 0 && (
-                                  <div className="flex items-center -space-x-2">
-                                    {getTopicParticipants(topic)
-                                      .slice(0, 6)
-                                      .map((participant) => (
-                                        participant.icon ? (
-                                          <img
-                                            key={participant.key}
-                                            src={participant.icon}
-                                            alt={participant.name}
-                                            title={participant.name}
-                                            className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full object-cover border-2 border-background"
-                                          />
-                                        ) : (
-                                          <div
-                                            key={participant.key}
-                                            title={participant.name}
-                                            className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-300 text-[10px] font-bold text-gray-700 border-2 border-background flex items-center justify-center"
-                                          >
-                                            {participant.name.slice(0, 1)}
-                                          </div>
-                                        )
-                                      ))}
-                                    {getTopicParticipants(topic).length > 6 && (
-                                      <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-200 text-[10px] font-bold text-gray-600 border-2 border-background flex items-center justify-center">
-                                        +{getTopicParticipants(topic).length - 6}
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
                             </div>
                           </div>
                           <div 
@@ -1087,6 +1064,41 @@ export default function Home() {
                             <p className="text-sm text-gray-800 dark:text-green-100 line-clamp-2">{topic.body}</p>
                             <p className="text-xs text-gray-600 dark:text-green-200">クリックして詳細ページを表示...</p>
                           </div>
+                          {getTopicParticipants(topic).length > 0 && (
+                            <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-gray-700 dark:text-gray-200">参加者:</span>
+                                <div className="flex items-center -space-x-2">
+                                {getTopicParticipants(topic)
+                                  .slice(0, 6)
+                                  .map((participant) => (
+                                    participant.icon ? (
+                                      <img
+                                        key={participant.key}
+                                        src={participant.icon}
+                                        alt={participant.name}
+                                        title={participant.name}
+                                        className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full object-cover border-2 border-background"
+                                      />
+                                    ) : (
+                                      <div
+                                        key={participant.key}
+                                        title={participant.name}
+                                        className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-gray-300 text-[11px] font-bold text-gray-700 border-2 border-background flex items-center justify-center"
+                                      >
+                                        {participant.name.slice(0, 1)}
+                                      </div>
+                                    )
+                                  ))}
+                                {getTopicParticipants(topic).length > 6 && (
+                                  <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-gray-200 text-[11px] font-bold text-gray-600 border-2 border-background flex items-center justify-center">
+                                    +{getTopicParticipants(topic).length - 6}
+                                  </div>
+                                )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </CardBody>
                       </Card>
                     ))}
@@ -1126,7 +1138,10 @@ export default function Home() {
         >
           <div className="p-4 space-y-3">
             {memberProfiles.length === 0 ? (
-              <Card shadow="sm" className="border border-default-200 rounded-2xl">
+              <Card shadow="sm" className={isChromeTheme
+                ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
+                : "border border-default-200 rounded-2xl"
+              }>
                 <CardBody className="p-6 text-center space-y-2">
                   <Users size={28} className="mx-auto text-default-400" />
                   <p className="text-sm font-semibold text-default-600">部員プロフィールはまだありません</p>
@@ -1143,7 +1158,10 @@ export default function Home() {
                   : ["#文芸部", "#創作", "#部員紹介"];
 
                 return (
-                  <Card key={member.email} shadow="none" className="jsr-card bg-gradient-to-br from-cyan-200 to-blue-300 dark:bg-black rounded-2xl">
+                  <Card key={member.email} shadow="none" className={isChromeTheme
+                    ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
+                    : "jsr-card bg-gradient-to-br from-cyan-200 to-blue-300 dark:bg-black rounded-2xl"
+                  }>
                     <CardBody className="p-5 space-y-3">
                       <div className="flex items-center gap-3">
                         {iconUrl ? (
@@ -1158,13 +1176,19 @@ export default function Home() {
                         <p className="font-black text-xl uppercase tracking-wide text-black dark:text-white">{displayName}</p>
                       </div>
 
-                      <div className="rounded-lg bg-white dark:bg-black border-3 border-black dark:border-white p-3">
+                      <div className={isChromeTheme
+                        ? "pt-3 border-t border-white/20"
+                        : "rounded-lg bg-white dark:bg-black border-3 border-black dark:border-white p-3"
+                      }>
                         <p className="text-xs font-black uppercase text-black dark:text-white mb-1">自己紹介</p>
                         <p className="text-sm font-semibold text-black dark:text-white">{member.selfIntro || "未設定"}</p>
                       </div>
 
                       {(aiReadingEnabled || member.email !== session?.user?.email) && (
-                        <div className="rounded-lg bg-pink-200 dark:bg-black border-3 border-black dark:border-white p-3">
+                        <div className={isChromeTheme
+                          ? "pt-3 border-t border-white/20"
+                          : "rounded-lg bg-pink-200 dark:bg-black border-3 border-black dark:border-white p-3"
+                        }>
                           <p className="text-xs font-black uppercase text-black dark:text-white mb-1">AI短文分析</p>
                           <p className="text-sm font-semibold text-black dark:text-white">
                             {member.aiSummary || "過去投稿ベースのAI分析は準備中です。"}

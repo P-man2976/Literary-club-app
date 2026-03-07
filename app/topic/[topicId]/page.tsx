@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
+import { useTheme } from "next-themes";
 import { getUserIconUrl } from "@/app/lib/imageUtils";
 import {
   ArrowLeft,
@@ -65,11 +66,14 @@ type TopicAnalysis = {
 export default function TopicPage() {
   const aiReadingSettingKey = "lit-club-ai-reading-enabled";
   const { data: session } = useSession();
+  const { resolvedTheme } = useTheme();
+  const isChromeTheme = resolvedTheme === "dark";
   const params = useParams();
   const router = useRouter();
   const topicId = params.topicId as string;
 
   const [topic, setTopic] = useState<Post | null>(null);
+  const [parentTopic, setParentTopic] = useState<Post | null>(null);
   const [replies, setReplies] = useState<Post[]>([]);
   const [newPost, setNewPost] = useState<Partial<Post>>({ title: "", body: "", tag: "創作" });
   const [likedPosts, setLikedPosts] = useState<string[]>([]);
@@ -158,6 +162,14 @@ export default function TopicPage() {
         const comments = await cRes.json();
         
         setTopic({ ...topicData, comments });
+        
+        // 親のお題がある場合は取得
+        if (topicData.parentPostId) {
+          const parentPost = allPosts.find(p => p.id === topicData.parentPostId);
+          if (parentPost) {
+            setParentTopic(parentPost);
+          }
+        }
       }
 
       // 返信のコメントを一括取得
@@ -717,7 +729,7 @@ export default function TopicPage() {
   }
 
   return (
-    <div className="topic-detail-scene min-h-screen p-4 md:p-6 relative z-10">
+    <div className={`topic-detail-scene min-h-screen p-4 md:p-6 relative z-10 ${isChromeTheme ? "chrome-theme-detail" : ""}`}>
       <div className="max-w-3xl mx-auto">
         {/* ヘッダー */}
         <div className="flex items-center mb-8 bg-white/20 backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.8)] rounded-2xl p-4">
@@ -730,6 +742,15 @@ export default function TopicPage() {
           </button>
           <h1 className="text-3xl font-black text-center flex-1 uppercase tracking-wide">投稿詳細</h1>
         </div>
+
+        {/* 親のお題（お題への返信の場合） */}
+        {parentTopic && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400 rounded-xl p-4 mb-6">
+            <p className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-2">このお題への返信です</p>
+            <h3 className="text-lg font-black text-black dark:text-blue-200 mb-2 uppercase">{parentTopic.title}</h3>
+            <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">{parentTopic.body}</p>
+          </div>
+        )}
 
         {/* トピック表示 */}
         {editingPostId === topic.id ? (
@@ -1397,6 +1418,21 @@ export default function TopicPage() {
         </div>
         )}
       </div>
+      {isChromeTheme && (
+        <style jsx global>{`
+          .chrome-theme-detail .font-black,
+          .chrome-theme-detail .font-bold,
+          .chrome-theme-detail .font-semibold {
+            font-weight: 400 !important;
+          }
+
+          .chrome-theme-detail h1,
+          .chrome-theme-detail h2,
+          .chrome-theme-detail h3 {
+            font-weight: 500 !important;
+          }
+        `}</style>
+      )}
     </div>
   );
 }
