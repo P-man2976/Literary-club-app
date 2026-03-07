@@ -20,6 +20,15 @@ import {
   Spinner
 } from "@heroui/react";
 import { Lightbulb, Pin, Save, Users, AlertCircle, Settings, MessageCircle, Heart } from "lucide-react";
+import { 
+  HandDrawnPostIcon, 
+  HandDrawnTopicIcon, 
+  HandDrawnPeopleIcon, 
+  HandDrawnSettingsIcon,
+  HandDrawnPlusIcon,
+  HandDrawnHeartIcon,
+  HandDrawnCommentIcon
+} from "@/app/components/HandDrawnIcons";
 
 
 // 型定義
@@ -683,42 +692,40 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen max-w-3xl mx-auto pb-40">
+    <main className="min-h-screen max-w-3xl mx-auto pb-40 relative z-10">
       {/* ヘッダー */}
-      <header className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-divider p-4 z-30">
+      <header className="sticky top-0 bg-white/20 backdrop-blur-md border-4 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] p-4 z-30 mb-2">
         <div className="flex justify-between items-center">
-          <h1 className="text-xl font-black">文芸部ポータル</h1>
+          <h1 className="text-3xl font-black uppercase tracking-tight">文芸部</h1>
           
           {session ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <Link
                 href="/settings"
                 aria-label="設定"
-                className="w-10 h-10 rounded-full border border-gray-300 bg-gray-100/60 dark:bg-slate-800/60 flex items-center justify-center"
+                className="w-12 h-12 rounded-full border-3 border-black bg-cyan-400 flex items-center justify-center shake-hover shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
               >
-                <Settings size={18} />
+                <HandDrawnSettingsIcon size={22} />
               </Link>
               <Link href="/settings/profile" aria-label="アカウント設定" className="block">
                 {getUserIconUrl(session.user?.email, userIcon) ? (
                   <img
                     src={getUserIconUrl(session.user?.email, userIcon) || ""}
                     alt="プロフィール"
-                    className="w-10 h-10 rounded-full object-cover border-2 border-primary"
+                    className="w-12 h-12 rounded-full object-cover border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)]"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-gray-200 border-2 border-primary" />
+                  <div className="w-12 h-12 rounded-full bg-yellow-300 border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)]" />
                 )}
               </Link>
             </div>
           ) : (
-            <Button 
-              onPress={() => signIn("google")}
-              color="primary"
-              size="sm"
-              radius="full"
+            <button 
+              onClick={() => signIn("google")}
+              className="h-10 px-6 rounded-full bg-pink-500 text-white font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] active:translate-y-[2px] active:shadow-[0_2px_0_rgba(0,0,0,0.8)] transition-all shake-hover"
             >
               ログイン
-            </Button>
+            </button>
           )}
         </div>
       </header>
@@ -731,18 +738,18 @@ export default function Home() {
         color="primary"
         className="w-full"
         classNames={{
-          base: "sticky top-[73px] w-full bg-background z-20 border-b border-divider px-0",
-          tabList: "w-full !grid !grid-cols-3 !gap-0 px-0",
-          cursor: "w-full h-[3px]",
-          tab: "h-12 w-full max-w-none !mx-0 !px-0 justify-center rounded-none data-[selected=true]:font-black data-[selected=true]:text-primary",
-          tabContent: "group-data-[selected=true]:text-primary group-data-[selected=false]:text-gray-500",
+          base: "sticky top-[73px] w-full bg-transparent z-20 px-0 backdrop-blur-sm",
+          tabList: "w-full !grid !grid-cols-3 !gap-2 px-2 bg-white/20 backdrop-blur-md border-4 border-white shadow-[0_6px_0_rgba(0,0,0,0.8)]",
+          cursor: "w-full h-1 bg-black",
+          tab: "h-14 w-full max-w-none !mx-0 !px-0 justify-center rounded-none data-[selected=true]:font-black data-[selected=true]:text-black data-[selected=true]:bg-yellow-400 shake-hover transition-all",
+          tabContent: "group-data-[selected=true]:text-black group-data-[selected=false]:text-white font-black text-lg uppercase tracking-wider",
         }}
       >
         <Tab
           key="posts"
           title={
-            <span className="flex items-center gap-1">
-              <Save size={14} />
+            <span className="flex items-center gap-2">
+              <HandDrawnPostIcon size={20} />
               投稿
             </span>
           }
@@ -766,8 +773,8 @@ export default function Home() {
                   return (
                     <Card 
                       key={post.id}
-                      shadow="sm"
-                      className="border border-gray-200 rounded-2xl"
+                      shadow="none"
+                      className="jsr-card bg-white dark:bg-gray-800 rounded-xl"
                     >
                       <CardBody className="p-4 gap-3">
                         <div className="flex items-center justify-between">
@@ -776,43 +783,43 @@ export default function Home() {
                               <img
                                 src={getDisplayIcon(post.authorEmail) || ""}
                                 alt="投稿者アイコン"
-                                className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full object-cover border border-gray-300"
+                                className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full object-cover border-2 border-black dark:border-white"
                               />
                             ) : (
-                              <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-200 border border-gray-300" />
+                              <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-yellow-300 border-2 border-black dark:border-white" />
                             )}
-                            <span className="font-bold">{getDisplayName(post.authorEmail, post.author)}</span>
+                            <span className="font-black text-base uppercase text-black dark:text-green-300">{getDisplayName(post.authorEmail, post.author)}</span>
                             {isTopicReply && parentTopic ? (
-                              <Chip size="sm" color="secondary" variant="flat">
+                              <Chip size="md" className="bg-purple-400 dark:bg-purple-800 text-white font-bold border-2 border-black dark:border-purple-500">
                                 お題: {parentTopic.title}
                               </Chip>
                             ) : (
-                              <Chip size="sm" color="primary" variant="flat">自由投稿</Chip>
+                              <Chip size="md" className="bg-cyan-400 dark:bg-cyan-700 text-black dark:text-cyan-200 font-bold border-2 border-black dark:border-cyan-400">自由投稿</Chip>
                             )}
                           </div>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
                             {new Date(post.createdAt).toLocaleDateString('ja-JP')}
                           </span>
                         </div>
                         
                         <div 
                           onClick={() => router.push(`/topic/${post.id}`)}
-                          className="cursor-pointer"
+                          className="cursor-pointer spray-hover"
                         >
-                          <h3 className="text-lg font-bold mb-1">{post.title}</h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 whitespace-pre-wrap">{post.body}</p>
-                          <p className="text-xs text-gray-400 mt-1">クリックして詳細を表示...</p>
+                          <h3 className="text-xl font-black mb-2 uppercase tracking-wide text-black dark:text-green-200">{post.title}</h3>
+                          <p className="text-sm font-semibold text-gray-700 dark:text-green-100 line-clamp-3 whitespace-pre-wrap">{post.body}</p>
+                          <p className="text-xs font-bold text-orange-600 dark:text-yellow-300 mt-2 uppercase">→ クリックして詳細表示</p>
                         </div>
 
                         {/* コメント数・いいね数表示 */}
-                        <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 dark:text-gray-400">
-                          <span className="flex items-center gap-1">
-                            <MessageCircle size={14} />
-                            {post.commentCount || 0} コメント
+                        <div className="flex items-center gap-4 mt-3 text-sm font-bold">
+                          <span className="flex items-center gap-1 text-blue-600 dark:text-cyan-400">
+                            <HandDrawnCommentIcon size={16} />
+                            {post.commentCount || 0}
                           </span>
-                          <span className="flex items-center gap-1">
-                            <Heart size={14} />
-                            {post.likes || 0} いいね
+                          <span className="flex items-center gap-1 text-red-500 dark:text-pink-400">
+                            <HandDrawnHeartIcon size={16} />
+                            {post.likes || 0}
                           </span>
                         </div>
                       </CardBody>
@@ -826,11 +833,12 @@ export default function Home() {
           {/* 投稿作成フロートボタン */}
           {session && (
             <button
-              className="fixed right-6 bottom-24 z-40 h-12 rounded-full bg-primary text-white text-sm font-bold px-4 shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
+              className="fixed right-6 bottom-24 z-40 h-14 rounded-full bg-yellow-400 text-black text-base font-black px-6 border-4 border-white shadow-[0_8px_0_rgba(0,0,0,0.9)] hover:shadow-[0_10px_0_rgba(0,0,0,0.9)] hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-[0_6px_0_rgba(0,0,0,0.9)] transition-all flex items-center gap-2 uppercase shake-hover"
               onClick={() => setIsPostModalOpen(true)}
               aria-label="投稿を作成"
             >
-              + 投稿
+              <HandDrawnPlusIcon size={20} />
+              投稿
             </button>
           )}
         </Tab>
@@ -838,8 +846,8 @@ export default function Home() {
         <Tab
           key="topics"
           title={
-            <span className="flex items-center gap-1">
-              <Pin size={14} />
+            <span className="flex items-center gap-2">
+              <HandDrawnTopicIcon size={20} />
               お題
             </span>
           }
@@ -857,31 +865,31 @@ export default function Home() {
                 {/* 今週のお題（最新のお題） */}
                 {topicPosts.length > 0 && (
                   <div className="space-y-2">
-                    <h2 className="text-lg font-bold px-2">今週のお題</h2>
+                    <h2 className="text-2xl font-black px-2 uppercase tracking-wide text-black dark:text-green-300">今週のお題</h2>
                     <Card 
-                      shadow="sm"
-                      className="border-2 border-primary rounded-2xl bg-primary-50/30 dark:bg-primary-900/20"
+                      shadow="none"
+                      className="jsr-card bg-gradient-to-br from-pink-300 to-purple-400 dark:from-green-900 dark:to-cyan-900 rounded-2xl"
                     >
-                      <CardBody className="p-4 gap-2">
+                      <CardBody className="p-5 gap-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             {getDisplayIcon(topicPosts[0].authorEmail) ? (
                               <img
                                 src={getDisplayIcon(topicPosts[0].authorEmail) || ""}
                                 alt="投稿者アイコン"
-                                className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full object-cover border border-gray-300"
+                                className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full object-cover border-2 border-black"
                               />
                             ) : (
-                              <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-200 border border-gray-300" />
+                              <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-yellow-300 border-2 border-black" />
                             )}
-                            <span className="font-bold">{getDisplayName(topicPosts[0].authorEmail, topicPosts[0].author)}</span>
-                            <Chip size="sm" color="secondary" variant="solid">今週のお題</Chip>
+                            <span className="font-black text-base uppercase text-black dark:text-white">{getDisplayName(topicPosts[0].authorEmail, topicPosts[0].author)}</span>
+                            <Chip size="md" className="bg-black text-white font-black border-2 border-white dark:bg-green-500 dark:text-black dark:border-green-300">🔥 HOT</Chip>
                           </div>
                           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center gap-2">
-                              <div className="flex items-center gap-1 text-gray-400 text-sm">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-1.9A9 9 0 1 1 5.9 5.9l1.1 1.1"/></svg>
-                                <span className="text-xs font-bold">{topicPosts[0].children?.length || 0} 投稿</span>
+                              <div className="flex items-center gap-1 text-black dark:text-white text-sm font-black">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-1.9A9 9 0 1 1 5.9 5.9l1.1 1.1"/></svg>
+                                <span className="text-sm font-black">{topicPosts[0].children?.length || 0}</span>
                               </div>
                               {getTopicParticipants(topicPosts[0]).length > 0 && (
                                 <div className="flex items-center -space-x-2">
@@ -894,20 +902,20 @@ export default function Home() {
                                           src={participant.icon}
                                           alt={participant.name}
                                           title={participant.name}
-                                          className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full object-cover border-2 border-background"
+                                          className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full object-cover border-3 border-white"
                                         />
                                       ) : (
                                         <div
                                           key={participant.key}
                                           title={participant.name}
-                                          className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-300 text-[10px] font-bold text-gray-700 border-2 border-background flex items-center justify-center"
+                                          className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-yellow-300 text-[11px] font-black text-black border-3 border-white flex items-center justify-center"
                                         >
                                           {participant.name.slice(0, 1)}
                                         </div>
                                       )
                                     ))}
                                   {getTopicParticipants(topicPosts[0]).length > 6 && (
-                                    <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-200 text-[10px] font-bold text-gray-600 border-2 border-background flex items-center justify-center">
+                                    <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-orange-400 text-[11px] font-black text-white border-3 border-white flex items-center justify-center">
                                       +{getTopicParticipants(topicPosts[0]).length - 6}
                                     </div>
                                   )}
@@ -920,14 +928,14 @@ export default function Home() {
                           onClick={() => router.push(`/topic/${topicPosts[0].id}`)}
                           className="cursor-pointer"
                         >
-                          <h2 className="text-lg font-bold">{topicPosts[0].title}</h2>
+                          <h2 className="text-lg font-bold text-black dark:text-white">{topicPosts[0].title}</h2>
                           {topicPosts[0].deadline && (
-                            <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-1">
+                            <p className="text-xs font-semibold text-blue-700 dark:text-cyan-300 mt-1">
                               締切: {formatDateTime(topicPosts[0].deadline)}
                             </p>
                           )}
-                          <p className="text-sm text-gray-600 line-clamp-2">{topicPosts[0].body}</p>
-                          <p className="text-xs text-gray-400">クリックして詳細ページを表示...</p>
+                          <p className="text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{topicPosts[0].body}</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-300">クリックして詳細ページを表示...</p>
                         </div>
                       </CardBody>
                     </Card>
@@ -936,12 +944,12 @@ export default function Home() {
 
                 {/* お題決定ボタン */}
                 {session && (
-                  <Card shadow="sm" className="border border-blue-300 dark:border-blue-700 rounded-2xl bg-blue-50/50 dark:bg-blue-900/10">
+                  <Card shadow="sm" className="border border-blue-300 dark:border-green-600 rounded-2xl bg-blue-50/50 dark:bg-green-950/30">
                     <CardBody className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-semibold text-sm text-blue-900 dark:text-blue-200">新しいお題を決定</p>
-                          <p className="text-xs text-blue-700 dark:text-blue-300">お題案からランダム選択、または手動で選んでお題化できます</p>
+                          <p className="font-black text-base text-black dark:text-green-300 uppercase">新しいお題を決定</p>
+                          <p className="text-xs font-bold text-black/70 dark:text-green-200/70">お題案からランダム選択、または手動で選んでお題化できます</p>
                         </div>
                         <button
                           onClick={() => {
@@ -954,7 +962,7 @@ export default function Home() {
                             setProposalDeadline(null);
                             setIsTopicDecisionModalOpen(true);
                           }}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 text-sm whitespace-nowrap"
+                          className="px-6 py-3 bg-pink-500 text-white rounded-lg font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] active:translate-y-[2px] active:shadow-[0_2px_0_rgba(0,0,0,0.8)] transition-all text-sm whitespace-nowrap shake-hover"
                         >
                           お題決定
                         </button>
@@ -965,13 +973,13 @@ export default function Home() {
 
                 {/* 過去のお題 */}
                 {topicPosts.length > 1 && (
-                  <div className="space-y-2">
-                    <h3 className="text-base font-bold px-2 mt-4">過去のお題</h3>
+                  <div className="space-y-3">
+                    <h3 className="text-xl font-black px-2 mt-6 uppercase tracking-wide text-black dark:text-yellow-300">過去のお題</h3>
                     {topicPosts.slice(1).map((topic) => (
                       <Card 
                         key={topic.id}
-                        shadow="sm"
-                        className="border border-gray-200 rounded-2xl"
+                        shadow="none"
+                        className="jsr-card bg-white dark:bg-gray-900 rounded-xl"
                       >
                         <CardBody className="p-4 gap-2">
                           <div className="flex items-center justify-between">
@@ -980,17 +988,17 @@ export default function Home() {
                                 <img
                                   src={getDisplayIcon(topic.authorEmail) || ""}
                                   alt="投稿者アイコン"
-                                  className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full object-cover border border-gray-300"
+                                  className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full object-cover border-2 border-black dark:border-white"
                                 />
                               ) : (
-                                <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full bg-gray-200 border border-gray-300" />
+                                <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-yellow-300 border-2 border-black dark:border-white" />
                               )}
-                              <span className="font-bold">{getDisplayName(topic.authorEmail, topic.author)}</span>
-                              <Chip size="sm" color="default" variant="flat">過去のお題</Chip>
+                              <span className="font-black text-base uppercase text-black dark:text-green-300">{getDisplayName(topic.authorEmail, topic.author)}</span>
+                              <Chip size="md" className="bg-gray-300 dark:bg-gray-700 text-black dark:text-yellow-300 font-bold border-2 border-black dark:border-green-600">過去</Chip>
                             </div>
                             <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                               <div className="flex items-center gap-2">
-                                <div className="flex items-center gap-1 text-gray-400 text-sm">
+                                <div className="flex items-center gap-1 text-gray-400 dark:text-gray-300 text-sm">
                                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-1.9A9 9 0 1 1 5.9 5.9l1.1 1.1"/></svg>
                                   <span className="text-xs font-bold">{topic.children?.length || 0} 投稿</span>
                                 </div>
@@ -1031,14 +1039,14 @@ export default function Home() {
                             onClick={() => router.push(`/topic/${topic.id}`)}
                             className="cursor-pointer"
                           >
-                            <h2 className="text-lg font-bold">{topic.title}</h2>
+                            <h2 className="text-lg font-bold text-black dark:text-green-200">{topic.title}</h2>
                             {topic.deadline && (
-                              <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-1">
+                              <p className="text-xs font-semibold text-blue-700 dark:text-yellow-300 mt-1">
                                 締切: {formatDateTime(topic.deadline)}
                               </p>
                             )}
-                            <p className="text-sm text-gray-600 line-clamp-2">{topic.body}</p>
-                            <p className="text-xs text-gray-400">クリックして詳細ページを表示...</p>
+                            <p className="text-sm text-gray-800 dark:text-green-100 line-clamp-2">{topic.body}</p>
+                            <p className="text-xs text-gray-600 dark:text-green-200">クリックして詳細ページを表示...</p>
                           </div>
                         </CardBody>
                       </Card>
@@ -1052,11 +1060,11 @@ export default function Home() {
           {/* お題案登録フロートボタン */}
           {session && (
             <button
-              className="fixed right-6 bottom-24 z-40 h-12 rounded-full bg-orange-500 text-white text-sm font-bold px-4 shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
+              className="fixed right-6 bottom-24 z-40 h-14 rounded-full bg-orange-500 text-white text-base font-black px-6 border-4 border-white shadow-[0_8px_0_rgba(0,0,0,0.9)] hover:shadow-[0_10px_0_rgba(0,0,0,0.9)] hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-[0_6px_0_rgba(0,0,0,0.9)] transition-all flex items-center gap-2 uppercase shake-hover"
               onClick={() => setIsProposalModalOpen(true)}
               aria-label="お題案を投稿"
             >
-              <Lightbulb size={16} />
+              <Lightbulb size={20} strokeWidth={3} />
               お題案
             </button>
           )}
@@ -1065,8 +1073,8 @@ export default function Home() {
         <Tab
           key="members"
           title={
-            <span className="flex items-center gap-1">
-              <Users size={14} />
+            <span className="flex items-center gap-2">
+              <HandDrawnPeopleIcon size={20} />
               部員紹介
             </span>
           }
@@ -1090,30 +1098,30 @@ export default function Home() {
                   : ["#文芸部", "#創作", "#部員紹介"];
 
                 return (
-                  <Card key={member.email} shadow="sm" className="border border-default-200 rounded-2xl">
-                    <CardBody className="p-4 space-y-3">
+                  <Card key={member.email} shadow="none" className="jsr-card bg-gradient-to-br from-cyan-200 to-blue-300 dark:from-cyan-900 dark:to-blue-950 rounded-2xl">
+                    <CardBody className="p-5 space-y-3">
                       <div className="flex items-center gap-3">
                         {iconUrl ? (
                           <img
                             src={iconUrl}
                             alt={`${displayName}のアイコン`}
-                            className="w-12 h-12 rounded-full object-cover border border-default-300"
+                            className="w-14 h-14 rounded-full object-cover border-3 border-black dark:border-green-400 shadow-[0_3px_0_rgba(0,0,0,0.8)]"
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-full bg-default-200 border border-default-300" />
+                          <div className="w-14 h-14 rounded-full bg-yellow-300 border-3 border-black dark:border-green-400 shadow-[0_3px_0_rgba(0,0,0,0.8)]" />
                         )}
-                        <p className="font-bold text-base truncate">{displayName}</p>
+                        <p className="font-black text-xl uppercase tracking-wide text-black dark:text-green-300">{displayName}</p>
                       </div>
 
-                      <div className="rounded-lg bg-slate-50 dark:bg-slate-900/20 p-3">
-                        <p className="text-xs text-default-500 mb-1">自己紹介</p>
-                        <p className="text-sm font-medium text-default-700">{member.selfIntro || "未設定"}</p>
+                      <div className="rounded-lg bg-white dark:bg-gray-900 border-3 border-black dark:border-green-600 p-3">
+                        <p className="text-xs font-black uppercase text-black dark:text-green-300 mb-1">自己紹介</p>
+                        <p className="text-sm font-semibold text-black dark:text-green-100">{member.selfIntro || "未設定"}</p>
                       </div>
 
                       {(aiReadingEnabled || member.email !== session?.user?.email) && (
-                        <div className="rounded-lg bg-primary-50/70 dark:bg-primary-900/30 p-3">
-                          <p className="text-xs text-default-500 dark:text-slate-300 mb-1">AI短文分析</p>
-                          <p className="text-sm text-default-700 dark:text-slate-100">
+                        <div className="rounded-lg bg-pink-200 dark:bg-pink-900 border-3 border-black dark:border-pink-600 p-3">
+                          <p className="text-xs font-black uppercase text-black dark:text-pink-200 mb-1">AI短文分析</p>
+                          <p className="text-sm font-semibold text-black dark:text-pink-100">
                             {member.aiSummary || "過去投稿ベースのAI分析は準備中です。"}
                           </p>
                         </div>
@@ -1121,7 +1129,7 @@ export default function Home() {
 
                       <div className="flex flex-wrap gap-2">
                         {displayTags.map((tag, index) => (
-                          <Chip key={`${member.email}-${tag}-${index}`} size="sm" variant="flat" color="primary">
+                          <Chip key={`${member.email}-${tag}-${index}`} size="md" className="bg-yellow-300 dark:bg-yellow-700 text-black dark:text-yellow-200 font-bold border-2 border-black dark:border-yellow-500">
                             {tag}
                           </Chip>
                         ))}
@@ -1142,18 +1150,18 @@ export default function Home() {
           onClick={() => setIsTopicDecisionModalOpen(false)}
         >
           <div 
-            className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg max-w-3xl w-full"
+            className="bg-white rounded-2xl border-4 border-white shadow-[0_10px_0_rgba(0,0,0,0.9)] max-w-3xl w-full"
             onClick={(e) => e.stopPropagation()}
           >
             {/* ヘッダー */}
-            <div className="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 p-6">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <Pin size={18} />
+            <div className="flex justify-between items-center border-b-4 border-black p-6 bg-gradient-to-r from-yellow-300 to-pink-400">
+              <h2 className="text-2xl font-black uppercase flex items-center gap-2">
+                <HandDrawnTopicIcon size={24} />
                 お題を決定
               </h2>
               <button
                 onClick={() => setIsTopicDecisionModalOpen(false)}
-                className="text-2xl text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                className="text-3xl font-black text-black hover:text-red-600 transition-colors"
               >
                 ×
               </button>
@@ -1163,8 +1171,8 @@ export default function Home() {
             <div className="p-6">
               {!hasDecisionCandidates ? (
                 <div className="text-center py-8">
-                  <p className="text-lg font-semibold text-slate-700 dark:text-slate-300">候補がまだありません</p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                  <p className="text-xl font-black uppercase text-black">候補がまだありません</p>
+                  <p className="text-sm font-bold text-black/70 mt-2">
                     「お題」タブ右下のボタンからお題案を投稿してください。
                   </p>
                 </div>
@@ -1175,7 +1183,7 @@ export default function Home() {
                       <button
                         onClick={selectRandomCandidate}
                         disabled={decisionCandidates.length === 0}
-                        className="px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-6 py-3 bg-orange-500 text-white rounded-lg font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                       >
                         ランダム
                       </button>
@@ -1183,7 +1191,7 @@ export default function Home() {
                         type="button"
                         disabled
                         title="AIお題作成は準備中です"
-                        className="px-4 py-2 bg-sky-600 text-white rounded-lg font-semibold opacity-50 cursor-not-allowed"
+                        className="px-6 py-3 bg-sky-600 text-white rounded-lg font-black uppercase opacity-50 cursor-not-allowed border-3 border-white"
                       >
                         生成AI (準備中)
                       </button>
@@ -1269,7 +1277,7 @@ export default function Home() {
                     convertPoolTopicToTopic(selectedPoolTopicId, proposalDeadline);
                   }
                 }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-3 bg-pink-500 text-white rounded-lg font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 この内容でお題化
               </button>
@@ -1285,20 +1293,20 @@ export default function Home() {
           onClick={onClose}
         >
           <div 
-            className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-2xl border-4 border-white shadow-[0_10px_0_rgba(0,0,0,0.9)] max-w-3xl w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* ヘッダー */}
-            <div className="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 p-6 sticky top-0 bg-white dark:bg-slate-900">
-              <h2 className="text-xl font-bold">
+            <div className="flex justify-between items-center border-b-4 border-black p-6 sticky top-0 bg-gradient-to-r from-cyan-300 to-blue-400">
+              <h2 className="text-2xl font-black uppercase">
                 {postingMode === "topic" ? (
                   <span className="flex items-center gap-2">
-                    <Pin size={18} />
+                    <HandDrawnTopicIcon size={24} />
                     お題を作成
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
-                    <Save size={18} />
+                    <HandDrawnPostIcon size={24} />
                     作品を投稿
                   </span>
                 )}
@@ -1385,7 +1393,7 @@ export default function Home() {
               <button 
                 onClick={() => saveToAWS(postingMode)}
                 disabled={!newPost.title || !newPost.body}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-3 bg-cyan-500 text-white rounded-lg font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 {postingMode === "topic" ? "お題を公開" : "保存を実行"}
               </button>
@@ -1401,13 +1409,13 @@ export default function Home() {
           onClick={() => setIsProposalModalOpen(false)}
         >
           <div 
-            className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg max-w-2xl w-full"
+            className="bg-white rounded-2xl border-4 border-white shadow-[0_10px_0_rgba(0,0,0,0.9)] max-w-2xl w-full"
             onClick={(e) => e.stopPropagation()}
           >
             {/* ヘッダー */}
-            <div className="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 p-6">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <Lightbulb size={18} />
+            <div className="flex justify-between items-center border-b-4 border-black p-6 bg-gradient-to-r from-yellow-300 to-orange-400">
+              <h2 className="text-2xl font-black uppercase flex items-center gap-2">
+                <Lightbulb size={24} strokeWidth={3} />
                 お題案を投稿
               </h2>
               <button
@@ -1443,13 +1451,13 @@ export default function Home() {
             </div>
 
             {/* フッター */}
-            <div className="flex justify-end gap-2 border-t border-gray-200 dark:border-slate-700 p-6">
+            <div className="flex justify-end gap-3 border-t-4 border-black p-6 bg-gray-50">
               <button
                 onClick={() => {
                   setIsProposalModalOpen(false);
                   setNewPost({ title: "", body: "", tag: "創作" });
                 }}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg font-semibold"
+                className="px-6 py-3 text-black font-black uppercase bg-gray-300 border-3 border-black rounded-lg shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
               >
                 キャンセル
               </button>
@@ -1484,7 +1492,7 @@ export default function Home() {
                   });
                 }}
                 disabled={!newPost.title || !newPost.body}
-                className="px-4 py-2 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-3 bg-orange-500 text-white rounded-lg font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 投稿
               </button>
@@ -1500,13 +1508,13 @@ export default function Home() {
           onClick={() => setIsPostModalOpen(false)}
         >
           <div 
-            className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg max-w-2xl w-full"
+            className="bg-white rounded-2xl border-4 border-white shadow-[0_10px_0_rgba(0,0,0,0.9)] max-w-2xl w-full"
             onClick={(e) => e.stopPropagation()}
           >
             {/* ヘッダー */}
-            <div className="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 p-6">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <Save size={18} />
+            <div className="flex justify-between items-center border-b-4 border-black p-6 bg-gradient-to-r from-purple-300 to-pink-400">
+              <h2 className="text-2xl font-black uppercase flex items-center gap-2">
+                <HandDrawnPostIcon size={24} />
                 投稿を作成
               </h2>
               <button
@@ -1570,14 +1578,14 @@ export default function Home() {
             </div>
 
             {/* フッター */}
-            <div className="flex justify-end gap-2 border-t border-gray-200 dark:border-slate-700 p-6">
+            <div className="flex justify-end gap-3 border-t-4 border-black p-6 bg-gray-50">
               <button
                 onClick={() => {
                   setIsPostModalOpen(false);
                   setNewPost({ title: "", body: "", tag: "創作" });
                   setSelectedTopicId(null);
                 }}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg font-semibold"
+                className="px-6 py-3 text-black font-black uppercase bg-gray-300 border-3 border-black rounded-lg shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
               >
                 キャンセル
               </button>
@@ -1615,7 +1623,7 @@ export default function Home() {
                   });
                 }}
                 disabled={!newPost.title || !newPost.body}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-3 bg-yellow-400 text-black rounded-lg font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 投稿
               </button>
