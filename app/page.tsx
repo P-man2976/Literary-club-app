@@ -4,6 +4,7 @@ import { useSession, signIn } from "next-auth/react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { getUserIconUrl } from "@/app/lib/imageUtils";
 import useSWR from "swr";
 import { 
@@ -19,15 +20,20 @@ import {
   Badge,
   Spinner
 } from "@heroui/react";
-import { Lightbulb, Pin, Save, Users, AlertCircle, Settings, MessageCircle, Heart } from "lucide-react";
+import { Lightbulb, Pin, Save, Users, AlertCircle, Settings, MessageCircle, Heart, FileText, Target } from "lucide-react";
 import { 
-  HandDrawnPostIcon, 
-  HandDrawnTopicIcon, 
-  HandDrawnPeopleIcon, 
+  HandDrawnPostIcon,
+  HandDrawnTopicIcon,
   HandDrawnSettingsIcon,
   HandDrawnPlusIcon,
   HandDrawnHeartIcon,
-  HandDrawnCommentIcon
+  HandDrawnCommentIcon,
+  LiquidMetalPostIcon,
+  LiquidMetalTopicIcon,
+  LiquidMetalPeopleIcon,
+  ChromeSettingsIcon,
+  ChromeUserIcon,
+  ChromeMessageIcon
 } from "@/app/components/HandDrawnIcons";
 
 
@@ -76,6 +82,8 @@ export default function Home() {
   const aiReadingSettingKey = "lit-club-ai-reading-enabled";
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { resolvedTheme } = useTheme();
+  const isChromeTheme = resolvedTheme === "dark";
   const [sessionLoadTimedOut, setSessionLoadTimedOut] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const onClose = () => setIsOpen(false);
@@ -694,7 +702,7 @@ export default function Home() {
   return (
     <main className="min-h-screen max-w-3xl mx-auto pb-40 relative z-10">
       {/* ヘッダー */}
-      <header className="sticky top-0 bg-white/20 backdrop-blur-md border-4 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] p-4 z-30 mb-2">
+      <header className="sticky top-0 bg-gradient-to-b from-black/75 via-black/45 to-transparent backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.6)] p-4 z-30 mb-2">
         <div className="flex justify-between items-center">
           <h1 className="site-title leading-none">
             <span className="block text-[10px] md:text-xs font-black uppercase tracking-[0.15em] text-black/80 dark:text-cyan-200">
@@ -712,17 +720,23 @@ export default function Home() {
                 aria-label="設定"
                 className="w-12 h-12 rounded-full border-3 border-black bg-cyan-400 flex items-center justify-center shake-hover shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
               >
-                <HandDrawnSettingsIcon size={22} />
+                {isChromeTheme ? <ChromeSettingsIcon size={24} /> : <HandDrawnSettingsIcon size={22} />}
               </Link>
               <Link href="/settings/profile" aria-label="アカウント設定" className="block">
                 {getUserIconUrl(session.user?.email, userIcon) ? (
                   <img
                     src={getUserIconUrl(session.user?.email, userIcon) || ""}
                     alt="プロフィール"
-                    className="w-12 h-12 rounded-full object-cover border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)]"
+                    className={isChromeTheme 
+                      ? "w-12 h-12 rounded-full object-cover border-2 border-white shadow-[0_2px_0_rgba(255,255,255,0.4)]"
+                      : "w-12 h-12 rounded-full object-cover border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)]"
+                    }
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-yellow-300 border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)]" />
+                  <div className={isChromeTheme
+                    ? "w-12 h-12 rounded-full bg-gray-700 border-2 border-white flex items-center justify-center"
+                    : "w-12 h-12 rounded-full bg-yellow-300 border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)]"
+                  } />
                 )}
               </Link>
             </div>
@@ -746,17 +760,29 @@ export default function Home() {
         className="w-full"
         classNames={{
           base: "sticky top-[73px] w-full bg-transparent z-20 px-0 backdrop-blur-sm",
-          tabList: "w-full !grid !grid-cols-3 !gap-2 px-2 bg-white/20 backdrop-blur-md border-4 border-white shadow-[0_6px_0_rgba(0,0,0,0.8)]",
-          cursor: "w-full h-1 bg-black",
-          tab: "h-14 w-full max-w-none !mx-0 !px-0 justify-center rounded-none data-[selected=true]:font-black data-[selected=true]:text-black data-[selected=true]:bg-yellow-400 dark:data-[selected=true]:bg-pink-500 shake-hover transition-all",
-          tabContent: "group-data-[selected=true]:text-black group-data-[selected=false]:text-white font-black text-lg uppercase tracking-wider",
+          tabList: isChromeTheme
+            ? "w-full !grid !grid-cols-3 !gap-0 px-0 bg-transparent border-0 shadow-none"
+            : "w-full !grid !grid-cols-3 !gap-2 px-2 bg-white/20 backdrop-blur-md border border-white/40 shadow-[0_4px_0_rgba(0,0,0,0.6)]",
+          cursor: isChromeTheme ? "w-full h-[2px] bg-white" : "w-full h-1 bg-black",
+          tab: isChromeTheme
+            ? "h-14 w-full max-w-none !mx-0 !px-0 justify-center rounded-none bg-transparent border-0 shadow-none transition-all relative data-[selected=true]:font-black data-[selected=true]:bg-transparent"
+            : "h-14 w-full max-w-none !mx-0 !px-0 justify-center rounded-none data-[selected=true]:font-black data-[selected=true]:text-black data-[selected=true]:bg-yellow-400 dark:data-[selected=true]:bg-pink-500 shake-hover transition-all",
+          tabContent: isChromeTheme
+            ? "group-data-[selected=true]:text-white group-data-[selected=false]:text-white/70 font-black text-lg uppercase tracking-wider"
+            : "group-data-[selected=true]:text-black group-data-[selected=false]:text-white font-black text-lg uppercase tracking-wider",
         }}
       >
         <Tab
           key="posts"
           title={
             <span className="flex items-center gap-2">
-              <HandDrawnPostIcon size={20} />
+              {isChromeTheme ? (
+                <FileText size={20} strokeWidth={2.5} className="text-white" />
+              ) : (
+                <span className="chrome-tab-icon-wrap">
+                  <LiquidMetalPostIcon size={20} className="chrome-tab-icon" />
+                </span>
+              )}
               投稿
             </span>
           }
@@ -821,7 +847,7 @@ export default function Home() {
                         {/* コメント数・いいね数表示 */}
                         <div className="flex items-center gap-4 mt-3 text-sm font-bold">
                           <span className="flex items-center gap-1 text-blue-600 dark:text-cyan-400">
-                            <HandDrawnCommentIcon size={16} />
+                            {isChromeTheme ? <ChromeMessageIcon size={16} /> : <HandDrawnCommentIcon size={16} />}
                             {post.commentCount || 0}
                           </span>
                           <span className="flex items-center gap-1 text-red-500 dark:text-pink-400">
@@ -854,7 +880,13 @@ export default function Home() {
           key="topics"
           title={
             <span className="flex items-center gap-2">
-              <HandDrawnTopicIcon size={20} />
+              {isChromeTheme ? (
+                <Target size={20} strokeWidth={2.5} className="text-white" />
+              ) : (
+                <span className="chrome-tab-icon-wrap">
+                  <LiquidMetalTopicIcon size={20} className="chrome-tab-icon" />
+                </span>
+              )}
               お題
             </span>
           }
@@ -1081,7 +1113,13 @@ export default function Home() {
           key="members"
           title={
             <span className="flex items-center gap-2">
-              <HandDrawnPeopleIcon size={20} />
+              {isChromeTheme ? (
+                <Users size={20} strokeWidth={2.5} className="text-white" />
+              ) : (
+                <span className="chrome-tab-icon-wrap">
+                  <LiquidMetalPeopleIcon size={20} className="chrome-tab-icon" />
+                </span>
+              )}
               部員紹介
             </span>
           }
@@ -1105,30 +1143,30 @@ export default function Home() {
                   : ["#文芸部", "#創作", "#部員紹介"];
 
                 return (
-                  <Card key={member.email} shadow="none" className="jsr-card bg-gradient-to-br from-cyan-200 to-blue-300 dark:from-cyan-900 dark:to-blue-950 rounded-2xl">
+                  <Card key={member.email} shadow="none" className="jsr-card bg-gradient-to-br from-cyan-200 to-blue-300 dark:bg-black rounded-2xl">
                     <CardBody className="p-5 space-y-3">
                       <div className="flex items-center gap-3">
                         {iconUrl ? (
                           <img
                             src={iconUrl}
                             alt={`${displayName}のアイコン`}
-                            className="w-20 h-20 rounded-full object-cover border-3 border-black dark:border-green-400 shadow-[0_3px_0_rgba(0,0,0,0.8)] dark:shadow-[0_0_15px_rgba(0,240,168,0.5)]"
+                            className="w-20 h-20 rounded-full object-cover border-2 border-black dark:border-white shadow-[0_3px_0_rgba(0,0,0,0.8)]"
                           />
                         ) : (
-                          <div className="w-20 h-20 rounded-full bg-yellow-300 border-3 border-black dark:border-green-400 shadow-[0_3px_0_rgba(0,0,0,0.8)] dark:shadow-[0_0_15px_rgba(0,240,168,0.5)]" />
+                          <div className="w-20 h-20 rounded-full bg-yellow-300 border-2 border-black dark:border-white shadow-[0_3px_0_rgba(0,0,0,0.8)]" />
                         )}
-                        <p className="font-black text-xl uppercase tracking-wide text-black dark:text-green-300">{displayName}</p>
+                        <p className="font-black text-xl uppercase tracking-wide text-black dark:text-white">{displayName}</p>
                       </div>
 
-                      <div className="rounded-lg bg-white dark:bg-gray-900 border-3 border-black dark:border-green-600 p-3">
-                        <p className="text-xs font-black uppercase text-black dark:text-green-300 mb-1">自己紹介</p>
-                        <p className="text-sm font-semibold text-black dark:text-green-100">{member.selfIntro || "未設定"}</p>
+                      <div className="rounded-lg bg-white dark:bg-black border-3 border-black dark:border-white p-3">
+                        <p className="text-xs font-black uppercase text-black dark:text-white mb-1">自己紹介</p>
+                        <p className="text-sm font-semibold text-black dark:text-white">{member.selfIntro || "未設定"}</p>
                       </div>
 
                       {(aiReadingEnabled || member.email !== session?.user?.email) && (
-                        <div className="rounded-lg bg-pink-200 dark:bg-[#00FFFF] border-3 border-black dark:border-cyan-300 p-3">
-                          <p className="text-xs font-black uppercase text-black dark:text-gray-900 mb-1">AI短文分析</p>
-                          <p className="text-sm font-semibold text-black dark:text-gray-900">
+                        <div className="rounded-lg bg-pink-200 dark:bg-black border-3 border-black dark:border-white p-3">
+                          <p className="text-xs font-black uppercase text-black dark:text-white mb-1">AI短文分析</p>
+                          <p className="text-sm font-semibold text-black dark:text-white">
                             {member.aiSummary || "過去投稿ベースのAI分析は準備中です。"}
                           </p>
                         </div>
@@ -1136,7 +1174,7 @@ export default function Home() {
 
                       <div className="flex flex-wrap gap-2">
                         {displayTags.map((tag, index) => (
-                          <Chip key={`${member.email}-${tag}-${index}`} size="md" className="bg-yellow-300 dark:bg-yellow-700 text-black dark:text-yellow-200 font-bold border-2 border-black dark:border-yellow-500">
+                          <Chip key={`${member.email}-${tag}-${index}`} size="md" className="bg-yellow-300 dark:bg-black text-black dark:text-white font-bold border-2 border-black dark:border-white">
                             {tag}
                           </Chip>
                         ))}

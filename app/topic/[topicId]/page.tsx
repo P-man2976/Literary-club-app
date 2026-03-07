@@ -717,10 +717,10 @@ export default function TopicPage() {
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-6 relative z-10">
+    <div className="topic-detail-scene min-h-screen p-4 md:p-6 relative z-10">
       <div className="max-w-3xl mx-auto">
         {/* ヘッダー */}
-        <div className="flex items-center mb-8 bg-white/20 backdrop-blur-md border-4 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] rounded-2xl p-4">
+        <div className="flex items-center mb-8 bg-white/20 backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.8)] rounded-2xl p-4">
           <button
             onClick={() => router.back()}
             className="px-4 py-2 bg-cyan-400 text-black border-3 border-black rounded-full font-black uppercase shake-hover flex items-center gap-2 hover:translate-y-[-2px] transition-all"
@@ -1127,7 +1127,7 @@ export default function TopicPage() {
         {/* 投稿一覧 - お題の場合のみ表示 */}
         {topic.isTopicPost === 1 && (
         <div>
-          <div className="flex items-center justify-between mb-4 bg-white/20 backdrop-blur-md border-4 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-4 bg-white/20 backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.8)] rounded-2xl p-4">
             <h3 className="text-xl font-black uppercase tracking-wide">このお題への投稿 ({replies.length})</h3>
             {getReplyParticipants().length > 0 && (
               <div className="flex items-center gap-2">

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=Noto+Sans+JP:wght@700;900&family=Noto+Serif+JP:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=Noto+Sans+JP:wght@300;400;700;900&family=Noto+Serif+JP:wght@500;700&family=Orbitron:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -34,10 +34,20 @@ html.light body::before {
 }
 
 html.dark body {
-  background: #0B1A1A;
+  background: #000000;
   background-attachment: fixed;
-  color: #E0F7FA;
+  color: #FFFFFF;
   position: relative;
+}
+
+html.dark body,
+html.dark button,
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4 {
+  font-family: 'Orbitron', 'Noto Sans JP', sans-serif;
+  font-weight: 500;
 }
 
 html.library body {
@@ -192,11 +202,31 @@ html.library img.rounded-full {
   border-radius: 9999px !important;
 }
 
-/* ダークモード時のアクセントカラー調整 */
+/* CHROMEモード: 鏡面シルバー + ホログラム反射 */
 html.dark h1,
 html.dark h2,
 html.dark h3 {
-  color: #00F0A8;
+  color: #ffffff !important;
+  background: none !important;
+  text-shadow: none !important;
+  letter-spacing: 0.01em;
+}
+
+/* CHROME: 英数字を太く */
+html.dark {
+  font-weight: 500;
+}
+
+html.dark .font-semibold {
+  font-weight: 600 !important;
+}
+
+html.dark .font-bold {
+  font-weight: 700 !important;
+}
+
+html.dark .font-black {
+  font-weight: 800 !important;
 }
 
 html.dark body::before {
@@ -206,21 +236,13 @@ html.dark body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: 
-    /* スキャンライン効果 */
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0, 240, 168, 0.03) 2px,
-      rgba(0, 240, 168, 0.03) 4px
-    ),
-    /* ネオングリッドパターン */
-    repeating-linear-gradient(90deg, rgba(0,240,168,0.02) 0px, rgba(0,240,168,0.02) 1px, transparent 1px, transparent 40px),
-    repeating-linear-gradient(0deg, rgba(0,240,168,0.02) 0px, rgba(0,240,168,0.02) 1px, transparent 1px, transparent 40px);
+  background-image:
+    linear-gradient(125deg, rgba(255,255,255,0.04) 0%, rgba(230,230,230,0.02) 40%, transparent 100%),
+    repeating-linear-gradient(115deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 12px);
   pointer-events: none;
   z-index: 0;
-  animation: scanline 8s linear infinite;
+  animation: none;
+  opacity: 0.5;
 }
 
 @keyframes scanline {
@@ -232,7 +254,7 @@ html.dark body::before {
 .jsr-card {
   border: 4px solid #fff;
   filter: drop-shadow(6px 6px 0px rgba(0, 0, 0, 0.8));
-  transform: rotate(-0.5deg);
+  transform: none;
   transition: all 0.2s ease;
 }
 
@@ -260,9 +282,85 @@ html.light .jsr-card:nth-of-type(4n) {
   transform: rotate(1.4deg) translateX(2px);
 }
 
+html.dark .jsr-card {
+  border: 1px solid #bcbcbc !important;
+  background: #0a0a0b;
+  filter: none;
+  box-shadow: none;
+  border-radius: 0 !important;
+  clip-path: none;
+}
+
+html.dark button {
+  border: 1px solid #bcbcbc !important;
+  background: #0d0d0f !important;
+  color: #f8f8f8 !important;
+  text-shadow: none;
+  box-shadow: none;
+  border-radius: 0 !important;
+  clip-path: none;
+}
+
+/* CHROME: 文字は真っ白 + 細めウェイト */
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6,
+html.dark p,
+html.dark span,
+html.dark a,
+html.dark li,
+html.dark label,
+html.dark small,
+html.dark strong,
+html.dark em {
+  color: #ffffff !important;
+  background: none !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+/* 黒背景での可読性確保: ボタン文字は常に白 */
+html.dark button,
+html.dark button * {
+  color: #ffffff !important;
+  background: none !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-shadow: none !important;
+}
+
+html.dark input,
+html.dark textarea,
+html.dark select,
+html.dark option {
+  color: #f2f2f2 !important;
+  -webkit-text-fill-color: #f2f2f2;
+}
+
+html.dark svg {
+  color: #e6e6e6 !important;
+}
+
+html.dark ::placeholder {
+  color: #d8d8d8 !important;
+}
+
+html.dark [class*="dark:border-green"],
+html.dark [class*="dark:border-cyan"],
+html.dark [class*="dark:border-pink"] {
+  border-color: #c4c4c4 !important;
+}
+
+/* ごく限定的なY2K差し色（蛍光グリーン） */
+html.dark .chrome-acid {
+  color: #6eff39 !important;
+}
+
 .jsr-card:hover {
-  transform: rotate(0deg) translateY(-4px);
-  filter: drop-shadow(8px 8px 0px rgba(0, 0, 0, 0.9));
+  transform: scale(1.02);
+  filter: drop-shadow(6px 6px 0px rgba(0, 0, 0, 0.85));
 }
 
 @keyframes boing-card {
@@ -275,7 +373,24 @@ html.light .jsr-card:nth-of-type(4n) {
 html.light .jsr-card:hover {
   transform: rotate(-1deg);
   animation: boing-card 0.22s ease-out 1;
-  filter: drop-shadow(8px 8px 0px rgba(0, 0, 0, 0.9));
+  filter: drop-shadow(6px 6px 0px rgba(0, 0, 0, 0.88));
+}
+
+/* テーマ別アイコン表示: STREETは絵文字、それ以外はSVG */
+.themed-icon-emoji {
+  display: none;
+}
+
+.themed-icon-svg {
+  display: inline-block;
+}
+
+html.light .themed-icon-emoji {
+  display: inline-block;
+}
+
+html.light .themed-icon-svg {
+  display: none;
 }
 
 /* 振動アニメーション */
@@ -296,13 +411,24 @@ html.light .jsr-card:hover {
   animation: shake 0.5s infinite;
 }
 
-/* ダークモード時、shake-hoverを無効化してネオングロウに変更 */
+/* CHROMEモード時、shake-hoverを無効化して金属ハイライトに変更 */
 html.dark .shake-hover:hover {
   animation: none;
-  box-shadow: 0 0 20px rgba(0, 240, 168, 0.6), 
-              0 0 40px rgba(0, 240, 168, 0.4), 
-              inset 0 0 10px rgba(0, 240, 168, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.42),
+              0 0 0 2px rgba(226,226,226,0.58);
   transition: box-shadow 0.3s ease;
+}
+
+html.dark .jsr-card:hover,
+html.dark button:hover {
+  transform: scale(1.015) !important;
+  animation: none !important;
+  filter: none !important;
+  box-shadow: none !important;
+}
+
+html.dark .spray-hover::before {
+  display: none;
 }
 
 /* スプレーペイント風ホバーエフェクト */
@@ -380,19 +506,189 @@ input[type="password"] {
   font-style: normal !important;
 }
 
-/* ダークモード時のネオングロウエフェクト */
-html.dark button,
-html.dark .jsr-card {
-  box-shadow: 0 0 10px rgba(0, 240, 168, 0.3);
-}
-
-html.dark button:hover,
-html.dark .jsr-card:hover {
-  box-shadow: 0 0 20px rgba(0, 240, 168, 0.5);
-}
-
-/* ダークモード時のボーダーにグロウ効果 */
+/* CHROME: エッジの硬い反射を強調 */
 html.dark .border-3,
 html.dark .border-4 {
-  box-shadow: 0 0 8px rgba(0, 240, 168, 0.4), inset 0 0 8px rgba(0, 240, 168, 0.2);
+  box-shadow: none;
+}
+
+/* CHROME: タブアイコンを液体金属調に */
+html.dark .chrome-tab-icon-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+html.dark .chrome-tab-icon-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.06) 45%, transparent 70%);
+  pointer-events: none;
+}
+
+html.dark .chrome-tab-icon {
+  color: #f5f5f5 !important;
+  filter: drop-shadow(0 0 1px rgba(255,255,255,0.85)) drop-shadow(0 0 6px rgba(255,255,255,0.18));
+}
+
+/* CHROME: 設定トグルは白黒で明確に */
+html.dark .chrome-toggle {
+  border: 1px solid #ffffff !important;
+}
+
+html.dark .chrome-toggle-on {
+  background: #ffffff !important;
+}
+
+html.dark .chrome-toggle-off {
+  background: #000000 !important;
+}
+
+html.dark .chrome-toggle-on .chrome-toggle-knob {
+  background: #000000 !important;
+}
+
+html.dark .chrome-toggle-off .chrome-toggle-knob {
+  background: #ffffff !important;
+}
+
+/* CHROME: 使用色を黒/液体金属/白系に限定 */
+html.dark [class*="bg-pink"],
+html.dark [class*="bg-purple"],
+html.dark [class*="bg-cyan"],
+html.dark [class*="bg-blue"],
+html.dark [class*="bg-green"],
+html.dark [class*="bg-yellow"],
+html.dark [class*="bg-orange"],
+html.dark [class*="bg-red"],
+html.dark [class*="bg-emerald"],
+html.dark [class*="bg-indigo"],
+html.dark [class*="bg-violet"],
+html.dark [class*="bg-sky"],
+html.dark [class*="bg-lime"],
+html.dark [class*="bg-rose"],
+html.dark [class*="dark:bg-"] {
+  background: #060606 !important;
+}
+
+html.dark [class*="text-pink"],
+html.dark [class*="text-purple"],
+html.dark [class*="text-cyan"],
+html.dark [class*="text-blue"],
+html.dark [class*="text-green"],
+html.dark [class*="text-yellow"],
+html.dark [class*="text-orange"],
+html.dark [class*="text-red"],
+html.dark [class*="text-emerald"],
+html.dark [class*="text-indigo"],
+html.dark [class*="text-violet"],
+html.dark [class*="text-sky"],
+html.dark [class*="text-lime"],
+html.dark [class*="text-rose"],
+html.dark [class*="dark:text-"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: none !important;
+}
+
+html.dark [class*="border-pink"],
+html.dark [class*="border-purple"],
+html.dark [class*="border-cyan"],
+html.dark [class*="border-blue"],
+html.dark [class*="border-green"],
+html.dark [class*="border-yellow"],
+html.dark [class*="border-orange"],
+html.dark [class*="border-red"],
+html.dark [class*="border-emerald"],
+html.dark [class*="border-indigo"],
+html.dark [class*="border-violet"],
+html.dark [class*="border-sky"],
+html.dark [class*="border-lime"],
+html.dark [class*="border-rose"],
+html.dark [class*="dark:border-"] {
+  border-color: #c7c7c7 !important;
+}
+
+/* CHROME: お題決定モーダルを無彩色に統一 */
+html.dark .library-topic-modal {
+  background: #050505 !important;
+  border: 1px solid #c9c9c9 !important;
+  box-shadow: none !important;
+}
+
+html.dark .library-topic-modal-header {
+  background: #050505 !important;
+  border-bottom: 1px solid #c9c9c9 !important;
+}
+
+html.dark .library-topic-modal,
+html.dark .library-topic-modal * {
+  border-color: #bdbdbd !important;
+}
+
+html.dark .library-topic-modal [class*="bg-"],
+html.dark .library-topic-modal [class*="dark:bg-"] {
+  background: #070707 !important;
+}
+
+html.dark .library-topic-modal h1,
+html.dark .library-topic-modal h2,
+html.dark .library-topic-modal h3,
+html.dark .library-topic-modal p,
+html.dark .library-topic-modal span,
+html.dark .library-topic-modal label,
+html.dark .library-topic-modal button {
+  background: linear-gradient(180deg, #ffffff 0%, #cfcfcf 45%, #f7f7f7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+}
+
+/* CHROME: 投稿詳細シーンの灰色/カラフルを排除 */
+html.dark .topic-detail-scene [class*="bg-gray"],
+html.dark .topic-detail-scene [class*="bg-slate"],
+html.dark .topic-detail-scene [class*="bg-yellow"],
+html.dark .topic-detail-scene [class*="bg-cyan"],
+html.dark .topic-detail-scene [class*="bg-pink"],
+html.dark .topic-detail-scene [class*="bg-red"],
+html.dark .topic-detail-scene [class*="bg-blue"],
+html.dark .topic-detail-scene [class*="bg-green"],
+html.dark .topic-detail-scene [class*="dark:bg-"] {
+  background: #070707 !important;
+}
+
+html.dark .topic-detail-scene [class*="border-"],
+html.dark .topic-detail-scene [class*="dark:border-"] {
+  border-color: #bdbdbd !important;
+}
+
+html.dark .topic-detail-scene h1,
+html.dark .topic-detail-scene h2,
+html.dark .topic-detail-scene h3,
+html.dark .topic-detail-scene h4,
+html.dark .topic-detail-scene p,
+html.dark .topic-detail-scene span,
+html.dark .topic-detail-scene label,
+html.dark .topic-detail-scene button,
+html.dark .topic-detail-scene a {
+  background: linear-gradient(180deg, #ffffff 0%, #cfcfcf 45%, #f7f7f7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+}
+
+/* CHROMEは斜体より硬質な直線フォントを優先 */
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6,
+html.dark button {
+  font-style: normal !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
 }

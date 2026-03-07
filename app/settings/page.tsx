@@ -218,7 +218,7 @@ export default function SettingsPage() {
                     className={`w-full justify-start px-4 py-6 rounded-none ${theme === "dark" ? "bg-primary-50 dark:bg-primary-900/20" : ""}`}
                   >
                     <div className="flex items-center gap-3 w-full">
-                      <p className={`font-bold ${theme === "dark" ? "text-primary" : ""}`}>NEON</p>
+                      <p className={`font-bold ${theme === "dark" ? "text-primary" : ""}`}>CHROME</p>
                       {theme === "dark" && <Check size={16} className="text-primary" />}
                     </div>
                   </Button>
@@ -253,12 +253,12 @@ export default function SettingsPage() {
                     <button
                       onClick={toggleNotifications}
                       disabled={notificationPermission === "denied"}
-                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                      className={`chrome-toggle relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                         notificationEnabled ? "bg-primary" : "bg-gray-300"
-                      } ${notificationPermission === "denied" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                      } ${notificationEnabled ? "chrome-toggle-on" : "chrome-toggle-off"} ${notificationPermission === "denied" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                     >
                       <span
-                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                        className={`chrome-toggle-knob inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
                           notificationEnabled ? "translate-x-6" : "translate-x-1"
                         }`}
                       />
@@ -294,12 +294,12 @@ export default function SettingsPage() {
                 </div>
                 <button
                   onClick={toggleAiReading}
-                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                  className={`chrome-toggle relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                     aiReadingEnabled ? "bg-primary" : "bg-gray-300"
-                  }`}
+                  } ${aiReadingEnabled ? "chrome-toggle-on" : "chrome-toggle-off"}`}
                 >
                   <span
-                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                    className={`chrome-toggle-knob inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
                       aiReadingEnabled ? "translate-x-6" : "translate-x-1"
                     }`}
                   />
