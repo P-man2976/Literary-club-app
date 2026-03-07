@@ -1105,10 +1105,10 @@ export default function Home() {
                           <img
                             src={iconUrl}
                             alt={`${displayName}のアイコン`}
-                            className="w-14 h-14 rounded-full object-cover border-3 border-black dark:border-green-400 shadow-[0_3px_0_rgba(0,0,0,0.8)]"
+                            className="w-20 h-20 rounded-full object-cover border-3 border-black dark:border-green-400 shadow-[0_3px_0_rgba(0,0,0,0.8)] dark:shadow-[0_0_15px_rgba(0,240,168,0.5)]"
                           />
                         ) : (
-                          <div className="w-14 h-14 rounded-full bg-yellow-300 border-3 border-black dark:border-green-400 shadow-[0_3px_0_rgba(0,0,0,0.8)]" />
+                          <div className="w-20 h-20 rounded-full bg-yellow-300 border-3 border-black dark:border-green-400 shadow-[0_3px_0_rgba(0,0,0,0.8)] dark:shadow-[0_0_15px_rgba(0,240,168,0.5)]" />
                         )}
                         <p className="font-black text-xl uppercase tracking-wide text-black dark:text-green-300">{displayName}</p>
                       </div>
@@ -1119,9 +1119,9 @@ export default function Home() {
                       </div>
 
                       {(aiReadingEnabled || member.email !== session?.user?.email) && (
-                        <div className="rounded-lg bg-pink-200 dark:bg-pink-900 border-3 border-black dark:border-pink-600 p-3">
-                          <p className="text-xs font-black uppercase text-black dark:text-pink-200 mb-1">AI短文分析</p>
-                          <p className="text-sm font-semibold text-black dark:text-pink-100">
+                        <div className="rounded-lg bg-pink-200 dark:bg-[#FF008C] border-3 border-black dark:border-[#FF66B2] p-3">
+                          <p className="text-xs font-black uppercase text-black dark:text-white mb-1">AI短文分析</p>
+                          <p className="text-sm font-semibold text-black dark:text-white">
                             {member.aiSummary || "過去投稿ベースのAI分析は準備中です。"}
                           </p>
                         </div>

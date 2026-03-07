@@ -9,7 +9,22 @@ const config: Config = {
     "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        'octo': {
+          'dark': '#0B1A1A',
+          'mint': '#00F0A8',
+          'magenta': '#FF008C',
+          'text': '#E0F7FA',
+        },
+        'jsr': {
+          'yellow': '#FDFD96',
+          'orange': '#FF8C00',
+          'blue': '#00BFFF',
+          'black': '#000000',
+        },
+      },
+    },
   },
   darkMode: "class",
   plugins: [heroui()],

@@ -10,9 +10,9 @@
 
 /* ジェットセットラジオ風の背景 */
 html.light body {
-  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #fdc830 100%);
+  background: #FDFD96;
   background-attachment: fixed;
-  color: #0f172a;
+  color: #000000;
   position: relative;
 }
 
@@ -24,17 +24,27 @@ html.light body::before {
   width: 100%;
   height: 100%;
   background-image: 
-    repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 2px),
-    repeating-linear-gradient(90deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 2px);
+    /* ハーフトーン（網点）テクスチャ */
+    radial-gradient(circle, rgba(0,0,0,0.08) 1px, transparent 1px),
+    radial-gradient(circle, rgba(0,0,0,0.08) 1px, transparent 1px);
+  background-size: 8px 8px, 8px 8px;
+  background-position: 0 0, 4px 4px;
   pointer-events: none;
   z-index: 0;
 }
 
 html.dark body {
-  background: linear-gradient(135deg, #0a0e1a 0%, #151820 50%, #0d1117 100%);
+  background: #0B1A1A;
   background-attachment: fixed;
-  color: #e0ffe0;
+  color: #E0F7FA;
   position: relative;
+}
+
+/* ダークモード時のアクセントカラー調整 */
+html.dark h1,
+html.dark h2,
+html.dark h3 {
+  color: #00F0A8;
 }
 
 html.dark body::before {
@@ -45,11 +55,25 @@ html.dark body::before {
   width: 100%;
   height: 100%;
   background-image: 
-    repeating-linear-gradient(0deg, rgba(0,255,150,0.03) 0px, rgba(0,255,150,0.03) 1px, transparent 1px, transparent 4px),
-    repeating-linear-gradient(90deg, rgba(0,255,150,0.03) 0px, rgba(0,255,150,0.03) 1px, transparent 1px, transparent 4px),
-    linear-gradient(180deg, rgba(0,255,150,0.05) 0%, transparent 100%);
+    /* スキャンライン効果 */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 240, 168, 0.03) 2px,
+      rgba(0, 240, 168, 0.03) 4px
+    ),
+    /* ネオングリッドパターン */
+    repeating-linear-gradient(90deg, rgba(0,240,168,0.02) 0px, rgba(0,240,168,0.02) 1px, transparent 1px, transparent 40px),
+    repeating-linear-gradient(0deg, rgba(0,240,168,0.02) 0px, rgba(0,240,168,0.02) 1px, transparent 1px, transparent 40px);
   pointer-events: none;
   z-index: 0;
+  animation: scanline 8s linear infinite;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(100vh); }
 }
 
 /* ステッカー風カードスタイル */
@@ -58,6 +82,13 @@ html.dark body::before {
   filter: drop-shadow(6px 6px 0px rgba(0, 0, 0, 0.8));
   transform: rotate(-0.5deg);
   transition: all 0.2s ease;
+}
+
+/* ライトモード時：太い黒枠でJSR風に */
+html.light .jsr-card {
+  border: 3px solid #000000;
+  filter: drop-shadow(6px 6px 0px rgba(0, 0, 0, 0.9));
+  transform: rotate(-1deg);
 }
 
 .jsr-card:hover {
@@ -81,6 +112,15 @@ html.dark body::before {
 
 .shake-hover:hover {
   animation: shake 0.5s infinite;
+}
+
+/* ダークモード時、shake-hoverを無効化してネオングロウに変更 */
+html.dark .shake-hover:hover {
+  animation: none;
+  box-shadow: 0 0 20px rgba(0, 240, 168, 0.6), 
+              0 0 40px rgba(0, 240, 168, 0.4), 
+              inset 0 0 10px rgba(0, 240, 168, 0.2);
+  transition: box-shadow 0.3s ease;
 }
 
 /* スプレーペイント風ホバーエフェクト */
@@ -129,6 +169,18 @@ h1, h2, h3, h4, h5, h6, button, .font-bold {
   font-style: italic;
 }
 
+/* ライトモード時のアクセントカラー */
+html.light h1,
+html.light h2,
+html.light h3 {
+  color: #FF8C00;
+  text-shadow: 2px 2px 0px #000000;
+}
+
+html.light button {
+  border: 3px solid #000000;
+}
+
 /* 投稿本文など、斜体を適用しない要素 */
 textarea, 
 .whitespace-pre-wrap,
@@ -137,4 +189,21 @@ input[type="text"],
 input[type="email"],
 input[type="password"] {
   font-style: normal !important;
+}
+
+/* ダークモード時のネオングロウエフェクト */
+html.dark button,
+html.dark .jsr-card {
+  box-shadow: 0 0 10px rgba(0, 240, 168, 0.3);
+}
+
+html.dark button:hover,
+html.dark .jsr-card:hover {
+  box-shadow: 0 0 20px rgba(0, 240, 168, 0.5);
+}
+
+/* ダークモード時のボーダーにグロウ効果 */
+html.dark .border-3,
+html.dark .border-4 {
+  box-shadow: 0 0 8px rgba(0, 240, 168, 0.4), inset 0 0 8px rgba(0, 240, 168, 0.2);
 }
