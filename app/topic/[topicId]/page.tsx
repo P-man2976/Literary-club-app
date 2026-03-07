@@ -732,7 +732,10 @@ export default function TopicPage() {
     <div className={`topic-detail-scene min-h-screen p-4 md:p-6 relative z-10 ${isChromeTheme ? "chrome-theme-detail" : ""}`}>
       <div className="max-w-3xl mx-auto">
         {/* ヘッダー */}
-        <div className="flex items-center mb-8 bg-white/20 backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.8)] rounded-2xl p-4">
+        <div className={isChromeTheme
+          ? "flex items-center mb-8 bg-black border-b border-white/30 p-4"
+          : "flex items-center mb-8 bg-white/20 backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.8)] rounded-2xl p-4"
+        }>
           <button
             onClick={() => router.back()}
             className="px-4 py-2 bg-cyan-400 text-black border-3 border-black rounded-full font-black uppercase shake-hover flex items-center gap-2 hover:translate-y-[-2px] transition-all"
@@ -740,12 +743,18 @@ export default function TopicPage() {
             <ArrowLeft size={18} strokeWidth={3} />
             戻る
           </button>
-          <h1 className="text-3xl font-black text-center flex-1 uppercase tracking-wide">投稿詳細</h1>
+          <h1 className={isChromeTheme
+            ? "text-xl font-medium text-center flex-1 tracking-wide text-white"
+            : "text-3xl font-black text-center flex-1 uppercase tracking-wide"
+          }>投稿詳細</h1>
         </div>
 
         {/* 親のお題（お題への返信の場合） */}
         {parentTopic && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400 rounded-xl p-4 mb-6">
+          <div className={isChromeTheme
+            ? "border-l-2 border-white/40 p-4 mb-6"
+            : "bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400 rounded-xl p-4 mb-6"
+          }>
             <p className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-2">このお題への返信です</p>
             <h3 className="text-lg font-black text-black dark:text-blue-200 mb-2 uppercase">{parentTopic.title}</h3>
             <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">{parentTopic.body}</p>
@@ -791,7 +800,10 @@ export default function TopicPage() {
             </div>
           </div>
         ) : (
-        <div className="jsr-card bg-white dark:bg-gray-900 rounded-2xl p-6 mb-8">
+        <div className={isChromeTheme
+          ? "bg-transparent border-0 border-b border-white/25 rounded-none p-6 mb-8"
+          : "jsr-card bg-white dark:bg-gray-900 rounded-2xl p-6 mb-8"
+        }>
           {getDeadlineStatus(topic.deadline) && (
             <div className={`inline-block px-3 py-1 rounded-full text-xs font-black mb-3 border-2 border-black dark:border-green-500 ${getDeadlineStatus(topic.deadline)!.bgColor} ${getDeadlineStatus(topic.deadline)!.textColor}`}>
               {getDeadlineStatus(topic.deadline)!.label}
@@ -970,33 +982,15 @@ export default function TopicPage() {
             </div>
           )}
           
-          {/* コメント入力フォーム */}
-          {session && (
-            <div className="pt-4 border-t-4 border-black dark:border-green-600">
-              <div className="flex gap-2">
-                <textarea
-                  placeholder="コメントを入力..."
-                  value={commentTexts[topic.id] || ""}
-                  onChange={(e) => setCommentTexts({ ...commentTexts, [topic.id]: e.target.value })}
-                  className="flex-1 px-3 py-2 border-3 border-black dark:border-green-600 bg-white dark:bg-gray-900 dark:text-green-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-cyan-400 dark:focus:ring-green-500"
-                  rows={2}
-                />
-                <button
-                  onClick={() => saveComment(topic.id)}
-                  disabled={!commentTexts[topic.id]}
-                  className="px-4 py-2 bg-cyan-400 text-black rounded-lg font-black uppercase text-sm border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] disabled:bg-gray-300 disabled:border-gray-400 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
-                >
-                  送信
-                </button>
-              </div>
-            </div>
-          )}
         </div>
         )}
 
         {/* AI分析 - お題の場合のみ表示 */}
         {topic.isTopicPost === 1 && (
-        <div className="jsr-card bg-gradient-to-br from-purple-300 to-pink-300 dark:from-purple-950 dark:to-pink-950 rounded-2xl p-6 mb-8">
+        <div className={isChromeTheme
+          ? "bg-transparent border-0 border-b border-white/25 rounded-none p-6 mb-8"
+          : "jsr-card bg-gradient-to-br from-purple-300 to-pink-300 dark:from-purple-950 dark:to-pink-950 rounded-2xl p-6 mb-8"
+        }>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h3 className="text-2xl font-black uppercase tracking-wide text-black dark:text-purple-300">AI講評</h3>
             <button
@@ -1079,8 +1073,14 @@ export default function TopicPage() {
 
         {/* 投稿フォーム（ファイルインポート専用） - お題の場合のみ表示 */}
         {session && topic.isTopicPost === 1 && (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md p-6 mb-8">
-            <h3 className="text-lg font-bold dark:text-slate-100 mb-4 flex items-center gap-2">
+          <div className={isChromeTheme
+            ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none p-6 mb-8"
+            : "bg-white dark:bg-slate-900 rounded-2xl shadow-md p-6 mb-8"
+          }>
+            <h3 className={isChromeTheme
+              ? "text-base font-medium text-white mb-4 flex items-center gap-2"
+              : "text-lg font-bold dark:text-slate-100 mb-4 flex items-center gap-2"
+            }>
               <PenLine size={18} />
               このお題に投稿する
             </h3>
@@ -1148,7 +1148,10 @@ export default function TopicPage() {
         {/* 投稿一覧 - お題の場合のみ表示 */}
         {topic.isTopicPost === 1 && (
         <div>
-          <div className="flex items-center justify-between mb-4 bg-white/20 backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.8)] rounded-2xl p-4">
+          <div className={isChromeTheme
+            ? "flex items-center justify-between mb-4 border-b border-white/30 p-4"
+            : "flex items-center justify-between mb-4 bg-white/20 backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.8)] rounded-2xl p-4"
+          }>
             <h3 className="text-xl font-black uppercase tracking-wide">このお題への投稿 ({replies.length})</h3>
             {getReplyParticipants().length > 0 && (
               <div className="flex items-center gap-2">
@@ -1190,7 +1193,10 @@ export default function TopicPage() {
             replies.map((reply) => (
               <div
                 key={reply.id}
-                className="jsr-card bg-white dark:bg-gray-900 rounded-2xl p-6 mb-4 spray-hover cursor-pointer"
+                className={isChromeTheme
+                  ? "bg-transparent border-0 border-b border-white/25 rounded-none p-6 mb-4 cursor-pointer"
+                  : "jsr-card bg-white dark:bg-gray-900 rounded-2xl p-6 mb-4 spray-hover cursor-pointer"
+                }
                 onClick={() => router.push(`/topic/${reply.id}`)}
               >
                 {/* 編集フォーム */}

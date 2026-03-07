@@ -847,19 +847,19 @@ export default function Home() {
                         >
                           <h3 className="text-xl font-black mb-2 uppercase tracking-wide text-black dark:text-green-200">{post.title}</h3>
                           <p className="text-sm font-semibold text-gray-700 dark:text-green-100 line-clamp-3 whitespace-pre-wrap">{post.body}</p>
-                          <p className="text-xs font-bold text-orange-600 dark:text-yellow-300 mt-2 uppercase">→ クリックして詳細表示</p>
-                        </div>
-
-                        {/* コメント数・いいね数表示 */}
-                        <div className="flex items-center gap-4 mt-3 text-sm font-bold">
-                          <span className="flex items-center gap-1 text-blue-600 dark:text-cyan-400">
-                            {isChromeTheme ? <ChromeMessageIcon size={16} /> : <HandDrawnCommentIcon size={16} />}
-                            {post.commentCount || 0}
-                          </span>
-                          <span className="flex items-center gap-1 text-red-500 dark:text-pink-400">
-                            <HandDrawnHeartIcon size={16} />
-                            {post.likes || 0}
-                          </span>
+                          <div className="mt-2 flex items-center justify-between gap-3 text-xs font-bold">
+                            <p className="text-orange-600 dark:text-yellow-300 uppercase">→ クリックして詳細表示</p>
+                            <div className="flex items-center gap-5 text-2xl leading-none">
+                              <span className="flex items-center gap-2 text-blue-600 dark:text-cyan-400">
+                                {isChromeTheme ? <ChromeMessageIcon size={32} /> : <HandDrawnCommentIcon size={32} />}
+                                {post.commentCount || 0}
+                              </span>
+                              <span className="flex items-center gap-2 text-red-500 dark:text-pink-400">
+                                <HandDrawnHeartIcon size={32} />
+                                {post.likes || 0}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </CardBody>
                     </Card>
@@ -934,7 +934,9 @@ export default function Home() {
                               <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-yellow-300 border-2 border-black" />
                             )}
                             <span className="font-black text-base uppercase text-black dark:text-white">{getDisplayName(topicPosts[0].authorEmail, topicPosts[0].author)}</span>
-                            <Chip size="md" className="bg-black text-white font-black border-2 border-white dark:bg-green-500 dark:text-black dark:border-green-300">🔥 HOT</Chip>
+                            <Chip size="md" className="bg-black text-white font-black border-2 border-white dark:bg-green-500 dark:text-black dark:border-green-300">
+                              <span className="text-lg leading-none">🔥</span> HOT
+                            </Chip>
                           </div>
                         </div>
                         <div 

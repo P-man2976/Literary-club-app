@@ -16,7 +16,7 @@ const IconBase = ({
     style={{ width: size, height: size }}
     aria-hidden="true"
   >
-    <span className="themed-icon-emoji" style={{ fontSize: Math.round(size * 0.82), lineHeight: 1 }}>
+    <span className="themed-icon-emoji" style={{ fontSize: Math.round(size * 1.23), lineHeight: 1 }}>
       {emoji}
     </span>
     <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} className="themed-icon-svg">
