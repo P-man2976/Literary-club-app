@@ -87,6 +87,7 @@ export default function TopicPage() {
   const [editingPostTitle, setEditingPostTitle] = useState("");
   const [editingPostBody, setEditingPostBody] = useState("");
   const [aiReadingEnabled, setAiReadingEnabled] = useState(true);
+  const [iconCacheBust] = useState<number>(Date.now());
 
   const handleBodyScroll = (postId: string) => {
     setScrollingPostId(postId);
@@ -214,6 +215,9 @@ export default function TopicPage() {
     if (savedLikes) {
       setLikedPosts(JSON.parse(savedLikes));
     }
+    
+    // チップス表示を初期化
+    setShowHorizontalHint(true);
   }, [topicId]);
 
   useEffect(() => {
@@ -802,7 +806,7 @@ export default function TopicPage() {
             <span className="flex items-center gap-2">
               {getDisplayIcon(topic.authorEmail) ? (
                 <img
-                  src={getDisplayIcon(topic.authorEmail) || ""}
+                  src={`${getDisplayIcon(topic.authorEmail)}?_=${iconCacheBust}`}
                   alt="投稿者アイコン"
                   className="w-7 h-7 min-w-7 min-h-7 shrink-0 rounded-full object-cover border border-gray-300"
                 />
@@ -857,13 +861,13 @@ export default function TopicPage() {
                 <MessageCircle size={14} /> コメント ({topic.comments.length})
               </p>
               <div className="space-y-3">
-                {topic.comments.map((comment) => (
+                {topic.comments.sort((a, b) => a.createdAt - b.createdAt).map((comment) => (
                   <div key={comment.commentId} className="bg-slate-50 dark:bg-slate-900/20 p-3 rounded-lg text-sm">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-semibold text-default-700 dark:text-slate-200 flex items-center gap-2">
                         {getDisplayIcon(comment.authorEmail) ? (
                           <img
-                            src={getDisplayIcon(comment.authorEmail) || ""}
+                            src={`${getDisplayIcon(comment.authorEmail)}?_=${iconCacheBust}`}
                             alt="コメント投稿者アイコン"
                             className="w-5 h-5 rounded-full object-cover border border-gray-300"
                           />
@@ -1227,7 +1231,7 @@ export default function TopicPage() {
                     <span className="flex items-center gap-2">
                       {getDisplayIcon(reply.authorEmail) ? (
                         <img
-                          src={getDisplayIcon(reply.authorEmail) || ""}
+                          src={`${getDisplayIcon(reply.authorEmail)}?_=${iconCacheBust}`}
                           alt="投稿者アイコン"
                           className="w-6 h-6 rounded-full object-cover border border-gray-300"
                         />
@@ -1277,13 +1281,13 @@ export default function TopicPage() {
                       <MessageCircle size={14} /> コメント ({reply.comments.length})
                     </p>
                     <div className="space-y-3">
-                      {reply.comments.map((comment) => (
+                      {reply.comments.sort((a, b) => a.createdAt - b.createdAt).map((comment) => (
                         <div key={comment.commentId} className="bg-slate-50 dark:bg-slate-900/20 p-3 rounded-lg text-sm">
                           <div className="flex items-center justify-between mb-1">
                             <span className="font-semibold text-default-700 dark:text-slate-200 flex items-center gap-2">
                               {getDisplayIcon(comment.authorEmail) ? (
                                 <img
-                                  src={getDisplayIcon(comment.authorEmail) || ""}
+                                  src={`${getDisplayIcon(comment.authorEmail)}?_=${iconCacheBust}`}
                                   alt="コメント投稿者アイコン"
                                   className="w-5 h-5 rounded-full object-cover border border-gray-300"
                                 />
