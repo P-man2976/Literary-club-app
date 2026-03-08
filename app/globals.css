@@ -86,41 +86,7 @@ html.library h6 {
   text-shadow: none;
 }
 
-html.library .jsr-card {
-  border: 0.5px solid #8B7355 !important;
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: none;
-  filter: none;
-  transform: none;
-  transition: border-color 0.2s ease;
-  border-radius: 2px !important;
-}
-
-html.library .jsr-card:hover {
-  transform: none;
-  animation: none;
-  border-color: #556B2F !important;
-  box-shadow: none;
-}
-
-html.library button {
-  background: #ECE7DB !important;
-  color: #1A1A1A !important;
-  border-width: 0.5px !important;
-  border-color: #8B7355 !important;
-  box-shadow: none !important;
-  font-style: normal;
-  border-radius: 2px !important;
-}
-
-html.library select,
-html.library input,
-html.library textarea,
-html.library [role="tab"],
-html.library [role="tablist"] {
-  border-radius: 2px !important;
-  box-shadow: none !important;
-}
+/* LIBRARY: 旧スタイルは削除（ニューモーフィズムに統一） */
 
 /* LIBRARYではビビッド色を抑えて、白黒+ベージュ/茶に統一 */
 html.library [class*="bg-pink"],
@@ -168,18 +134,18 @@ html.library [class*="uppercase"] {
   text-transform: none !important;
 }
 
-/* LIBRARY: お題決定モーダルはさらに静かな配色に */
+/* LIBRARY: お題決定モーダルもニューモーフィズム適用 */
 html.library .library-topic-modal {
   background: #F8F5EE !important;
-  border: 0.5px solid #8B7355 !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
+  box-shadow: 
+    6px 6px 12px rgba(163, 141, 115, 0.2),
+    -6px -6px 12px rgba(255, 255, 255, 0.6) !important;
+  border-radius: 12px !important;
 }
 
 html.library .library-topic-modal-header {
   background: #ECE7DB !important;
-  border-bottom: 0.5px solid #8B7355 !important;
-  border-radius: 0 !important;
+  border-radius: 12px 12px 0 0 !important;
 }
 
 html.library .library-topic-modal-header h2,
@@ -188,25 +154,76 @@ html.library .library-topic-modal-header button {
 }
 
 /* LIBRARY: 全ページで縁取りをなくす */
-html.library [class*="border"] {
+html.library *,
+html.library *::before,
+html.library *::after {
   border-width: 0 !important;
   border-color: transparent !important;
+  border-style: none !important;
 }
 
-html.library [class*="shadow"],
-html.library [class*="drop-shadow"] {
-  box-shadow: none !important;
-  filter: none !important;
+/* LIBRARY: すべての角を丸くする */
+html.library * {
+  border-radius: 12px !important;
 }
 
-/* LIBRARY: 囲いは基本的に角丸なし */
-html.library .rounded-2xl,
-html.library .rounded-xl,
-html.library .rounded-lg,
-html.library .rounded-md,
-html.library .rounded-sm,
-html.library :not(img).rounded-full {
-  border-radius: 0 !important;
+/* LIBRARY: ニューモーフィズム風の柔らかい立体感を適用 */
+
+/* カード類 */
+html.library .jsr-card,
+html.library [data-testid="card"],
+html.library [role="region"],
+html.library [class*="card"],
+html.library [class*="Card"],
+html.library div[class*="bg-white"],
+html.library div[class*="bg-yellow"],
+html.library div[class*="bg-blue"],
+html.library div[class*="bg-pink"],
+html.library div[class*="bg-gray"],
+html.library div[class*="bg-purple"],
+html.library div[class*="bg-orange"],
+html.library div[class*="bg-red"],
+html.library div[class*="bg-indigo"] {
+  box-shadow: 
+    6px 6px 12px rgba(163, 141, 115, 0.2),
+    -6px -6px 12px rgba(255, 255, 255, 0.6) !important;
+}
+
+/* ボタン - 通常時 */
+html.library button:not(:disabled),
+html.library [type="button"]:not(:disabled),
+html.library a[role="button"] {
+  box-shadow: 
+    4px 4px 8px rgba(163, 141, 115, 0.15),
+    -4px -4px 8px rgba(255, 255, 255, 0.5) !important;
+  transform: translateY(0) !important;
+}
+
+/* ボタン - ホバー時 */
+html.library button:not(:disabled):hover,
+html.library [type="button"]:not(:disabled):hover,
+html.library a[role="button"]:hover {
+  box-shadow: 
+    5px 5px 10px rgba(163, 141, 115, 0.18),
+    -5px -5px 10px rgba(255, 255, 255, 0.6) !important;
+}
+
+/* ボタン - アクティブ時（押下） */
+html.library button:active:not(:disabled),
+html.library [type="button"]:active:not(:disabled),
+html.library a[role="button"]:active {
+  box-shadow: 
+    inset 3px 3px 6px rgba(163, 141, 115, 0.25),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.3) !important;
+}
+
+/* 入力欄 - 内側影で凹んだ印象 */
+html.library input:not([type="checkbox"]):not([type="radio"]),
+html.library textarea,
+html.library select {
+  box-shadow: 
+    inset 2px 2px 5px rgba(163, 141, 115, 0.15),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.5) !important;
 }
 
 /* アイコン画像だけは円形を維持 */

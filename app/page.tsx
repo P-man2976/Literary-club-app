@@ -1724,17 +1724,6 @@ export default function Home() {
           </div>
         </div>
       )}
-      {isLibraryTheme && (
-        <style jsx global>{`
-          .library-theme [class*="border"] {
-            border-width: 0 !important;
-          }
-
-          .library-theme .jsr-card {
-            box-shadow: none !important;
-          }
-        `}</style>
-      )}
     </main>
   );
 }

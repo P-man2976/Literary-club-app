@@ -996,7 +996,7 @@ export default function TopicPage() {
               </p>
               <div className="space-y-3">
                 {topic.comments.sort((a, b) => a.createdAt - b.createdAt).map((comment) => (
-                  <div key={comment.commentId} className="bg-yellow-100 dark:bg-gray-800 border-3 border-black dark:border-green-600 rounded-xl p-3 text-sm shadow-[4px_4px_0_rgba(0,0,0,0.8)]">
+                  <div key={comment.commentId} className={`bg-yellow-100 dark:bg-gray-800 border-3 border-black dark:border-green-600 rounded-xl p-3 text-sm ${resolvedTheme !== 'library' ? 'shadow-[4px_4px_0_rgba(0,0,0,0.8)]' : ''}`}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-black flex items-center gap-2 uppercase text-xs text-black dark:text-green-300">
                         {getDisplayIcon(comment.authorEmail) ? (
@@ -1460,7 +1460,7 @@ export default function TopicPage() {
                     </p>
                     <div className="space-y-3">
                       {reply.comments.sort((a, b) => a.createdAt - b.createdAt).map((comment) => (
-                        <div key={comment.commentId} className="bg-yellow-100 dark:bg-gray-800 border-3 border-black dark:border-green-600 rounded-xl p-3 text-sm shadow-[4px_4px_0_rgba(0,0,0,0.8)]">
+                        <div key={comment.commentId} className={`bg-yellow-100 dark:bg-gray-800 border-3 border-black dark:border-green-600 rounded-xl p-3 text-sm ${resolvedTheme !== 'library' ? 'shadow-[4px_4px_0_rgba(0,0,0,0.8)]' : ''}`}>
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-black flex items-center gap-2 uppercase text-xs text-black dark:text-green-300">
                               {getDisplayIcon(comment.authorEmail) ? (
