@@ -181,8 +181,6 @@ export default function SettingsPage() {
     }
   };
 
-  if (!session) return <div className="p-10 text-center">ログインが必要です</div>;
-
   return (
     <main className="min-h-screen max-w-3xl mx-auto">
       <header className="sticky top-0 z-30 bg-background border-b border-divider p-4 flex items-center gap-4">
@@ -239,96 +237,108 @@ export default function SettingsPage() {
           </Card>
         </section>
 
-        <section>
-          <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-3">通知</h2>
-          <Card className="rounded-2xl">
-            <CardBody className="gap-4">
-              {notificationSupported ? (
-                <>
+        {session ? (
+          <>
+            <section>
+              <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-3">通知</h2>
+              <Card className="rounded-2xl">
+                <CardBody className="gap-4">
+                  {notificationSupported ? (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="font-bold">プッシュ通知</p>
+                          <p className="text-xs text-default-500">いいね・コメント・締め切りのリマインダー</p>
+                        </div>
+                        <button
+                          onClick={toggleNotifications}
+                          disabled={notificationPermission === "denied"}
+                          className={`chrome-toggle relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                            notificationEnabled ? "bg-primary" : "bg-gray-300"
+                          } ${notificationEnabled ? "chrome-toggle-on" : "chrome-toggle-off"} ${notificationPermission === "denied" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                        >
+                          <span
+                            className={`chrome-toggle-knob inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                              notificationEnabled ? "translate-x-6" : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
+
+                      {notificationPermission === "denied" && (
+                        <div className="bg-danger-50 border border-danger-200 rounded-lg p-3">
+                          <p className="text-xs text-danger-700 flex items-center gap-2">
+                            <AlertTriangle size={14} />
+                            通知がブロックされています。ブラウザ設定から許可してください。
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="bg-warning-50 border border-warning-200 rounded-lg p-3">
+                      <p className="text-xs text-warning-700">お使いのブラウザまたはデバイスは通知に対応していません。</p>
+                    </div>
+                  )}
+                </CardBody>
+              </Card>
+            </section>
+
+            <section>
+              <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-3">AI講評</h2>
+              <Card className="rounded-2xl">
+                <CardBody className="gap-4">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <p className="font-bold">プッシュ通知</p>
-                      <p className="text-xs text-default-500">いいね・コメント・締め切りのリマインダー</p>
+                      <p className="font-bold">自分の作品をAI講評に使う</p>
+                      <p className="text-xs text-default-500">OFFにすると、あなたの投稿は他人のAI講評にも含まれません</p>
                     </div>
                     <button
-                      onClick={toggleNotifications}
-                      disabled={notificationPermission === "denied"}
+                      onClick={toggleAiReading}
                       className={`chrome-toggle relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                        notificationEnabled ? "bg-primary" : "bg-gray-300"
-                      } ${notificationEnabled ? "chrome-toggle-on" : "chrome-toggle-off"} ${notificationPermission === "denied" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                        aiReadingEnabled ? "bg-primary" : "bg-gray-300"
+                      } ${aiReadingEnabled ? "chrome-toggle-on" : "chrome-toggle-off"}`}
                     >
                       <span
                         className={`chrome-toggle-knob inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
-                          notificationEnabled ? "translate-x-6" : "translate-x-1"
+                          aiReadingEnabled ? "translate-x-6" : "translate-x-1"
                         }`}
                       />
                     </button>
                   </div>
 
-                  {notificationPermission === "denied" && (
-                    <div className="bg-danger-50 border border-danger-200 rounded-lg p-3">
-                      <p className="text-xs text-danger-700 flex items-center gap-2">
-                        <AlertTriangle size={14} />
-                        通知がブロックされています。ブラウザ設定から許可してください。
-                      </p>
+                  <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
+                    <p className="text-xs text-slate-600 dark:text-slate-200">
+                      注意: AI講評をONにした場合、講評生成のために入力内容が外部AI APIへ送信されます。通常は学習用途で再利用されない前提ですが、最終的には利用中のAI提供元のポリシーに従います。
+                    </p>
+                  </div>
+                </CardBody>
+              </Card>
+            </section>
+
+            <section>
+              <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-3">プロフィール</h2>
+              <Card className="w-full rounded-2xl" isPressable onPress={() => router.push("/settings/profile")}>
+                <CardBody className="py-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-bold">プロフィール設定へ</p>
+                      <p className="text-xs text-default-500">アカウント名・ペンネーム・アイコン・投稿管理</p>
                     </div>
-                  )}
-                </>
-              ) : (
-                <div className="bg-warning-50 border border-warning-200 rounded-lg p-3">
-                  <p className="text-xs text-warning-700">お使いのブラウザまたはデバイスは通知に対応していません。</p>
-                </div>
-              )}
-            </CardBody>
-          </Card>
-        </section>
-
-        <section>
-          <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-3">AI講評</h2>
-          <Card className="rounded-2xl">
-            <CardBody className="gap-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="font-bold">自分の作品をAI講評に使う</p>
-                  <p className="text-xs text-default-500">OFFにすると、あなたの投稿は他人のAI講評にも含まれません</p>
-                </div>
-                <button
-                  onClick={toggleAiReading}
-                  className={`chrome-toggle relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                    aiReadingEnabled ? "bg-primary" : "bg-gray-300"
-                  } ${aiReadingEnabled ? "chrome-toggle-on" : "chrome-toggle-off"}`}
-                >
-                  <span
-                    className={`chrome-toggle-knob inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
-                      aiReadingEnabled ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
-                <p className="text-xs text-slate-600 dark:text-slate-200">
-                  注意: AI講評をONにした場合、講評生成のために入力内容が外部AI APIへ送信されます。通常は学習用途で再利用されない前提ですが、最終的には利用中のAI提供元のポリシーに従います。
-                </p>
-              </div>
-            </CardBody>
-          </Card>
-        </section>
-
-        <section>
-          <h2 className="text-sm font-black text-default-400 uppercase tracking-widest mb-3">プロフィール</h2>
-          <Card className="w-full rounded-2xl" isPressable onPress={() => router.push("/settings/profile")}>
-            <CardBody className="py-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-bold">プロフィール設定へ</p>
-                  <p className="text-xs text-default-500">アカウント名・ペンネーム・アイコン・投稿管理</p>
-                </div>
-                <ChevronRight size={18} className="text-default-400" />
-              </div>
-            </CardBody>
-          </Card>
-        </section>
+                    <ChevronRight size={18} className="text-default-400" />
+                  </div>
+                </CardBody>
+              </Card>
+            </section>
+          </>
+        ) : (
+          <section>
+            <Card className="rounded-2xl">
+              <CardBody className="py-5">
+                <p className="text-sm text-default-600">通知・AI講評・プロフィール設定はログイン後に利用できます。</p>
+              </CardBody>
+            </Card>
+          </section>
+        )}
       </div>
     </main>
   );

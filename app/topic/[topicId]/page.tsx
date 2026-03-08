@@ -96,6 +96,15 @@ export default function TopicPage() {
   const [editingPostBody, setEditingPostBody] = useState("");
   const [aiReadingEnabled, setAiReadingEnabled] = useState(true);
   const [iconCacheBust] = useState<number>(Date.now());
+  const [pipOpen, setPipOpen] = useState(false);
+  const [pipTitle, setPipTitle] = useState("");
+  const [pipBody, setPipBody] = useState("");
+
+  const openVerticalBodyPip = (title: string, body: string) => {
+    setPipTitle(title);
+    setPipBody(body);
+    setPipOpen(true);
+  };
 
   const handleBodyScroll = (postId: string) => {
     setScrollingPostId(postId);
@@ -835,6 +844,15 @@ export default function TopicPage() {
                   Shift + スクロールで横スクロールできます
                 </div>
               )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openVerticalBodyPip(topic.title, topic.body);
+                }}
+                className="absolute top-2 right-2 z-10 px-2 py-1 text-xs font-bold rounded bg-white/85 dark:bg-gray-800/90 text-black dark:text-white border border-gray-300 dark:border-gray-600"
+              >
+                PiP
+              </button>
               <p className="text-default-900 dark:text-green-200 whitespace-pre-wrap font-semibold" style={{ writingMode: 'vertical-rl', height: '400px', minWidth: 'fit-content', direction: 'ltr' }}>{topic.body}</p>
             </div>
           )}
@@ -1257,6 +1275,15 @@ export default function TopicPage() {
                           Shift + スクロールで横スクロールできます
                         </div>
                       )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openVerticalBodyPip(reply.title, reply.body);
+                        }}
+                        className="absolute top-2 right-2 z-10 px-2 py-1 text-xs font-bold rounded bg-white/85 dark:bg-gray-800/90 text-black dark:text-white border border-gray-300 dark:border-gray-600"
+                      >
+                        PiP
+                      </button>
                       <p className="text-black dark:text-green-200 whitespace-pre-wrap font-semibold" style={{ writingMode: 'vertical-rl', height: '400px', minWidth: 'fit-content', direction: 'ltr' }}>{reply.body}</p>
                   </div>
                   <div className="flex items-center justify-between text-sm font-bold mb-4">
@@ -1422,6 +1449,25 @@ export default function TopicPage() {
             ))
           )}
         </div>
+        )}
+
+        {pipOpen && (
+          <div className="fixed right-4 bottom-4 z-[60] w-[320px] max-w-[calc(100vw-2rem)] h-[420px] bg-white dark:bg-black border border-gray-300 dark:border-gray-600 rounded-lg shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-3 py-2">
+              <p className="text-sm font-semibold truncate pr-2">{pipTitle}</p>
+              <button
+                onClick={() => setPipOpen(false)}
+                className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700"
+              >
+                閉じる
+              </button>
+            </div>
+            <div className="h-[calc(100%-44px)] overflow-x-auto p-4" style={{ direction: "rtl" }}>
+              <p className="text-sm whitespace-pre-wrap" style={{ writingMode: "vertical-rl", height: "100%", minWidth: "fit-content", direction: "ltr" }}>
+                {pipBody}
+              </p>
+            </div>
+          </div>
         )}
       </div>
       {isChromeTheme && (

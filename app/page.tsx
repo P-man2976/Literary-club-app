@@ -716,15 +716,16 @@ export default function Home() {
             </span>
           </h1>
           
-          {session ? (
-            <div className="flex items-center gap-3">
-              <Link
-                href="/settings"
-                aria-label="設定"
-                className="w-12 h-12 rounded-full border-3 border-black bg-cyan-400 flex items-center justify-center shake-hover shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
-              >
-                {isChromeTheme ? <ChromeSettingsIcon size={24} /> : <HandDrawnSettingsIcon size={22} />}
-              </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/settings"
+              aria-label="設定"
+              className="w-12 h-12 rounded-full border-3 border-black bg-cyan-400 flex items-center justify-center shake-hover shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
+            >
+              {isChromeTheme ? <ChromeSettingsIcon size={24} /> : <HandDrawnSettingsIcon size={22} />}
+            </Link>
+
+            {session ? (
               <Link href="/settings/profile" aria-label="アカウント設定" className="block">
                 {getUserIconUrl(session.user?.email, userIcon) ? (
                   <img
@@ -742,15 +743,15 @@ export default function Home() {
                   } />
                 )}
               </Link>
-            </div>
-          ) : (
-            <button 
-              onClick={() => signIn("google")}
-              className="h-10 px-6 rounded-full bg-pink-500 text-white font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] active:translate-y-[2px] active:shadow-[0_2px_0_rgba(0,0,0,0.8)] transition-all shake-hover"
-            >
-              ログイン
-            </button>
-          )}
+            ) : (
+              <button 
+                onClick={() => signIn("google")}
+                className="h-10 px-4 rounded-full bg-pink-500 text-white font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] active:translate-y-[2px] active:shadow-[0_2px_0_rgba(0,0,0,0.8)] transition-all shake-hover"
+              >
+                ログイン
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -849,13 +850,13 @@ export default function Home() {
                           <p className="text-sm font-semibold text-gray-700 dark:text-green-100 line-clamp-3 whitespace-pre-wrap">{post.body}</p>
                           <div className="mt-2 flex items-center justify-between gap-3 text-xs font-bold">
                             <p className="text-orange-600 dark:text-yellow-300 uppercase">→ クリックして詳細表示</p>
-                            <div className="flex items-center gap-5 text-2xl leading-none">
-                              <span className="flex items-center gap-2 text-blue-600 dark:text-cyan-400">
-                                {isChromeTheme ? <ChromeMessageIcon size={32} /> : <HandDrawnCommentIcon size={32} />}
+                            <div className="flex items-center gap-5 text-[1.25rem] leading-normal pt-0.5 pb-1 pr-1 overflow-visible">
+                              <span className="flex items-center gap-2 text-blue-600 dark:text-cyan-400 leading-normal min-w-max">
+                                {isChromeTheme ? <ChromeMessageIcon size={24} /> : <HandDrawnCommentIcon size={24} className="overflow-visible shrink-0" />}
                                 {post.commentCount || 0}
                               </span>
-                              <span className="flex items-center gap-2 text-red-500 dark:text-pink-400">
-                                <HandDrawnHeartIcon size={32} />
+                              <span className="flex items-center gap-2 text-red-500 dark:text-pink-400 leading-normal min-w-max">
+                                <HandDrawnHeartIcon size={24} className="overflow-visible shrink-0" />
                                 {post.likes || 0}
                               </span>
                             </div>
