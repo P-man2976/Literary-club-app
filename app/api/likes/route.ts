@@ -64,10 +64,39 @@ export async function GET(request: Request) {
     const db = getD1Client();
     const { searchParams } = new URL(request.url);
     const postId = searchParams.get("postId");
+    const postIdsParam = searchParams.get("postIds");
+
+    if (postIdsParam) {
+      const postIds = postIdsParam.split(",").filter(Boolean);
+      if (postIds.length === 0) {
+        return NextResponse.json({});
+      }
+
+      const placeholders = postIds.map(() => "?").join(",");
+      const result = await db.execute<any>({
+        sql: `SELECT postId, userId, createdAt FROM likes WHERE postId IN (${placeholders}) ORDER BY createdAt DESC`,
+        params: postIds,
+      });
+
+      if (!result.success) {
+        return NextResponse.json(
+          { error: result.error || "Failed to fetch likes" },
+          { status: 500 }
+        );
+      }
+
+      const likesByPostId: { [key: string]: string[] } = {};
+      (result.results || []).forEach((row: any) => {
+        if (!likesByPostId[row.postId]) likesByPostId[row.postId] = [];
+        likesByPostId[row.postId].push(String(row.userId || "anonymous"));
+      });
+
+      return NextResponse.json(likesByPostId);
+    }
 
     if (!postId) {
       return NextResponse.json(
-        { error: "postId is required" },
+        { error: "postId or postIds is required" },
         { status: 400 }
       );
     }
@@ -82,7 +111,20 @@ export async function GET(request: Request) {
     }
 
     const count = result.results?.[0]?.count || 0;
-    return NextResponse.json({ count });
+    const usersResult = await db.execute<any>({
+      sql: `SELECT userId FROM likes WHERE postId = ? ORDER BY createdAt DESC`,
+      params: [postId],
+    });
+
+    if (!usersResult.success) {
+      return NextResponse.json(
+        { error: usersResult.error || "Failed to fetch like users" },
+        { status: 500 }
+      );
+    }
+
+    const userIds = (usersResult.results || []).map((row: any) => String(row.userId || "anonymous"));
+    return NextResponse.json({ count, userIds });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

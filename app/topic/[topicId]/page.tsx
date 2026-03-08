@@ -42,6 +42,7 @@ type Post = {
   deadline?: number | null;
   comments?: Comment[];
   likes?: number;
+  likesUserIds?: string[];
 };
 
 type TopicAnalysis = {
@@ -189,26 +190,56 @@ export default function TopicPage() {
       // 返信のコメントを一括取得
       const replyIds = repliesData.map(r => r.id);
       let commentsByPostId = new Map<string, any[]>();
+      let likesByPostId = new Map<string, string[]>();
       
       if (replyIds.length > 0) {
         const cRes = await fetch(`/api/comments?postIds=${replyIds.join(",")}`);
         const commentsData = await cRes.json();
         commentsByPostId = new Map(Object.entries(commentsData));
+
+        const lRes = await fetch(`/api/likes?postIds=${[topicId, ...replyIds].join(",")}`);
+        if (lRes.ok) {
+          const likesData = await lRes.json();
+          likesByPostId = new Map(Object.entries(likesData));
+        }
+      } else {
+        const lRes = await fetch(`/api/likes?postId=${topicId}`);
+        if (lRes.ok) {
+          const likesData = await lRes.json();
+          likesByPostId.set(topicId, Array.isArray(likesData.userIds) ? likesData.userIds : []);
+        }
       }
       
       const repliesWithDetails = repliesData.map((reply) => ({
         ...reply,
         comments: commentsByPostId.get(reply.id) || [],
+        likesUserIds: likesByPostId.get(reply.id) || [],
       }));
+
+      if (topicData) {
+        setTopic((prev) => {
+          const source = prev || { ...topicData, comments: [] };
+          return {
+            ...source,
+            likesUserIds: likesByPostId.get(topicData.id) || [],
+          };
+        });
+      }
 
       // すべてのauthorEmailを収集（トピック、返信、コメント）
       const allEmails = new Set<string>();
       if (topicData?.authorEmail) allEmails.add(topicData.authorEmail);
       repliesWithDetails.forEach(reply => {
         if (reply.authorEmail) allEmails.add(reply.authorEmail);
+        (reply.likesUserIds || []).forEach((userId: string) => {
+          if (userId.includes("@")) allEmails.add(userId);
+        });
         reply.comments?.forEach((comment: any) => {
           if (comment.authorEmail) allEmails.add(comment.authorEmail);
         });
+      });
+      (likesByPostId.get(topicId) || []).forEach((userId: string) => {
+        if (userId.includes("@")) allEmails.add(userId);
       });
 
       // ペンネームを一括取得
@@ -306,6 +337,17 @@ export default function TopicPage() {
     });
 
     return participants;
+  };
+
+  const getLikeParticipants = (post: Post) => {
+    return (post.likesUserIds || []).map((userId) => {
+      const isMember = userId.includes("@");
+      return {
+        key: userId,
+        icon: isMember ? getDisplayIcon(userId) : null,
+        name: isMember ? getDisplayName(userId, "部員") : "ゲスト",
+      };
+    });
   };
 
   const getDeadlineStatus = (deadline: number | null | undefined) => {
@@ -485,13 +527,38 @@ export default function TopicPage() {
 
     const method = isLiked ? "DELETE" : "POST";
 
+    const updateLikeState = (delta: number) => {
+      setTopic((prev) => {
+        if (!prev || prev.id !== postId) return prev;
+        const currentUsers = prev.likesUserIds || [];
+        const nextUsers = delta > 0
+          ? (currentUsers.includes(userId) ? currentUsers : [...currentUsers, userId])
+          : currentUsers.filter((id) => id !== userId);
+        return {
+          ...prev,
+          likes: Math.max((prev.likes || 0) + delta, 0),
+          likesUserIds: nextUsers,
+        };
+      });
+
+      setReplies((prev) =>
+        prev.map((reply) => {
+          if (reply.id !== postId) return reply;
+          const currentUsers = reply.likesUserIds || [];
+          const nextUsers = delta > 0
+            ? (currentUsers.includes(userId) ? currentUsers : [...currentUsers, userId])
+            : currentUsers.filter((id) => id !== userId);
+          return {
+            ...reply,
+            likes: Math.max((reply.likes || 0) + delta, 0),
+            likesUserIds: nextUsers,
+          };
+        })
+      );
+    };
+
     // 先にUIだけ反映して体感レスポンスを上げる
-    setReplies((prev) =>
-      prev.map((reply) => {
-        if (reply.id !== postId) return reply;
-        return { ...reply, likes: Math.max((reply.likes || 0) + likeDelta, 0) };
-      })
-    );
+    updateLikeState(likeDelta);
 
     try {
       const response = await fetch("/api/likes", {
@@ -512,21 +579,11 @@ export default function TopicPage() {
         localStorage.setItem("lit-club-liked-ids", JSON.stringify(newLikedPosts));
       } else {
         // 失敗時はカウントを戻す
-        setReplies((prev) =>
-          prev.map((reply) => {
-            if (reply.id !== postId) return reply;
-            return { ...reply, likes: Math.max((reply.likes || 0) - likeDelta, 0) };
-          })
-        );
+        updateLikeState(-likeDelta);
       }
     } catch (error) {
       console.error("いいね操作エラー:", error);
-      setReplies((prev) =>
-        prev.map((reply) => {
-          if (reply.id !== postId) return reply;
-          return { ...reply, likes: Math.max((reply.likes || 0) - likeDelta, 0) };
-        })
-      );
+      updateLikeState(-likeDelta);
     }
   };
 
@@ -871,26 +928,54 @@ export default function TopicPage() {
           <div className="flex gap-3 mb-4">
             <button
               onClick={() => handleLike(topic.id)}
-              className={`px-4 py-2 rounded-lg font-black uppercase transition border-3 shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition border-3 shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] ${
                 likedPosts.includes(topic.id)
                   ? "bg-pink-400 text-white border-white"
                   : "bg-gray-200 text-black border-black"
               } flex items-center gap-2`}
             >
-              <HandDrawnHeartIcon size={16} filled={likedPosts.includes(topic.id)} /> {topic.likes || 0}
+              <HandDrawnHeartIcon size={13} filled={likedPosts.includes(topic.id)} /> {topic.likes || 0}
             </button>
+            {getLikeParticipants(topic).length > 0 && (
+              <div className="flex items-center -space-x-2" title="いいねしたユーザー">
+                {getLikeParticipants(topic).slice(0, 6).map((participant) => (
+                  participant.icon ? (
+                    <img
+                      key={participant.key}
+                      src={participant.icon}
+                      alt={participant.name}
+                      title={participant.name}
+                      className="w-7 h-7 rounded-full object-cover border-2 border-white"
+                    />
+                  ) : (
+                    <div
+                      key={participant.key}
+                      title={participant.name}
+                      className="w-7 h-7 rounded-full bg-gray-500 text-[10px] font-black text-white border-2 border-white flex items-center justify-center"
+                    >
+                      G
+                    </div>
+                  )
+                ))}
+                {getLikeParticipants(topic).length > 6 && (
+                  <div className="w-7 h-7 rounded-full bg-black/70 text-[10px] font-black text-white border-2 border-white flex items-center justify-center">
+                    +{getLikeParticipants(topic).length - 6}
+                  </div>
+                )}
+              </div>
+            )}
             {session?.user?.email === topic.authorEmail && (
               <>
                 <button
                   onClick={() => startEditingPost(topic.id, topic.title, topic.body)}
-                  className="px-4 py-2 bg-cyan-400 text-black rounded-lg font-black uppercase border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
+                  className="px-3 py-1.5 text-xs bg-cyan-400 text-black rounded-lg font-black uppercase border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
                 >
                   編集
                 </button>
                 <button
                   onClick={() => deletePost(topic.id)}
                   disabled={replies.length > 0}
-                  className={`px-4 py-2 rounded-lg font-black uppercase border-3 shadow-[0_4px_0_rgba(0,0,0,0.8)] transition-all ${
+                  className={`px-3 py-1.5 text-xs rounded-lg font-black uppercase border-3 shadow-[0_4px_0_rgba(0,0,0,0.8)] transition-all ${
                     replies.length > 0
                       ? "bg-gray-300 text-gray-500 border-gray-400 cursor-not-allowed opacity-50"
                       : "bg-red-400 text-white border-white hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)]"
@@ -1310,25 +1395,53 @@ export default function TopicPage() {
                   <div className="flex gap-3">
                     <button
                       onClick={() => handleLike(reply.id)}
-                      className={`px-4 py-2 rounded-lg font-black uppercase transition border-3 shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] ${
+                      className={`px-3 py-1.5 text-xs rounded-lg font-black uppercase transition border-3 shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] ${
                         likedPosts.includes(reply.id)
                           ? "bg-pink-400 text-white border-white"
                           : "bg-gray-200 text-black border-black"
                       } flex items-center gap-2`}
                     >
-                      <HandDrawnHeartIcon size={16} filled={likedPosts.includes(reply.id)} /> {reply.likes || 0}
+                      <HandDrawnHeartIcon size={13} filled={likedPosts.includes(reply.id)} /> {reply.likes || 0}
                     </button>
+                    {getLikeParticipants(reply).length > 0 && (
+                      <div className="flex items-center -space-x-2" title="いいねしたユーザー">
+                        {getLikeParticipants(reply).slice(0, 6).map((participant) => (
+                          participant.icon ? (
+                            <img
+                              key={participant.key}
+                              src={participant.icon}
+                              alt={participant.name}
+                              title={participant.name}
+                              className="w-7 h-7 rounded-full object-cover border-2 border-white"
+                            />
+                          ) : (
+                            <div
+                              key={participant.key}
+                              title={participant.name}
+                              className="w-7 h-7 rounded-full bg-gray-500 text-[10px] font-black text-white border-2 border-white flex items-center justify-center"
+                            >
+                              G
+                            </div>
+                          )
+                        ))}
+                        {getLikeParticipants(reply).length > 6 && (
+                          <div className="w-7 h-7 rounded-full bg-black/70 text-[10px] font-black text-white border-2 border-white flex items-center justify-center">
+                            +{getLikeParticipants(reply).length - 6}
+                          </div>
+                        )}
+                      </div>
+                    )}
                     {session?.user?.email === reply.authorEmail && (
                       <>
                         <button
                           onClick={() => startEditingPost(reply.id, reply.title, reply.body)}
-                          className="px-4 py-2 bg-cyan-400 text-black rounded-lg font-black uppercase border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
+                          className="px-3 py-1.5 text-xs bg-cyan-400 text-black rounded-lg font-black uppercase border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
                         >
                           編集
                         </button>
                         <button
                           onClick={() => deletePost(reply.id)}
-                          className="px-4 py-2 bg-red-400 text-white rounded-lg font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
+                          className="px-3 py-1.5 text-xs bg-red-400 text-white rounded-lg font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
                         >
                           削除
                         </button>

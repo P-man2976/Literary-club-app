@@ -84,6 +84,7 @@ export default function Home() {
   const router = useRouter();
   const { resolvedTheme } = useTheme();
   const isChromeTheme = resolvedTheme === "dark";
+  const isLibraryTheme = resolvedTheme === "library";
   const [sessionLoadTimedOut, setSessionLoadTimedOut] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const onClose = () => setIsOpen(false);
@@ -704,7 +705,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen max-w-3xl mx-auto pb-40 relative z-10">
+    <main className={`min-h-screen max-w-3xl mx-auto pb-40 relative z-10 ${isLibraryTheme ? "library-theme" : ""}`}>
       {/* ヘッダー */}
       <header className={isChromeTheme
         ? "sticky top-0 bg-gradient-to-b from-black/75 via-black/45 to-transparent backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.6)] p-4 z-30 mb-2"
@@ -1017,7 +1018,7 @@ export default function Home() {
                 {session && (
                   <Card shadow="sm" className={isChromeTheme
                     ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
-                    : "jsr-card border border-blue-300 dark:border-green-600 rounded-2xl bg-blue-50/50 dark:bg-green-950/30"
+                    : "jsr-card border border-blue-300 dark:border-green-600 rounded-2xl bg-blue-50/80 dark:bg-green-950/10"
                   }>
                     <CardBody className="p-4">
                       <div className="flex items-center justify-between">
@@ -1722,6 +1723,17 @@ export default function Home() {
             </div>
           </div>
         </div>
+      )}
+      {isLibraryTheme && (
+        <style jsx global>{`
+          .library-theme [class*="border"] {
+            border-width: 0 !important;
+          }
+
+          .library-theme .jsr-card {
+            box-shadow: none !important;
+          }
+        `}</style>
       )}
     </main>
   );

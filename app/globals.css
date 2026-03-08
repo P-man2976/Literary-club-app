@@ -187,6 +187,18 @@ html.library .library-topic-modal-header button {
   color: #1A1A1A !important;
 }
 
+/* LIBRARY: 全ページで縁取りをなくす */
+html.library [class*="border"] {
+  border-width: 0 !important;
+  border-color: transparent !important;
+}
+
+html.library [class*="shadow"],
+html.library [class*="drop-shadow"] {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
 /* LIBRARY: 囲いは基本的に角丸なし */
 html.library .rounded-2xl,
 html.library .rounded-xl,
