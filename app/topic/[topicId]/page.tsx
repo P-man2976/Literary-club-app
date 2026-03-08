@@ -96,14 +96,19 @@ export default function TopicPage() {
   const [editingPostBody, setEditingPostBody] = useState("");
   const [aiReadingEnabled, setAiReadingEnabled] = useState(true);
   const [iconCacheBust] = useState<number>(Date.now());
-  const [pipOpen, setPipOpen] = useState(false);
-  const [pipTitle, setPipTitle] = useState("");
-  const [pipBody, setPipBody] = useState("");
 
-  const openVerticalBodyPip = (title: string, body: string) => {
-    setPipTitle(title);
-    setPipBody(body);
-    setPipOpen(true);
+  const getAnonymousUserId = () => {
+    const storageKey = "lit-club-anonymous-user-id";
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) return saved;
+
+      const generated = `anon-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      localStorage.setItem(storageKey, generated);
+      return generated;
+    } catch {
+      return `anon-fallback-${Date.now()}`;
+    }
   };
 
   const handleBodyScroll = (postId: string) => {
@@ -241,8 +246,6 @@ export default function TopicPage() {
       setLikedPosts(JSON.parse(savedLikes));
     }
     
-    // チップス表示を初期化
-    setShowHorizontalHint(true);
   }, [topicId]);
 
   useEffect(() => {
@@ -477,7 +480,7 @@ export default function TopicPage() {
 
   const handleLike = async (postId: string) => {
     const isLiked = likedPosts.includes(postId);
-    const userId = session?.user?.email || "guest";
+    const userId = session?.user?.email || getAnonymousUserId();
     const likeDelta = isLiked ? -1 : 1;
 
     const method = isLiked ? "DELETE" : "POST";
@@ -844,15 +847,6 @@ export default function TopicPage() {
                   Shift + スクロールで横スクロールできます
                 </div>
               )}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openVerticalBodyPip(topic.title, topic.body);
-                }}
-                className="absolute top-2 right-2 z-10 px-2 py-1 text-xs font-bold rounded bg-white/85 dark:bg-gray-800/90 text-black dark:text-white border border-gray-300 dark:border-gray-600"
-              >
-                PiP
-              </button>
               <p className="text-default-900 dark:text-green-200 whitespace-pre-wrap font-semibold" style={{ writingMode: 'vertical-rl', height: '400px', minWidth: 'fit-content', direction: 'ltr' }}>{topic.body}</p>
             </div>
           )}
@@ -996,6 +990,28 @@ export default function TopicPage() {
                     )}
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* 通常投稿の詳細画面ではコメントをその場で投稿可能にする */}
+          {topic.isTopicPost !== 1 && (
+            <div className="pt-4 border-t-4 border-black dark:border-green-600">
+              <div className="flex gap-2">
+                <textarea
+                  placeholder="コメントを入力..."
+                  value={commentTexts[topic.id] || ""}
+                  onChange={(e) => setCommentTexts({ ...commentTexts, [topic.id]: e.target.value })}
+                  className="flex-1 px-3 py-2 border-3 border-black dark:border-green-600 bg-white dark:bg-gray-900 dark:text-green-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-cyan-400 dark:focus:ring-green-500"
+                  rows={2}
+                />
+                <button
+                  onClick={() => saveComment(topic.id)}
+                  disabled={!commentTexts[topic.id]}
+                  className="px-4 py-2 bg-cyan-400 text-black rounded-lg font-black uppercase text-sm border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] disabled:bg-gray-300 disabled:border-gray-400 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
+                >
+                  送信
+                </button>
               </div>
             </div>
           )}
@@ -1212,10 +1228,9 @@ export default function TopicPage() {
               <div
                 key={reply.id}
                 className={isChromeTheme
-                  ? "bg-transparent border-0 border-b border-white/25 rounded-none p-6 mb-4 cursor-pointer"
-                  : "jsr-card bg-white dark:bg-gray-900 rounded-2xl p-6 mb-4 spray-hover cursor-pointer"
+                  ? "bg-transparent border-0 border-b border-white/25 rounded-none p-6 mb-4"
+                  : "jsr-card bg-white dark:bg-gray-900 rounded-2xl p-6 mb-4 spray-hover"
                 }
-                onClick={() => router.push(`/topic/${reply.id}`)}
               >
                 {/* 編集フォーム */}
                 {editingPostId === reply.id ? (
@@ -1275,15 +1290,6 @@ export default function TopicPage() {
                           Shift + スクロールで横スクロールできます
                         </div>
                       )}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openVerticalBodyPip(reply.title, reply.body);
-                        }}
-                        className="absolute top-2 right-2 z-10 px-2 py-1 text-xs font-bold rounded bg-white/85 dark:bg-gray-800/90 text-black dark:text-white border border-gray-300 dark:border-gray-600"
-                      >
-                        PiP
-                      </button>
                       <p className="text-black dark:text-green-200 whitespace-pre-wrap font-semibold" style={{ writingMode: 'vertical-rl', height: '400px', minWidth: 'fit-content', direction: 'ltr' }}>{reply.body}</p>
                   </div>
                   <div className="flex items-center justify-between text-sm font-bold mb-4">
@@ -1425,50 +1431,30 @@ export default function TopicPage() {
                 )}
 
                 {/* コメント入力フォーム */}
-                {session && (
-                  <div className="pt-4 border-t-4 border-black dark:border-green-600">
-                    <div className="flex gap-2">
-                      <textarea
-                        placeholder="コメントを入力..."
-                        value={commentTexts[reply.id] || ""}
-                        onChange={(e) => setCommentTexts({ ...commentTexts, [reply.id]: e.target.value })}
-                        className="flex-1 px-3 py-2 border-3 border-black dark:border-green-600 bg-white dark:bg-gray-900 dark:text-green-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-cyan-400 dark:focus:ring-green-500"
-                        rows={2}
-                      />
-                      <button
-                        onClick={() => saveComment(reply.id)}
-                        disabled={!commentTexts[reply.id]}
-                        className="px-4 py-2 bg-cyan-400 text-black rounded-lg font-black uppercase text-sm border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] disabled:bg-gray-300 disabled:border-gray-400 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
-                      >
-                        送信
-                      </button>
-                    </div>
+                <div className="pt-4 border-t-4 border-black dark:border-green-600">
+                  <div className="flex gap-2">
+                    <textarea
+                      placeholder="コメントを入力..."
+                      value={commentTexts[reply.id] || ""}
+                      onChange={(e) => setCommentTexts({ ...commentTexts, [reply.id]: e.target.value })}
+                      className="flex-1 px-3 py-2 border-3 border-black dark:border-green-600 bg-white dark:bg-gray-900 dark:text-green-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-cyan-400 dark:focus:ring-green-500"
+                      rows={2}
+                    />
+                    <button
+                      onClick={() => saveComment(reply.id)}
+                      disabled={!commentTexts[reply.id]}
+                      className="px-4 py-2 bg-cyan-400 text-black rounded-lg font-black uppercase text-sm border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] disabled:bg-gray-300 disabled:border-gray-400 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
+                    >
+                      送信
+                    </button>
                   </div>
-                )}
+                </div>
               </div>
             ))
           )}
         </div>
         )}
 
-        {pipOpen && (
-          <div className="fixed right-4 bottom-4 z-[60] w-[320px] max-w-[calc(100vw-2rem)] h-[420px] bg-white dark:bg-black border border-gray-300 dark:border-gray-600 rounded-lg shadow-2xl">
-            <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-3 py-2">
-              <p className="text-sm font-semibold truncate pr-2">{pipTitle}</p>
-              <button
-                onClick={() => setPipOpen(false)}
-                className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700"
-              >
-                閉じる
-              </button>
-            </div>
-            <div className="h-[calc(100%-44px)] overflow-x-auto p-4" style={{ direction: "rtl" }}>
-              <p className="text-sm whitespace-pre-wrap" style={{ writingMode: "vertical-rl", height: "100%", minWidth: "fit-content", direction: "ltr" }}>
-                {pipBody}
-              </p>
-            </div>
-          </div>
-        )}
       </div>
       {isChromeTheme && (
         <style jsx global>{`

@@ -633,7 +633,11 @@ export default function Home() {
     ? topicPosts.find((topic) => topic.id === selectedPoolTopicId) || null
     : null;
 
-  const pastTopicPool = topicPosts.filter((topic) => !!topic.deadline && topic.deadline < Date.now());
+  const nowTimestamp = Date.now();
+  const activeTopic = topicPosts.find((topic) => !topic.deadline || topic.deadline >= nowTimestamp) || null;
+  const pastTopicsForDisplay = topicPosts.filter((topic) => (activeTopic ? topic.id !== activeTopic.id : true));
+
+  const pastTopicPool = topicPosts.filter((topic) => !!topic.deadline && topic.deadline < nowTimestamp);
   const decisionCandidates = [
     ...topicProposals.map((candidate) => ({ ...candidate, source: "proposal" as const })),
     ...pastTopicPool.map((candidate) => ({ ...candidate, source: "pool" as const })),
@@ -850,13 +854,13 @@ export default function Home() {
                           <p className="text-sm font-semibold text-gray-700 dark:text-green-100 line-clamp-3 whitespace-pre-wrap">{post.body}</p>
                           <div className="mt-2 flex items-center justify-between gap-3 text-xs font-bold">
                             <p className="text-orange-600 dark:text-yellow-300 uppercase">→ クリックして詳細表示</p>
-                            <div className="flex items-center gap-5 text-[1.25rem] leading-normal pt-0.5 pb-1 pr-1 overflow-visible">
+                            <div className="flex items-center gap-4 text-[1.08rem] leading-normal pt-0.5 pb-1 pr-1 overflow-visible">
                               <span className="flex items-center gap-2 text-blue-600 dark:text-cyan-400 leading-normal min-w-max">
-                                {isChromeTheme ? <ChromeMessageIcon size={24} /> : <HandDrawnCommentIcon size={24} className="overflow-visible shrink-0" />}
+                                {isChromeTheme ? <ChromeMessageIcon size={21} /> : <HandDrawnCommentIcon size={21} className="overflow-visible shrink-0" />}
                                 {post.commentCount || 0}
                               </span>
                               <span className="flex items-center gap-2 text-red-500 dark:text-pink-400 leading-normal min-w-max">
-                                <HandDrawnHeartIcon size={24} className="overflow-visible shrink-0" />
+                                <HandDrawnHeartIcon size={21} className="overflow-visible shrink-0" />
                                 {post.likes || 0}
                               </span>
                             </div>
@@ -912,7 +916,7 @@ export default function Home() {
             ) : (
               <>
                 {/* 今週のお題（最新のお題） */}
-                {topicPosts.length > 0 && (
+                {activeTopic ? (
                   <div className="space-y-2">
                     <h2 className="text-2xl font-black px-2 uppercase tracking-wide text-black dark:text-green-300">今週のお題</h2>
                     <Card 
@@ -925,40 +929,40 @@ export default function Home() {
                       <CardBody className="p-5 gap-3">
                         <div className="flex items-center">
                           <div className="flex items-center gap-2">
-                            {getDisplayIcon(topicPosts[0].authorEmail) ? (
+                            {getDisplayIcon(activeTopic.authorEmail) ? (
                               <img
-                                src={getDisplayIcon(topicPosts[0].authorEmail) || ""}
+                                src={getDisplayIcon(activeTopic.authorEmail) || ""}
                                 alt="投稿者アイコン"
                                 className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full object-cover border-2 border-black"
                               />
                             ) : (
                               <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-yellow-300 border-2 border-black" />
                             )}
-                            <span className="font-black text-base uppercase text-black dark:text-white">{getDisplayName(topicPosts[0].authorEmail, topicPosts[0].author)}</span>
+                            <span className="font-black text-base uppercase text-black dark:text-white">{getDisplayName(activeTopic.authorEmail, activeTopic.author)}</span>
                             <Chip size="md" className="bg-black text-white font-black border-2 border-white dark:bg-green-500 dark:text-black dark:border-green-300">
                               <span className="text-lg leading-none">🔥</span> HOT
                             </Chip>
                           </div>
                         </div>
                         <div 
-                          onClick={() => router.push(`/topic/${topicPosts[0].id}`)}
+                          onClick={() => router.push(`/topic/${activeTopic.id}`)}
                           className="cursor-pointer"
                         >
-                          <h2 className="text-lg font-bold text-black dark:text-white">{topicPosts[0].title}</h2>
-                          {topicPosts[0].deadline && (
+                          <h2 className="text-lg font-bold text-black dark:text-white">{activeTopic.title}</h2>
+                          {activeTopic.deadline && (
                             <p className="text-xs font-semibold text-blue-700 dark:text-cyan-300 mt-1">
-                              締切: {formatDateTime(topicPosts[0].deadline)}
+                              締切: {formatDateTime(activeTopic.deadline)}
                             </p>
                           )}
-                          <p className="text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{topicPosts[0].body}</p>
+                          <p className="text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{activeTopic.body}</p>
                           <p className="text-xs text-gray-600 dark:text-gray-300">クリックして詳細ページを表示...</p>
                         </div>
-                        {getTopicParticipants(topicPosts[0]).length > 0 && (
+                        {getTopicParticipants(activeTopic).length > 0 && (
                           <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-bold text-black dark:text-white">参加者:</span>
                               <div className="flex items-center -space-x-2">
-                              {getTopicParticipants(topicPosts[0])
+                              {getTopicParticipants(activeTopic)
                                 .slice(0, 6)
                                 .map((participant) => (
                                   participant.icon ? (
@@ -979,15 +983,31 @@ export default function Home() {
                                     </div>
                                   )
                                 ))}
-                              {getTopicParticipants(topicPosts[0]).length > 6 && (
+                              {getTopicParticipants(activeTopic).length > 6 && (
                                 <div className="w-9 h-9 min-w-9 min-h-9 shrink-0 rounded-full bg-orange-400 text-xs font-black text-white border-3 border-white flex items-center justify-center">
-                                  +{getTopicParticipants(topicPosts[0]).length - 6}
+                                  +{getTopicParticipants(activeTopic).length - 6}
                                 </div>
                               )}
                               </div>
                             </div>
                           </div>
                         )}
+                      </CardBody>
+                    </Card>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <h2 className="text-2xl font-black px-2 uppercase tracking-wide text-black dark:text-green-300">今週のお題</h2>
+                    <Card
+                      shadow="none"
+                      className={isChromeTheme
+                        ? "bg-transparent border-0 border-b border-white/35 rounded-none shadow-none"
+                        : "jsr-card bg-white dark:bg-gray-900 rounded-2xl"
+                      }
+                    >
+                      <CardBody className="p-5">
+                        <p className="text-sm font-black uppercase text-gray-700 dark:text-gray-200">今週のお題はありません</p>
+                        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mt-1">次のお題が設定されるまでお待ちください。</p>
                       </CardBody>
                     </Card>
                   </div>
@@ -1026,10 +1046,10 @@ export default function Home() {
                 )}
 
                 {/* 過去のお題 */}
-                {topicPosts.length > 1 && (
+                {pastTopicsForDisplay.length > 0 && (
                   <div className="space-y-3">
                     <h3 className="text-xl font-black px-2 mt-6 uppercase tracking-wide text-black dark:text-yellow-300">過去のお題</h3>
-                    {topicPosts.slice(1).map((topic) => (
+                    {pastTopicsForDisplay.map((topic) => (
                       <Card 
                         key={topic.id}
                         shadow="none"
