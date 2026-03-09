@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Avatar, Button, Card, CardBody, Input } from "@heroui/react";
 import { ChevronRight } from "lucide-react";
-import { getUserIconUrl } from "@/app/lib/imageUtils";
+import { useIconUrl } from "@/app/hooks/useIconUrl";
 
 export default function ProfileSettingsPage() {
   const { data: session } = useSession();
@@ -21,6 +21,8 @@ export default function ProfileSettingsPage() {
   const [userIcon, setUserIcon] = useState<string | null>(null);
   const [isEditingIcon, setIsEditingIcon] = useState(false);
   const [uploadingIcon, setUploadingIcon] = useState(false);
+
+  const iconUrl = useIconUrl(session?.user?.email, userIcon);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -206,7 +208,7 @@ export default function ProfileSettingsPage() {
                   <div className="flex items-center gap-3">
                     {userIcon ? (
                       <img
-                        src={getUserIconUrl(session?.user?.email, userIcon) || userIcon}
+                        src={iconUrl || userIcon}
                         alt="カスタムアイコン"
                         className="w-16 h-16 min-w-16 min-h-16 rounded-full object-cover border-2 border-primary shrink-0"
                       />

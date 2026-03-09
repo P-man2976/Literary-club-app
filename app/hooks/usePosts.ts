@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import useSWR from "swr";
 import type { Post, MemberProfile } from "@/app/types/post";
 import { fetcher, profilesFetcher } from "@/app/lib/fetchers";
-import { getUserIconUrl } from "@/app/lib/imageUtils";
+import { useIconUrlMap } from "@/app/hooks/useIconUrl";
 
 export function usePosts() {
   const {
@@ -99,9 +99,7 @@ export function usePosts() {
     return authorName;
   };
 
-  const getDisplayIcon = (authorEmail: string | null | undefined) => {
-    return getUserIconUrl(authorEmail, userIconMap[authorEmail || ""]);
-  };
+  const getDisplayIcon = useIconUrlMap(userIconMap);
 
   const getTopicParticipants = (topic: Post) => {
     const seen = new Set<string>();

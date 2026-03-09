@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import {
@@ -9,8 +9,8 @@ import {
   Chip,
 } from "@heroui/react";
 import { Users } from "lucide-react";
-import { getUserIconUrl } from "@/app/lib/imageUtils";
 import { usePosts } from "@/app/hooks/usePosts";
+import { useIconUrlMap } from "@/app/hooks/useIconUrl";
 
 export function MembersTabContent() {
   const { data: session } = useSession();
@@ -18,6 +18,15 @@ export function MembersTabContent() {
   const isChromeTheme = resolvedTheme === "dark";
   const isLibraryTheme = resolvedTheme === "library";
   const { memberProfiles } = usePosts();
+
+  const memberIconMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const m of memberProfiles) {
+      if (m.email) map[m.email] = m.userIcon || "";
+    }
+    return map;
+  }, [memberProfiles]);
+  const getMemberIcon = useIconUrlMap(memberIconMap);
 
   const [aiReadingEnabled, setAiReadingEnabled] = useState(true);
   useEffect(() => {
@@ -45,7 +54,7 @@ export function MembersTabContent() {
         </Card>
       ) : (
         memberProfiles.map((member) => {
-          const iconUrl = getUserIconUrl(member.email, member.userIcon || undefined);
+          const iconUrl = getMemberIcon(member.email);
           const fallbackName = member.email ? member.email.split("@")[0] : "匿名部員";
           const displayName = member.penName || fallbackName;
           const displayTags = Array.isArray(member.aiTags) && member.aiTags.length > 0

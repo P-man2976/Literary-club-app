@@ -4,7 +4,7 @@ import { useSession, signIn } from "next-auth/react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { getUserIconUrl } from "@/app/lib/imageUtils";
+import { useIconUrl } from "@/app/hooks/useIconUrl";
 import { 
   Button, 
   Tabs, 
@@ -48,6 +48,7 @@ export default function Home() {
   } = usePosts();
 
   const { userIcon } = useUserProfile(session ?? null);
+  const iconUrl = useIconUrl(session?.user?.email, userIcon);
 
   useEffect(() => {
     if (status !== "loading") {
@@ -142,9 +143,9 @@ export default function Home() {
 
             {session ? (
               <Link href="/settings/profile" aria-label="アカウント設定" className="block">
-                {getUserIconUrl(session.user?.email, userIcon) ? (
+                {iconUrl ? (
                   <img
-                    src={getUserIconUrl(session.user?.email, userIcon) || ""}
+                    src={iconUrl || ""}
                     alt="プロフィール"
                     className={isChromeTheme 
                       ? "w-12 h-12 rounded-full object-cover border-2 border-white shadow-[0_2px_0_rgba(255,255,255,0.4)]"
