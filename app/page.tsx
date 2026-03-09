@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession, signIn } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -78,6 +78,16 @@ const fetcher = (url: string) => fetch(url).then((res) => {
   return res.json();
 });
 
+const profilesFetcher = ([url, emails]: [string, string[]]) =>
+  fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ emails }),
+  }).then((res) => {
+    if (!res.ok) throw new Error('プロフィール取得に失敗しました');
+    return res.json();
+  });
+
 export default function Home() {
   const aiReadingSettingKey = "lit-club-ai-reading-enabled";
   const { data: session, status } = useSession();
@@ -93,24 +103,13 @@ export default function Home() {
   const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"posts" | "topics" | "members">("posts");
   const [openPostId, setOpenPostId] = useState<string | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [allPosts, setAllPosts] = useState<Post[]>([]);
-  const [topicPosts, setTopicPosts] = useState<Post[]>([]);
-  const [topicProposals, setTopicProposals] = useState<Post[]>([]);
-  const [freePosts, setFreePosts] = useState<Post[]>([]);
-  const [topicReplies, setTopicReplies] = useState<Post[]>([]);
   const [newPost, setNewPost] = useState<Partial<Post>>({ title: "", body: "", tag: "創作" });
-  const [userIcon, setUserIcon] = useState<string | null>(null);
   const [postingMode, setPostingMode] = useState<"regular" | "topic" | "reply">("regular");
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
   const [replyTexts, setReplyTexts] = useState<{ [key: string]: { title: string; body: string } }>({});
-  const [penName, setPenName] = useState("");
-  const [penNameMap, setPenNameMap] = useState<{ [email: string]: string }>({});
-  const [userIconMap, setUserIconMap] = useState<{ [email: string]: string }>({});
   const [selectedProposalId, setSelectedProposalId] = useState<string | null>(null);
   const [selectedPoolTopicId, setSelectedPoolTopicId] = useState<string | null>(null);
   const [proposalDeadline, setProposalDeadline] = useState<number | null>(null);
-  const [memberProfiles, setMemberProfiles] = useState<MemberProfile[]>([]);
   const [editingProposalId, setEditingProposalId] = useState<string | null>(null);
   const [editingProposalTitle, setEditingProposalTitle] = useState("");
   const [editingProposalBody, setEditingProposalBody] = useState("");
@@ -118,68 +117,80 @@ export default function Home() {
 
   // SWRでデータ取得
   const { data: allPostsData, error: postsError, isLoading: postsLoading, mutate: mutatePosts } = useSWR<Post[]>('/api/posts', fetcher, {
-    refreshInterval: 30000, // 30秒ごとに自動リフェッチ
+    refreshInterval: 30000,
     revalidateOnFocus: true,
   });
 
   const { data: memberProfilesData, error: profilesError } = useSWR('/api/profiles', fetcher, {
-    refreshInterval: 60000, // 60秒ごとに自動リフェッチ
+    refreshInterval: 60000,
   });
 
-  // SWRで取得したデータを処理
-  useEffect(() => {
-    if (!allPostsData || !Array.isArray(allPostsData)) return;
+  // ユーザープロフィール（ペンネーム・アイコン）
+  const { data: userProfileData } = useSWR(
+    session ? '/api/profile' : null,
+    fetcher
+  );
+  const penName = userProfileData?.penName || "";
+  const userIcon = userProfileData?.userIcon || null;
 
-    const postsWithAll = allPostsData;
-
-    const allEmails = new Set<string>();
-    postsWithAll.forEach(post => {
-      if (post.authorEmail) allEmails.add(post.authorEmail);
+  // 投稿者のメールアドレスリストを導出
+  const emailsFromPosts = useMemo(() => {
+    if (!allPostsData || !Array.isArray(allPostsData)) return [];
+    const emails = new Set<string>();
+    allPostsData.forEach(post => {
+      if (post.authorEmail) emails.add(post.authorEmail);
     });
-
-    if (allEmails.size > 0) {
-      fetch("/api/profiles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emails: Array.from(allEmails) }),
-      })
-        .then(res => res.ok ? res.json() : Promise.reject())
-        .then(({ penNameMap: fetchedMap, userIconMap: fetchedIconMap }) => {
-          setPenNameMap(fetchedMap || {});
-          setUserIconMap(fetchedIconMap || {});
-        })
-        .catch(error => console.error("ペンネーム取得エラー:", error));
-    }
-
-    const allSorted = postsWithAll.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    setAllPosts(allSorted);
-
-    // お題
-    const topics = postsWithAll.filter(p => p.isTopicPost === 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    // お題案
-    const proposals = postsWithAll.filter(p => p.tag === "お題案" && p.isTopicPost !== 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    // 自由投稿（お題に紐づかない投稿）
-    const free = postsWithAll.filter(p => !p.parentPostId && p.isTopicPost !== 1 && p.tag !== "お題案").sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    // お題への投稿（返信）
-    const replies = postsWithAll.filter(p => p.parentPostId && p.isTopicPost !== 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-    const topicsWithChildren = topics.map(topic => {
-      const children = postsWithAll.filter(p => p.parentPostId === topic.id);
-      return { ...topic, children };
-    });
-
-    setTopicPosts(topicsWithChildren);
-    setTopicProposals(proposals);
-    setPosts(free);
-    setFreePosts(free);
-    setTopicReplies(replies);
+    return Array.from(emails).sort();
   }, [allPostsData]);
 
-  // 部員プロフィールデータの処理
-  useEffect(() => {
-    if (memberProfilesData) {
-      setMemberProfiles(Array.isArray(memberProfilesData.profiles) ? memberProfilesData.profiles : []);
-    }
+  // ペンネーム・アイコンマップを SWR で取得
+  const { data: penNameData } = useSWR(
+    emailsFromPosts.length > 0 ? ['/api/profiles', emailsFromPosts] : null,
+    profilesFetcher
+  );
+  const penNameMap = penNameData?.penNameMap || {};
+  const userIconMap = penNameData?.userIconMap || {};
+
+  // 投稿データを useMemo で分類
+  const allPosts = useMemo(() => {
+    if (!allPostsData || !Array.isArray(allPostsData)) return [];
+    return [...allPostsData].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  }, [allPostsData]);
+
+  // お題
+  const topicPosts = useMemo(() => {
+    if (!allPostsData || !Array.isArray(allPostsData)) return [];
+    const topics = allPostsData.filter(p => p.isTopicPost === 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    return topics.map(topic => ({
+      ...topic,
+      children: allPostsData.filter(p => p.parentPostId === topic.id),
+    }));
+  }, [allPostsData]);
+
+  // お題案
+  const topicProposals = useMemo(() => {
+    if (!allPostsData || !Array.isArray(allPostsData)) return [];
+    return allPostsData.filter(p => p.tag === "お題案" && p.isTopicPost !== 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  }, [allPostsData]);
+
+  // 自由投稿（お題に紐づかない投稿）
+  const posts = useMemo(() => {
+    if (!allPostsData || !Array.isArray(allPostsData)) return [];
+    return allPostsData.filter(p => !p.parentPostId && p.isTopicPost !== 1 && p.tag !== "お題案").sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  }, [allPostsData]);
+
+  const freePosts = posts;
+
+  // お題への投稿（返信）
+  const topicReplies = useMemo(() => {
+    if (!allPostsData || !Array.isArray(allPostsData)) return [];
+    return allPostsData.filter(p => p.parentPostId && p.isTopicPost !== 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  }, [allPostsData]);
+
+  // 部員プロフィール
+  const memberProfiles: MemberProfile[] = useMemo(() => {
+    if (!memberProfilesData) return [];
+    return Array.isArray(memberProfilesData.profiles) ? memberProfilesData.profiles : [];
   }, [memberProfilesData]);
 
   useEffect(() => {
@@ -203,25 +214,6 @@ export default function Home() {
       setAiReadingEnabled(true);
     }
   }, []);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await fetch("/api/profile");
-        if (res.ok) {
-          const data = await res.json();
-          setPenName(data.penName || "");
-          setUserIcon(data.userIcon || null);
-        }
-      } catch (error) {
-        console.error("プロフィール取得エラー:", error);
-      }
-    };
-
-    if (session) {
-      fetchProfile();
-    }
-  }, [session]);
 
   const getDisplayName = (authorEmail: string | null | undefined, authorName: string) => {
     if (authorEmail && penNameMap[authorEmail]) {
