@@ -771,14 +771,24 @@ export default function Home() {
           base: "sticky top-[73px] w-full bg-transparent z-20 px-0 backdrop-blur-sm",
           tabList: isChromeTheme
             ? "w-full !grid !grid-cols-3 !gap-0 px-0 bg-transparent border-0 shadow-none outline-none ring-0 before:hidden after:hidden [&>*]:border-0 [&>*]:outline-none [&>*]:ring-0"
-            : "w-full !grid !grid-cols-3 !gap-2 px-2 bg-white/20 backdrop-blur-md border border-white/40 shadow-[0_4px_0_rgba(0,0,0,0.6)]",
-          cursor: isChromeTheme ? "hidden" : "w-full h-1 bg-black",
+            : isLibraryTheme
+              ? "w-full !grid !grid-cols-3 !gap-2 px-2 bg-[#ECE7DB]/90 backdrop-blur-md"
+              : "w-full !grid !grid-cols-3 !gap-2 px-2 bg-white/20 backdrop-blur-md border border-white/40 shadow-[0_4px_0_rgba(0,0,0,0.6)]",
+          cursor: isChromeTheme
+            ? "hidden"
+            : isLibraryTheme
+              ? "w-full h-1 bg-[#8B7355]"
+              : "w-full h-1 bg-black",
           tab: isChromeTheme
             ? "h-14 w-full max-w-none !mx-0 !px-0 justify-center rounded-none bg-transparent border-0 ring-0 shadow-none outline-none before:hidden after:hidden transition-all relative data-[selected=true]:font-black data-[selected=true]:bg-transparent data-[selected=true]:border-0 data-[selected=true]:ring-0 data-[selected=true]:shadow-[0_0_14px_rgba(255,255,255,0.9)]"
-            : "h-14 w-full max-w-none !mx-0 !px-0 justify-center rounded-none data-[selected=true]:font-black data-[selected=true]:text-black data-[selected=true]:bg-yellow-400 dark:data-[selected=true]:bg-pink-500 shake-hover transition-all",
+            : isLibraryTheme
+              ? "h-14 w-full max-w-none !mx-0 !px-0 justify-center rounded-xl text-[#4A3F30] data-[selected=true]:font-black data-[selected=true]:text-[#1A1A1A] data-[selected=true]:bg-[#ECE7DB] transition-all"
+              : "h-14 w-full max-w-none !mx-0 !px-0 justify-center rounded-none data-[selected=true]:font-black data-[selected=true]:text-black data-[selected=true]:bg-yellow-400 dark:data-[selected=true]:bg-pink-500 shake-hover transition-all",
           tabContent: isChromeTheme
             ? "group-data-[selected=true]:text-white group-data-[selected=false]:text-white/70 group-data-[selected=true]:drop-shadow-[0_0_8px_rgba(255,255,255,0.9)] font-black text-lg uppercase tracking-wider"
-            : "group-data-[selected=true]:text-black group-data-[selected=false]:text-white font-black text-lg uppercase tracking-wider",
+            : isLibraryTheme
+              ? "group-data-[selected=true]:text-[#1A1A1A] group-data-[selected=false]:text-[#6A5A45] font-black text-lg tracking-wider"
+              : "group-data-[selected=true]:text-black group-data-[selected=false]:text-white font-black text-lg uppercase tracking-wider",
         }}
       >
         <Tab
@@ -835,11 +845,25 @@ export default function Home() {
                             )}
                             <span className="font-black text-base uppercase text-black dark:text-green-300">{getDisplayName(post.authorEmail, post.author)}</span>
                             {isTopicReply ? (
-                              <Chip size="md" className="bg-purple-400 dark:bg-purple-800 text-white font-bold border-2 border-black dark:border-purple-500">
+                              <Chip
+                                size="md"
+                                className={isLibraryTheme
+                                  ? "bg-[#E7E0D0] text-[#3F3427] font-bold"
+                                  : "bg-purple-400 dark:bg-purple-800 text-white font-bold border-2 border-black dark:border-purple-500"
+                                }
+                              >
                                 お題
                               </Chip>
                             ) : (
-                              <Chip size="md" className="bg-cyan-400 dark:bg-cyan-700 text-black dark:text-cyan-200 font-bold border-2 border-black dark:border-cyan-400">自由投稿</Chip>
+                              <Chip
+                                size="md"
+                                className={isLibraryTheme
+                                  ? "bg-[#E7E0D0] text-[#3F3427] font-bold"
+                                  : "bg-cyan-400 dark:bg-cyan-700 text-black dark:text-cyan-200 font-bold border-2 border-black dark:border-cyan-400"
+                                }
+                              >
+                                自由投稿
+                              </Chip>
                             )}
                           </div>
                           <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
@@ -924,7 +948,9 @@ export default function Home() {
                       shadow="none"
                       className={isChromeTheme
                         ? "bg-transparent border-0 border-b border-white/35 rounded-none shadow-none"
-                        : "jsr-card bg-gradient-to-br from-pink-300 to-purple-400 dark:from-green-900 dark:to-cyan-900 rounded-2xl"
+                        : isLibraryTheme
+                          ? "jsr-card bg-[#ECE7DB] rounded-2xl"
+                          : "jsr-card bg-gradient-to-br from-pink-300 to-purple-400 dark:from-green-900 dark:to-cyan-900 rounded-2xl"
                       }
                     >
                       <CardBody className="p-5 gap-3">
@@ -1184,7 +1210,9 @@ export default function Home() {
                 return (
                   <Card key={member.email} shadow="none" className={isChromeTheme
                     ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
-                    : "jsr-card bg-gradient-to-br from-cyan-200 to-blue-300 dark:bg-black rounded-2xl"
+                    : isLibraryTheme
+                      ? "jsr-card bg-[#ECE7DB] rounded-2xl"
+                      : "jsr-card bg-gradient-to-br from-cyan-200 to-blue-300 dark:bg-black rounded-2xl"
                   }>
                     <CardBody className="p-5 space-y-3">
                       <div className="flex items-center gap-3">

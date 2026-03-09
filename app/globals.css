@@ -99,6 +99,14 @@ html.library [class*="bg-blue"] {
   background: #ECE7DB !important;
 }
 
+html.library [class*="bg-gradient"],
+html.library [class*="from-"],
+html.library [class*="to-"],
+html.library [class*="via-"] {
+  background-image: none !important;
+  background: #ECE7DB !important;
+}
+
 html.library [class*="text-pink"],
 html.library [class*="text-cyan"],
 html.library [class*="text-yellow"],
