@@ -1,5 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useTheme } from "next-themes";
 import {
   Card,
   CardBody,
@@ -7,23 +10,26 @@ import {
 } from "@heroui/react";
 import { Users } from "lucide-react";
 import { getUserIconUrl } from "@/app/lib/imageUtils";
-import type { MemberProfile } from "@/app/types/post";
+import { usePosts } from "@/app/hooks/usePosts";
 
-type MembersTabContentProps = {
-  memberProfiles: MemberProfile[];
-  isChromeTheme: boolean;
-  isLibraryTheme: boolean;
-  aiReadingEnabled: boolean;
-  sessionEmail: string | null | undefined;
-};
+export function MembersTabContent() {
+  const { data: session } = useSession();
+  const { resolvedTheme } = useTheme();
+  const isChromeTheme = resolvedTheme === "dark";
+  const isLibraryTheme = resolvedTheme === "library";
+  const { memberProfiles } = usePosts();
 
-export function MembersTabContent({
-  memberProfiles,
-  isChromeTheme,
-  isLibraryTheme,
-  aiReadingEnabled,
-  sessionEmail,
-}: MembersTabContentProps) {
+  const [aiReadingEnabled, setAiReadingEnabled] = useState(true);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("lit-club-ai-reading-enabled");
+      setAiReadingEnabled(saved !== "0");
+    } catch {
+      setAiReadingEnabled(true);
+    }
+  }, []);
+
+  const sessionEmail = session?.user?.email;
   return (
     <div className="p-4 space-y-3">
       {memberProfiles.length === 0 ? (

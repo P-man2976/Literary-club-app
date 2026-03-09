@@ -31,7 +31,6 @@ import { createPostActions } from "@/app/hooks/usePostActions";
 import { parseFile } from "@/app/lib/fileParser";
 
 export default function Home() {
-  const aiReadingSettingKey = "lit-club-ai-reading-enabled";
   const { data: session, status } = useSession();
   const { resolvedTheme } = useTheme();
   const isChromeTheme = resolvedTheme === "dark";
@@ -54,23 +53,15 @@ export default function Home() {
   const [editingProposalId, setEditingProposalId] = useState<string | null>(null);
   const [editingProposalTitle, setEditingProposalTitle] = useState("");
   const [editingProposalBody, setEditingProposalBody] = useState("");
-  const [aiReadingEnabled, setAiReadingEnabled] = useState(true);
 
   // カスタムフック
   const {
-    allPosts,
     topicPosts,
     topicProposals,
-    freePosts,
-    topicReplies,
-    memberProfiles,
     postsError,
     profilesError,
     postsLoading,
     mutatePosts,
-    getDisplayName,
-    getDisplayIcon,
-    getTopicParticipants,
   } = usePosts();
 
   const { penName, userIcon } = useUserProfile(session ?? null);
@@ -92,15 +83,6 @@ export default function Home() {
 
     return () => window.clearTimeout(timeoutId);
   }, [status]);
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(aiReadingSettingKey);
-      setAiReadingEnabled(saved !== "0");
-    } catch {
-      setAiReadingEnabled(true);
-    }
-  }, []);
 
   const startEditingProposal = (proposalId: string, title: string, body: string) => {
     setEditingProposalId(proposalId);
@@ -205,9 +187,6 @@ export default function Home() {
     : null;
 
   const nowTimestamp = Date.now();
-  const activeTopic = topicPosts.find((topic) => !topic.deadline || topic.deadline >= nowTimestamp) || null;
-  const pastTopicsForDisplay = topicPosts.filter((topic) => (activeTopic ? topic.id !== activeTopic.id : true));
-
   const pastTopicPool = topicPosts.filter((topic) => !!topic.deadline && topic.deadline < nowTimestamp);
   const decisionCandidates = [
     ...topicProposals.map((candidate) => ({ ...candidate, source: "proposal" as const })),
@@ -367,14 +346,6 @@ export default function Home() {
           }
         >
           <PostsTabContent
-            freePosts={freePosts}
-            topicReplies={topicReplies}
-            topicPosts={topicPosts}
-            isChromeTheme={isChromeTheme}
-            isLibraryTheme={isLibraryTheme}
-            getDisplayIcon={getDisplayIcon}
-            getDisplayName={getDisplayName}
-            session={session}
             onCreatePost={() => setIsPostModalOpen(true)}
           />
         </Tab>
@@ -395,16 +366,6 @@ export default function Home() {
           }
         >
           <TopicsTabContent
-            topicPosts={topicPosts}
-            activeTopic={activeTopic}
-            pastTopicsForDisplay={pastTopicsForDisplay}
-            isChromeTheme={isChromeTheme}
-            isLibraryTheme={isLibraryTheme}
-            getDisplayIcon={getDisplayIcon}
-            getDisplayName={getDisplayName}
-            getTopicParticipants={getTopicParticipants}
-            session={session}
-            hasDecisionCandidates={hasDecisionCandidates}
             onOpenTopicDecision={() => {
               setSelectedProposalId(null);
               setSelectedPoolTopicId(null);
@@ -430,13 +391,7 @@ export default function Home() {
             </span>
           }
         >
-          <MembersTabContent
-            memberProfiles={memberProfiles}
-            isChromeTheme={isChromeTheme}
-            isLibraryTheme={isLibraryTheme}
-            aiReadingEnabled={aiReadingEnabled}
-            sessionEmail={session?.user?.email}
-          />
+          <MembersTabContent />
         </Tab>
       </Tabs>
 

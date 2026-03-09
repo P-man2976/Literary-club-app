@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { useTheme } from "next-themes";
 import {
   Card,
   CardBody,
@@ -9,36 +11,34 @@ import {
 import { Lightbulb, Pin } from "lucide-react";
 import type { Post } from "@/app/types/post";
 import { formatDateTime } from "@/app/lib/formatUtils";
+import { usePosts } from "@/app/hooks/usePosts";
 
 type TopicsTabContentProps = {
-  topicPosts: Post[];
-  activeTopic: Post | null;
-  pastTopicsForDisplay: Post[];
-  isChromeTheme: boolean;
-  isLibraryTheme: boolean;
-  getDisplayIcon: (email: string | null | undefined) => string | null;
-  getDisplayName: (email: string | null | undefined, name: string) => string;
-  getTopicParticipants: (topic: Post) => Array<{ key: string; name: string; icon: string | null }>;
-  session: { user?: { email?: string | null; name?: string | null } } | null;
-  hasDecisionCandidates: boolean;
   onOpenTopicDecision: () => void;
   onCreateProposal: () => void;
 };
 
 export function TopicsTabContent({
-  topicPosts,
-  activeTopic,
-  pastTopicsForDisplay,
-  isChromeTheme,
-  isLibraryTheme,
-  getDisplayIcon,
-  getDisplayName,
-  getTopicParticipants,
-  session,
-  hasDecisionCandidates,
   onOpenTopicDecision,
   onCreateProposal,
 }: TopicsTabContentProps) {
+  const { data: session } = useSession();
+  const { resolvedTheme } = useTheme();
+  const isChromeTheme = resolvedTheme === "dark";
+  const isLibraryTheme = resolvedTheme === "library";
+  const {
+    topicPosts,
+    topicProposals,
+    getDisplayIcon,
+    getDisplayName,
+    getTopicParticipants,
+  } = usePosts();
+
+  const nowTimestamp = Date.now();
+  const activeTopic = topicPosts.find((topic: Post) => !topic.deadline || topic.deadline >= nowTimestamp) || null;
+  const pastTopicsForDisplay = topicPosts.filter((topic: Post) => (activeTopic ? topic.id !== activeTopic.id : true));
+  const pastTopicPool = topicPosts.filter((topic: Post) => !!topic.deadline && topic.deadline < nowTimestamp);
+  const hasDecisionCandidates = topicProposals.length > 0 || pastTopicPool.length > 0;
   return (
     <>
       <div className="p-3 space-y-3">

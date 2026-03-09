@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { useTheme } from "next-themes";
 import {
   Card,
   CardBody,
@@ -13,31 +15,25 @@ import {
   HandDrawnCommentIcon,
   ChromeMessageIcon,
 } from "@/app/components/HandDrawnIcons";
-import type { Post } from "@/app/types/post";
+import { usePosts } from "@/app/hooks/usePosts";
 
 type PostsTabContentProps = {
-  freePosts: Post[];
-  topicReplies: Post[];
-  topicPosts: Post[];
-  isChromeTheme: boolean;
-  isLibraryTheme: boolean;
-  getDisplayIcon: (email: string | null | undefined) => string | null;
-  getDisplayName: (email: string | null | undefined, name: string) => string;
-  session: { user?: { email?: string | null; name?: string | null } } | null;
   onCreatePost: () => void;
 };
 
 export function PostsTabContent({
-  freePosts,
-  topicReplies,
-  topicPosts,
-  isChromeTheme,
-  isLibraryTheme,
-  getDisplayIcon,
-  getDisplayName,
-  session,
   onCreatePost,
 }: PostsTabContentProps) {
+  const { data: session } = useSession();
+  const { resolvedTheme } = useTheme();
+  const isChromeTheme = resolvedTheme === "dark";
+  const isLibraryTheme = resolvedTheme === "library";
+  const {
+    freePosts,
+    topicReplies,
+    getDisplayIcon,
+    getDisplayName,
+  } = usePosts();
   return (
     <>
       <div className="p-3 space-y-3">
