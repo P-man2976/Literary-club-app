@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { getUserIconUrl } from "@/app/lib/imageUtils";
-import useSWR from "swr";
 import { 
   Button, 
   Card, 
@@ -35,58 +34,12 @@ import {
   ChromeUserIcon,
   ChromeMessageIcon
 } from "@/app/components/HandDrawnIcons";
-
-
-// 型定義
-type Comment = {
-  commentId: string;
-  text: string;
-  author: string;
-  authorEmail?: string | null;
-  createdAt: number;
-};
-type Post = {
-  id: string;
-  author: string;
-  authorEmail?: string | null;
-  title: string;
-  body: string;
-  tag: string;
-  createdAt: number;
-  parentPostId?: string | null;
-  isTopicPost?: number;
-  deadline?: number | null;
-  comments?: Comment[];
-  commentCount?: number;
-  likes?: number;
-  children?: Post[]; // 返信投稿を格納
-};
-
-type MemberProfile = {
-  email: string;
-  penName: string;
-  userIcon: string | null;
-  selfIntro: string;
-  aiSummary: string;
-  aiTags: string[];
-  updatedAt: number;
-};
-
-// SWR fetcher
-const fetcher = (url: string) => fetch(url).then((res) => {
-  if (!res.ok) throw new Error('データの取得に失敗しました');
-  return res.json();
-});
-
-const profilesFetcher = ([url, emails]: [string, string[]]) =>
-  fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ emails }),
-  }).then((res) => {
-    if (!res.ok) throw new Error('プロフィール取得に失敗しました');
-    return res.json();
-  });
+import type { Post } from "@/app/types/post";
+import { usePosts } from "@/app/hooks/usePosts";
+import { useUserProfile } from "@/app/hooks/useUserProfile";
+import { createPostActions } from "@/app/hooks/usePostActions";
+import { formatDateTime } from "@/app/lib/formatUtils";
+import { parseFile } from "@/app/lib/fileParser";
 
 export default function Home() {
   const aiReadingSettingKey = "lit-club-ai-reading-enabled";
@@ -115,83 +68,29 @@ export default function Home() {
   const [editingProposalBody, setEditingProposalBody] = useState("");
   const [aiReadingEnabled, setAiReadingEnabled] = useState(true);
 
-  // SWRでデータ取得
-  const { data: allPostsData, error: postsError, isLoading: postsLoading, mutate: mutatePosts } = useSWR<Post[]>('/api/posts', fetcher, {
-    refreshInterval: 30000,
-    revalidateOnFocus: true,
-  });
+  // カスタムフック
+  const {
+    allPosts,
+    topicPosts,
+    topicProposals,
+    freePosts,
+    topicReplies,
+    memberProfiles,
+    postsError,
+    profilesError,
+    postsLoading,
+    mutatePosts,
+    getDisplayName,
+    getDisplayIcon,
+    getTopicParticipants,
+  } = usePosts();
 
-  const { data: memberProfilesData, error: profilesError } = useSWR('/api/profiles', fetcher, {
-    refreshInterval: 60000,
-  });
+  const { penName, userIcon } = useUserProfile(session ?? null);
 
-  // ユーザープロフィール（ペンネーム・アイコン）
-  const { data: userProfileData } = useSWR(
-    session ? '/api/profile' : null,
-    fetcher
+  const actions = useMemo(
+    () => createPostActions({ session: session ?? null, penName, mutatePosts }),
+    [session, penName, mutatePosts]
   );
-  const penName = userProfileData?.penName || "";
-  const userIcon = userProfileData?.userIcon || null;
-
-  // 投稿者のメールアドレスリストを導出
-  const emailsFromPosts = useMemo(() => {
-    if (!allPostsData || !Array.isArray(allPostsData)) return [];
-    const emails = new Set<string>();
-    allPostsData.forEach(post => {
-      if (post.authorEmail) emails.add(post.authorEmail);
-    });
-    return Array.from(emails).sort();
-  }, [allPostsData]);
-
-  // ペンネーム・アイコンマップを SWR で取得
-  const { data: penNameData } = useSWR(
-    emailsFromPosts.length > 0 ? ['/api/profiles', emailsFromPosts] : null,
-    profilesFetcher
-  );
-  const penNameMap = penNameData?.penNameMap || {};
-  const userIconMap = penNameData?.userIconMap || {};
-
-  // 投稿データを useMemo で分類
-  const allPosts = useMemo(() => {
-    if (!allPostsData || !Array.isArray(allPostsData)) return [];
-    return [...allPostsData].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  }, [allPostsData]);
-
-  // お題
-  const topicPosts = useMemo(() => {
-    if (!allPostsData || !Array.isArray(allPostsData)) return [];
-    const topics = allPostsData.filter(p => p.isTopicPost === 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    return topics.map(topic => ({
-      ...topic,
-      children: allPostsData.filter(p => p.parentPostId === topic.id),
-    }));
-  }, [allPostsData]);
-
-  // お題案
-  const topicProposals = useMemo(() => {
-    if (!allPostsData || !Array.isArray(allPostsData)) return [];
-    return allPostsData.filter(p => p.tag === "お題案" && p.isTopicPost !== 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  }, [allPostsData]);
-
-  // 自由投稿（お題に紐づかない投稿）
-  const posts = useMemo(() => {
-    if (!allPostsData || !Array.isArray(allPostsData)) return [];
-    return allPostsData.filter(p => !p.parentPostId && p.isTopicPost !== 1 && p.tag !== "お題案").sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  }, [allPostsData]);
-
-  const freePosts = posts;
-
-  // お題への投稿（返信）
-  const topicReplies = useMemo(() => {
-    if (!allPostsData || !Array.isArray(allPostsData)) return [];
-    return allPostsData.filter(p => p.parentPostId && p.isTopicPost !== 1).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  }, [allPostsData]);
-
-  // 部員プロフィール
-  const memberProfiles: MemberProfile[] = useMemo(() => {
-    if (!memberProfilesData) return [];
-    return Array.isArray(memberProfilesData.profiles) ? memberProfilesData.profiles : [];
-  }, [memberProfilesData]);
 
   useEffect(() => {
     if (status !== "loading") {
@@ -215,18 +114,6 @@ export default function Home() {
     }
   }, []);
 
-  const getDisplayName = (authorEmail: string | null | undefined, authorName: string) => {
-    if (authorEmail && penNameMap[authorEmail]) {
-      return penNameMap[authorEmail];
-    }
-    return authorName;
-  };
-
-  const getDisplayIcon = (authorEmail: string | null | undefined) => {
-    // メールアドレスから画像URLを生成（R2対応 + 後方互換性あり）
-    return getUserIconUrl(authorEmail, userIconMap[authorEmail || ""]);
-  };
-
   const startEditingProposal = (proposalId: string, title: string, body: string) => {
     setEditingProposalId(proposalId);
     setEditingProposalTitle(title);
@@ -240,359 +127,62 @@ export default function Home() {
   };
 
   const saveEditedProposal = async (proposalId: string) => {
-    if (!editingProposalTitle.trim() || !editingProposalBody.trim()) {
-      alert("タイトルと内容は必須です");
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/posts", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          postId: proposalId,
-          title: editingProposalTitle,
-          body: editingProposalBody,
-          authorEmail: session?.user?.email,
-        }),
-      });
-
-      if (response.ok) {
-        alert("更新しました！");
-        cancelEditingProposal();
-        mutatePosts();
-      } else {
-        const error = await response.json();
-        alert(`更新に失敗しました: ${error.error}`);
-      }
-    } catch (error) {
-      console.error("編集エラー:", error);
-      alert("編集に失敗しました");
-    }
-  };
-
-  const getTopicParticipants = (topic: Post) => {
-    const seen = new Set<string>();
-    const participants: Array<{ key: string; name: string; icon: string | null }> = [];
-
-    (topic.children || []).forEach((child) => {
-      const key = child.authorEmail || `name:${child.author}`;
-      if (seen.has(key)) return;
-
-      seen.add(key);
-      participants.push({
-        key,
-        name: getDisplayName(child.authorEmail, child.author),
-        icon: getDisplayIcon(child.authorEmail),
-      });
-    });
-
-    return participants;
+    const success = await actions.saveEditedProposal(proposalId, editingProposalTitle, editingProposalBody);
+    if (success) cancelEditingProposal();
   };
 
   const [commentTexts, setCommentTexts] = useState<{ [key: string]: string }>({});
 
   const saveComment = async (postId: string) => {
     const text = commentTexts[postId];
-    if (!text) return;
-
-    try {
-      const response = await fetch("/api/comments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          postId: postId,
-          text: text,
-          author: penName || session?.user?.name || "匿名部員",
-          authorEmail: session?.user?.email || null,
-        }),
-      });
-
-      if (response.ok) {
-        setCommentTexts({ ...commentTexts, [postId]: "" });
-        alert("感想を送信しました！");
-        mutatePosts();
-      }
-    } catch (error) {
-      console.error(error);
+    const success = await actions.saveComment(postId, text);
+    if (success) {
+      setCommentTexts({ ...commentTexts, [postId]: "" });
     }
   };
 
-  const deletePost = async (postId: string) => {
-    if (!confirm("本当に削除しますか？")) return;
-    
-    try {
-      const response = await fetch(`/api/posts?postId=${postId}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        alert("削除しました！");
-        mutatePosts();
-      }
-    } catch (error) {
-      console.error("削除に失敗しました", error);
-    }
-  };
-
-  // お題案をお題に変換
   const convertProposalToTopic = async (proposalId: string, deadline: number) => {
-    try {
-      const proposal = topicProposals.find(p => p.id === proposalId);
-      if (!proposal) {
-        alert("お題案が見つかりません");
-        return;
-      }
-
-      const topicData: any = {
-        ...proposal,
-        isTopicPost: 1,
-        deadline: deadline,
-        tag: "お題",
-      };
-
-      const response = await fetch("/api/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(topicData),
-      });
-
-      if (response.ok) {
-        alert("お題を追加しました！");
-        setProposalDeadline(null);
-        setSelectedProposalId(null);
-        setIsTopicDecisionModalOpen(false);
-        await mutatePosts();
-      } else {
-        const error = await response.text();
-        alert("エラー: " + error);
-      }
-    } catch (error) {
-      console.error("お題への変換に失敗しました", error);
-      alert("お題への変換に失敗しました");
+    const proposal = topicProposals.find(p => p.id === proposalId);
+    const success = await actions.convertProposalToTopic(proposal, deadline);
+    if (success) {
+      setProposalDeadline(null);
+      setSelectedProposalId(null);
+      setIsTopicDecisionModalOpen(false);
     }
   };
 
   const convertPoolTopicToTopic = async (poolTopicId: string, deadline: number) => {
-    try {
-      const poolTopic = topicPosts.find((t) => t.id === poolTopicId && !!t.deadline && t.deadline < Date.now());
-      if (!poolTopic) {
-        alert("過去お題が見つかりません");
-        return;
-      }
-
-      const topicData: any = {
-        title: poolTopic.title,
-        body: poolTopic.body,
-        tag: "お題",
-        isTopicPost: 1,
-        deadline,
-        author: penName || session?.user?.name || "匿名部員",
-        authorEmail: session?.user?.email || null,
-      };
-
-      const response = await fetch("/api/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(topicData),
-      });
-
-      if (response.ok) {
-        alert("過去お題プールからお題を追加しました！");
-        setProposalDeadline(null);
-        setSelectedProposalId(null);
-        setSelectedPoolTopicId(null);
-        setIsTopicDecisionModalOpen(false);
-        await mutatePosts();
-      } else {
-        const error = await response.text();
-        alert("エラー: " + error);
-      }
-    } catch (error) {
-      console.error("過去お題からのお題作成に失敗しました", error);
-      alert("過去お題からのお題作成に失敗しました");
+    const poolTopic = topicPosts.find((t) => t.id === poolTopicId && !!t.deadline && t.deadline < Date.now());
+    const success = await actions.convertPoolTopicToTopic(poolTopic, deadline);
+    if (success) {
+      setProposalDeadline(null);
+      setSelectedProposalId(null);
+      setSelectedPoolTopicId(null);
+      setIsTopicDecisionModalOpen(false);
     }
   };
 
   const saveReplyInTopic = async (topicId: string) => {
     const reply = replyTexts[topicId];
-    if (!reply || !reply.title || !reply.body) {
-      alert("タイトルと本文を入力してください");
-      return;
-    }
-
-    try {
-      const postData = {
-        title: reply.title,
-        body: reply.body,
-        author: penName || session?.user?.name || "匿名部員",
-        authorEmail: session?.user?.email || null,
-        tag: "創作",
-        parentPostId: topicId,
-        isTopicPost: 0,
-      };
-
-      const response = await fetch("/api/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(postData),
-      });
-
-      if (response.ok) {
-        alert("投稿しました！");
-        setReplyTexts({ ...replyTexts, [topicId]: { title: "", body: "" } });
-        mutatePosts();
-      } else {
-        const error = await response.json();
-        console.error("投稿エラー:", error);
-        alert("投稿に失敗しました: " + (error.error || "不明なエラー"));
-      }
-    } catch (error) {
-      console.error("投稿エラー:", error);
-      alert("投稿に失敗しました");
+    const success = await actions.saveReplyInTopic(topicId, reply);
+    if (success) {
+      setReplyTexts({ ...replyTexts, [topicId]: { title: "", body: "" } });
     }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
-    const fileName = file.name.replace(/\.[^/.]+$/, "");
-
-    try {
-      if (file.type === "text/plain") {
-        const text = await file.text();
-        setNewPost((prev) => ({ ...prev, title: fileName, body: text }));
-      } else if (file.type === "application/pdf") {
-        const PDFJS = await import("pdfjs-dist");
-        PDFJS.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${PDFJS.version}/build/pdf.worker.min.mjs`;
-
-        const arrayBuffer = await file.arrayBuffer();
-        const loadingTask = PDFJS.getDocument({ data: arrayBuffer });
-        const pdf = await loadingTask.promise;
-        
-        let text = "";
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          
-          // Y座標を使って改行を検出
-          let lastY = -1;
-          let pageText = "";
-          for (const item of textContent.items as any[]) {
-            if (!item.str) continue;
-            
-            const currentY = item.transform[5]; // Y座標
-            if (lastY !== -1 && Math.abs(currentY - lastY) > 5) {
-              // Y座標が変わったら改行
-              pageText += "\n";
-            } else if (lastY !== -1 && pageText.length > 0 && !pageText.endsWith(" ")) {
-              // 同じ行でスペースがない場合はスペース追加
-              pageText += " ";
-            }
-            pageText += item.str;
-            lastY = currentY;
-          }
-          
-          text += pageText + "\n";
-        }
-        
-        setNewPost((prev) => ({ ...prev, title: fileName, body: text }));
-      } else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || file.name.endsWith(".docx")) {
-        const arrayBuffer = await file.arrayBuffer();
-        const JSZip = (await import("jszip")).default;
-        
-        const zip = new JSZip();
-        const loadedZip = await zip.loadAsync(arrayBuffer);
-        const xml = await loadedZip.file("word/document.xml")?.async("text");
-        
-        if (xml) {
-          const doc = new DOMParser().parseFromString(xml, "text/xml");
-          const paragraphs = doc.getElementsByTagName("w:p");
-          let text = "";
-
-          const readNodeText = (node: Node): string => {
-            const name = node.nodeName;
-            if (name === "w:t") return node.textContent || "";
-            if (name === "w:tab") return "\t";
-            if (name === "w:br" || name === "w:cr") return "\n";
-
-            let out = "";
-            node.childNodes.forEach((child) => {
-              out += readNodeText(child);
-            });
-            return out;
-          };
-
-          // Wordの段落・改行タグを保持してテキスト化
-          for (let i = 0; i < paragraphs.length; i++) {
-            const paragraph = paragraphs[i];
-            text += readNodeText(paragraph);
-            if (i < paragraphs.length - 1) {
-              text += "\n";
-            }
-          }
-
-          setNewPost((prev) => ({ ...prev, title: fileName, body: text || "DOCX解析に失敗しました" }));
-        } else {
-          setNewPost((prev) => ({ ...prev, title: fileName, body: "DOCX解析に失敗しました" }));
-        }
-      }
-    } catch (error) {
-      console.error("ファイル解析エラー:", error);
-      alert("ファイルの解析に失敗しました");
-    }
+    await parseFile(file, setNewPost);
   };
   
   const saveToAWS = async (forceMode?: "topic" | "regular" | "reply") => {
-    if (!newPost.title || !newPost.body) return;
-    try {
-      const effectiveMode = forceMode || postingMode;
-      const postData: any = {
-        ...newPost,
-        author: penName || session?.user?.name || "匿名部員",
-        authorEmail: session?.user?.email || null,
-      };
-
-      if (effectiveMode === "topic") {
-        postData.isTopicPost = 1;
-        postData.parentPostId = null;
-      } else if (effectiveMode === "reply" && selectedTopicId) {
-        postData.parentPostId = selectedTopicId;
-        postData.isTopicPost = 0;
-      } else {
-        postData.parentPostId = null;
-        postData.isTopicPost = 0;
-      }
-
-      const response = await fetch("/api/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(postData),
-      });
-
-      if (response.ok) {
-        const mode = effectiveMode === "topic" ? "お題を作成しました！" : 
-                     effectiveMode === "reply" ? "投稿しました！" : "保存しました！";
-        alert(mode);
-        setNewPost({ title: "", body: "", tag: "創作" });
-        setPostingMode("regular");
-        setSelectedTopicId(null);
-        onClose();
-        mutatePosts();
-      } else {
-        const errorText = await response.text();
-        console.error("投稿エラー:", response.status, errorText);
-        try {
-          const error = JSON.parse(errorText);
-          alert("投稿に失敗しました: " + (error.error || errorText));
-        } catch {
-          alert("投稿に失敗しました: " + errorText);
-        }
-      }
-    } catch (error) { 
-      console.error("投稿エラー:", error);
-      alert("投稿に失敗しました");
+    const success = await actions.saveToAWS(newPost, postingMode, selectedTopicId, forceMode);
+    if (success) {
+      setNewPost({ title: "", body: "", tag: "創作" });
+      setPostingMode("regular");
+      setSelectedTopicId(null);
+      onClose();
     }
   };
 
@@ -637,16 +227,6 @@ export default function Home() {
   ];
   const selectedDecisionCandidate = selectedProposal || selectedPoolTopic;
   const hasDecisionCandidates = topicProposals.length > 0 || pastTopicPool.length > 0;
-
-  const formatDateTime = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString("ja-JP", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   const selectRandomCandidate = () => {
     if (decisionCandidates.length === 0) {
