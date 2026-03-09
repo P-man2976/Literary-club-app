@@ -3,48 +3,36 @@
 import { useSession, signIn } from "next-auth/react";
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { getUserIconUrl } from "@/app/lib/imageUtils";
 import { 
   Button, 
-  Card, 
-  CardHeader,
-  CardBody, 
   Tabs, 
   Tab, 
-  Avatar, 
-  Chip,
-  Divider,
-  Badge,
   Spinner
 } from "@heroui/react";
-import { Lightbulb, Pin, Save, Users, AlertCircle, Settings, MessageCircle, Heart, FileText, Target } from "lucide-react";
+import { Lightbulb, Users, AlertCircle, FileText, Target } from "lucide-react";
 import { 
   HandDrawnPostIcon,
   HandDrawnTopicIcon,
   HandDrawnSettingsIcon,
-  HandDrawnPlusIcon,
-  HandDrawnHeartIcon,
-  HandDrawnCommentIcon,
   LiquidMetalPostIcon,
   LiquidMetalTopicIcon,
   LiquidMetalPeopleIcon,
   ChromeSettingsIcon,
-  ChromeUserIcon,
-  ChromeMessageIcon
 } from "@/app/components/HandDrawnIcons";
+import { PostsTabContent } from "@/app/components/PostsTabContent";
+import { TopicsTabContent } from "@/app/components/TopicsTabContent";
+import { MembersTabContent } from "@/app/components/MembersTabContent";
 import type { Post } from "@/app/types/post";
 import { usePosts } from "@/app/hooks/usePosts";
 import { useUserProfile } from "@/app/hooks/useUserProfile";
 import { createPostActions } from "@/app/hooks/usePostActions";
-import { formatDateTime } from "@/app/lib/formatUtils";
 import { parseFile } from "@/app/lib/fileParser";
 
 export default function Home() {
   const aiReadingSettingKey = "lit-club-ai-reading-enabled";
   const { data: session, status } = useSession();
-  const router = useRouter();
   const { resolvedTheme } = useTheme();
   const isChromeTheme = resolvedTheme === "dark";
   const isLibraryTheme = resolvedTheme === "library";
@@ -378,113 +366,17 @@ export default function Home() {
             </span>
           }
         >
-          {/* 投稿タブのコンテンツ */}
-          <div className="p-3 space-y-3">
-            {(freePosts.length === 0 && topicReplies.length === 0) ? (
-              <div className="p-10 text-center">
-                <Save size={34} className="mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-500 text-sm font-medium">まだ投稿がありません</p>
-                <p className="text-gray-400 text-xs mt-2">右下のボタンから投稿を作成できます。</p>
-              </div>
-            ) : (
-              <>
-                {/* 全投稿を統合して時系列順に表示 */}
-                {[...topicReplies, ...freePosts]
-                  .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
-                  .map((post) => {
-                  const parentTopic = post.parentPostId ? topicPosts.find(t => t.id === post.parentPostId) : null;
-                  const isTopicReply = !!post.parentPostId;
-                  return (
-                    <Card 
-                      key={post.id}
-                      shadow="none"
-                      className={isChromeTheme
-                        ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
-                        : "jsr-card bg-white dark:bg-gray-800 rounded-xl"
-                      }
-                    >
-                      <CardBody className="p-4 gap-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {getDisplayIcon(post.authorEmail) ? (
-                              <img
-                                src={getDisplayIcon(post.authorEmail) || ""}
-                                alt="投稿者アイコン"
-                                className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full object-cover border-2 border-black dark:border-white"
-                              />
-                            ) : (
-                              <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-yellow-300 border-2 border-black dark:border-white" />
-                            )}
-                            <span className="font-black text-base uppercase text-black dark:text-green-300">{getDisplayName(post.authorEmail, post.author)}</span>
-                            {isTopicReply ? (
-                              <Chip
-                                size="md"
-                                className={isLibraryTheme
-                                  ? "bg-[#E7E0D0] text-[#3F3427] font-bold"
-                                  : "bg-purple-400 dark:bg-purple-800 text-white font-bold border-2 border-black dark:border-purple-500"
-                                }
-                              >
-                                お題
-                              </Chip>
-                            ) : (
-                              <Chip
-                                size="md"
-                                className={isLibraryTheme
-                                  ? "bg-[#E7E0D0] text-[#3F3427] font-bold"
-                                  : "bg-cyan-400 dark:bg-cyan-700 text-black dark:text-cyan-200 font-bold border-2 border-black dark:border-cyan-400"
-                                }
-                              >
-                                自由投稿
-                              </Chip>
-                            )}
-                          </div>
-                          <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
-                            {new Date(post.createdAt).toLocaleDateString('ja-JP')}
-                          </span>
-                        </div>
-                        
-                        <div 
-                          onClick={() => router.push(`/topic/${post.id}`)}
-                          className="cursor-pointer spray-hover"
-                        >
-                          <h3 className="text-xl font-black mb-2 uppercase tracking-wide text-black dark:text-green-200">{post.title}</h3>
-                          <p className="text-sm font-semibold text-gray-700 dark:text-green-100 line-clamp-3 whitespace-pre-wrap">{post.body}</p>
-                          <div className="mt-2 flex items-center justify-between gap-3 text-xs font-bold">
-                            <p className="text-orange-600 dark:text-yellow-300 uppercase">→ クリックして詳細表示</p>
-                            <div className="flex items-center gap-4 text-[1.08rem] leading-normal pt-0.5 pb-1 pr-1 overflow-visible">
-                              <span className="flex items-center gap-2 text-blue-600 dark:text-cyan-400 leading-normal min-w-max">
-                                {isChromeTheme ? <ChromeMessageIcon size={21} /> : <HandDrawnCommentIcon size={21} className="overflow-visible shrink-0" />}
-                                {post.commentCount || 0}
-                              </span>
-                              <span className="flex items-center gap-2 text-red-500 dark:text-pink-400 leading-normal min-w-max">
-                                <HandDrawnHeartIcon size={21} className="overflow-visible shrink-0" />
-                                {post.likes || 0}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </CardBody>
-                    </Card>
-                  );
-                })}
-              </>
-            )}
-          </div>
-
-          {/* 投稿作成フロートボタン */}
-          {session && (
-            <button
-              className={isChromeTheme
-                ? "fixed right-6 bottom-24 z-40 h-14 rounded-full bg-gray-600 text-white text-base font-black px-6 border-0 shadow-[0_8px_0_rgba(20,20,20,0.9)] hover:shadow-[0_10px_0_rgba(20,20,20,0.9)] hover:bg-gray-500 hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-[0_6px_0_rgba(20,20,20,0.9)] transition-all flex items-center gap-2 uppercase"
-                : "fixed right-6 bottom-24 z-40 h-14 rounded-full bg-yellow-400 text-black text-base font-black px-6 border-4 border-white shadow-[0_8px_0_rgba(0,0,0,0.9)] hover:shadow-[0_10px_0_rgba(0,0,0,0.9)] hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-[0_6px_0_rgba(0,0,0,0.9)] transition-all flex items-center gap-2 uppercase shake-hover"
-              }
-              onClick={() => setIsPostModalOpen(true)}
-              aria-label="投稿を作成"
-            >
-              <HandDrawnPlusIcon size={20} />
-              投稿
-            </button>
-          )}
+          <PostsTabContent
+            freePosts={freePosts}
+            topicReplies={topicReplies}
+            topicPosts={topicPosts}
+            isChromeTheme={isChromeTheme}
+            isLibraryTheme={isLibraryTheme}
+            getDisplayIcon={getDisplayIcon}
+            getDisplayName={getDisplayName}
+            session={session}
+            onCreatePost={() => setIsPostModalOpen(true)}
+          />
         </Tab>
 
         <Tab
@@ -502,245 +394,25 @@ export default function Home() {
             </span>
           }
         >
-          {/* お題タブのコンテンツ */}
-          <div className="p-3 space-y-3">
-            {topicPosts.length === 0 ? (
-              <div className="p-10 text-center">
-                <Pin size={34} className="mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-500 text-sm font-medium">まだお題がありません</p>
-                <p className="text-gray-400 text-xs mt-2">右下のボタンからお題案を投稿し、お題を決定できます。</p>
-              </div>
-            ) : (
-              <>
-                {/* 今週のお題（最新のお題） */}
-                {activeTopic ? (
-                  <div className="space-y-2">
-                    <h2 className="text-2xl font-black px-2 uppercase tracking-wide text-black dark:text-green-300">今週のお題</h2>
-                    <Card 
-                      shadow="none"
-                      className={isChromeTheme
-                        ? "bg-transparent border-0 border-b border-white/35 rounded-none shadow-none"
-                        : isLibraryTheme
-                          ? "jsr-card bg-[#ECE7DB] rounded-2xl"
-                          : "jsr-card bg-gradient-to-br from-pink-300 to-purple-400 dark:from-green-900 dark:to-cyan-900 rounded-2xl"
-                      }
-                    >
-                      <CardBody className="p-5 gap-3">
-                        <div className="flex items-center">
-                          <div className="flex items-center gap-2">
-                            {getDisplayIcon(activeTopic.authorEmail) ? (
-                              <img
-                                src={getDisplayIcon(activeTopic.authorEmail) || ""}
-                                alt="投稿者アイコン"
-                                className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full object-cover border-2 border-black"
-                              />
-                            ) : (
-                              <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-yellow-300 border-2 border-black" />
-                            )}
-                            <span className="font-black text-base uppercase text-black dark:text-white">{getDisplayName(activeTopic.authorEmail, activeTopic.author)}</span>
-                            <Chip size="md" className="bg-black text-white font-black border-2 border-white dark:bg-green-500 dark:text-black dark:border-green-300">
-                              <span className="text-lg leading-none">🔥</span> HOT
-                            </Chip>
-                          </div>
-                        </div>
-                        <div 
-                          onClick={() => router.push(`/topic/${activeTopic.id}`)}
-                          className="cursor-pointer"
-                        >
-                          <h2 className="text-lg font-bold text-black dark:text-white">{activeTopic.title}</h2>
-                          {activeTopic.deadline && (
-                            <p className="text-xs font-semibold text-blue-700 dark:text-cyan-300 mt-1">
-                              締切: {formatDateTime(activeTopic.deadline)}
-                            </p>
-                          )}
-                          <p className="text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{activeTopic.body}</p>
-                          <p className="text-xs text-gray-600 dark:text-gray-300">クリックして詳細ページを表示...</p>
-                        </div>
-                        {getTopicParticipants(activeTopic).length > 0 && (
-                          <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-black dark:text-white">参加者:</span>
-                              <div className="flex items-center -space-x-2">
-                              {getTopicParticipants(activeTopic)
-                                .slice(0, 6)
-                                .map((participant) => (
-                                  participant.icon ? (
-                                    <img
-                                      key={participant.key}
-                                      src={participant.icon}
-                                      alt={participant.name}
-                                      title={participant.name}
-                                      className="w-9 h-9 min-w-9 min-h-9 shrink-0 rounded-full object-cover border-3 border-white"
-                                    />
-                                  ) : (
-                                    <div
-                                      key={participant.key}
-                                      title={participant.name}
-                                      className="w-9 h-9 min-w-9 min-h-9 shrink-0 rounded-full bg-yellow-300 text-xs font-black text-black border-3 border-white flex items-center justify-center"
-                                    >
-                                      {participant.name.slice(0, 1)}
-                                    </div>
-                                  )
-                                ))}
-                              {getTopicParticipants(activeTopic).length > 6 && (
-                                <div className="w-9 h-9 min-w-9 min-h-9 shrink-0 rounded-full bg-orange-400 text-xs font-black text-white border-3 border-white flex items-center justify-center">
-                                  +{getTopicParticipants(activeTopic).length - 6}
-                                </div>
-                              )}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </CardBody>
-                    </Card>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <h2 className="text-2xl font-black px-2 uppercase tracking-wide text-black dark:text-green-300">今週のお題</h2>
-                    <Card
-                      shadow="none"
-                      className={isChromeTheme
-                        ? "bg-transparent border-0 border-b border-white/35 rounded-none shadow-none"
-                        : "jsr-card bg-white dark:bg-gray-900 rounded-2xl"
-                      }
-                    >
-                      <CardBody className="p-5">
-                        <p className="text-sm font-black uppercase text-gray-700 dark:text-gray-200">今週のお題はありません</p>
-                        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mt-1">次のお題が設定されるまでお待ちください。</p>
-                      </CardBody>
-                    </Card>
-                  </div>
-                )}
-
-                {/* お題決定ボタン */}
-                {session && (
-                  <Card shadow="sm" className={isChromeTheme
-                    ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
-                    : "jsr-card border border-blue-300 dark:border-green-600 rounded-2xl bg-blue-50/80 dark:bg-green-950/10"
-                  }>
-                    <CardBody className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-black italic text-base text-black dark:text-green-300 uppercase">新しいお題を決定</p>
-                          <p className="text-xs font-bold text-black/70 dark:text-green-200/70">お題案からランダム選択、または手動で選んでお題化できます</p>
-                        </div>
-                        <button
-                          onClick={() => {
-                            if (!hasDecisionCandidates) {
-                              alert("お題案がありません。まず右下のボタンからお題案を投稿してください。");
-                              return;
-                            }
-                            setSelectedProposalId(null);
-                            setSelectedPoolTopicId(null);
-                            setProposalDeadline(null);
-                            setIsTopicDecisionModalOpen(true);
-                          }}
-                          className="px-6 py-3 bg-pink-500 text-white rounded-lg font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] active:translate-y-[2px] active:shadow-[0_2px_0_rgba(0,0,0,0.8)] transition-all text-sm whitespace-nowrap shake-hover"
-                        >
-                          お題決定
-                        </button>
-                      </div>
-                    </CardBody>
-                  </Card>
-                )}
-
-                {/* 過去のお題 */}
-                {pastTopicsForDisplay.length > 0 && (
-                  <div className="space-y-3">
-                    <h3 className="text-xl font-black px-2 mt-6 uppercase tracking-wide text-black dark:text-yellow-300">過去のお題</h3>
-                    {pastTopicsForDisplay.map((topic) => (
-                      <Card 
-                        key={topic.id}
-                        shadow="none"
-                        className={isChromeTheme
-                          ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
-                          : "jsr-card bg-white dark:bg-gray-900 rounded-xl"
-                        }
-                      >
-                        <CardBody className="p-4 gap-2">
-                          <div className="flex items-center">
-                            <div className="flex items-center gap-2">
-                              {getDisplayIcon(topic.authorEmail) ? (
-                                <img
-                                  src={getDisplayIcon(topic.authorEmail) || ""}
-                                  alt="投稿者アイコン"
-                                  className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full object-cover border-2 border-black dark:border-white"
-                                />
-                              ) : (
-                                <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-yellow-300 border-2 border-black dark:border-white" />
-                              )}
-                              <span className="font-black text-base uppercase text-black dark:text-green-300">{getDisplayName(topic.authorEmail, topic.author)}</span>
-                              <Chip size="md" className="bg-gray-300 dark:bg-gray-700 text-black dark:text-yellow-300 font-bold border-2 border-black dark:border-green-600">過去</Chip>
-                            </div>
-                          </div>
-                          <div 
-                            onClick={() => router.push(`/topic/${topic.id}`)}
-                            className="cursor-pointer"
-                          >
-                            <h2 className="text-lg font-bold text-black dark:text-green-200">{topic.title}</h2>
-                            {topic.deadline && (
-                              <p className="text-xs font-semibold text-blue-700 dark:text-yellow-300 mt-1">
-                                締切: {formatDateTime(topic.deadline)}
-                              </p>
-                            )}
-                            <p className="text-sm text-gray-800 dark:text-green-100 line-clamp-2">{topic.body}</p>
-                            <p className="text-xs text-gray-600 dark:text-green-200">クリックして詳細ページを表示...</p>
-                          </div>
-                          {getTopicParticipants(topic).length > 0 && (
-                            <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-gray-700 dark:text-gray-200">参加者:</span>
-                                <div className="flex items-center -space-x-2">
-                                {getTopicParticipants(topic)
-                                  .slice(0, 6)
-                                  .map((participant) => (
-                                    participant.icon ? (
-                                      <img
-                                        key={participant.key}
-                                        src={participant.icon}
-                                        alt={participant.name}
-                                        title={participant.name}
-                                        className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full object-cover border-2 border-background"
-                                      />
-                                    ) : (
-                                      <div
-                                        key={participant.key}
-                                        title={participant.name}
-                                        className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-gray-300 text-[11px] font-bold text-gray-700 border-2 border-background flex items-center justify-center"
-                                      >
-                                        {participant.name.slice(0, 1)}
-                                      </div>
-                                    )
-                                  ))}
-                                {getTopicParticipants(topic).length > 6 && (
-                                  <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-gray-200 text-[11px] font-bold text-gray-600 border-2 border-background flex items-center justify-center">
-                                    +{getTopicParticipants(topic).length - 6}
-                                  </div>
-                                )}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </CardBody>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* お題案登録フロートボタン */}
-          {session && (
-            <button
-              className="fixed right-6 bottom-24 z-40 h-14 rounded-full bg-orange-500 text-white text-base font-black px-6 border-4 border-white shadow-[0_8px_0_rgba(0,0,0,0.9)] hover:shadow-[0_10px_0_rgba(0,0,0,0.9)] hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-[0_6px_0_rgba(0,0,0,0.9)] transition-all flex items-center gap-2 uppercase shake-hover"
-              onClick={() => setIsProposalModalOpen(true)}
-              aria-label="お題案を投稿"
-            >
-              <Lightbulb size={20} strokeWidth={3} />
-              お題案
-            </button>
-          )}
+          <TopicsTabContent
+            topicPosts={topicPosts}
+            activeTopic={activeTopic}
+            pastTopicsForDisplay={pastTopicsForDisplay}
+            isChromeTheme={isChromeTheme}
+            isLibraryTheme={isLibraryTheme}
+            getDisplayIcon={getDisplayIcon}
+            getDisplayName={getDisplayName}
+            getTopicParticipants={getTopicParticipants}
+            session={session}
+            hasDecisionCandidates={hasDecisionCandidates}
+            onOpenTopicDecision={() => {
+              setSelectedProposalId(null);
+              setSelectedPoolTopicId(null);
+              setProposalDeadline(null);
+              setIsTopicDecisionModalOpen(true);
+            }}
+            onCreateProposal={() => setIsProposalModalOpen(true)}
+          />
         </Tab>
 
         <Tab
@@ -758,81 +430,13 @@ export default function Home() {
             </span>
           }
         >
-          <div className="p-4 space-y-3">
-            {memberProfiles.length === 0 ? (
-              <Card shadow="sm" className={isChromeTheme
-                ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
-                : "border border-default-200 rounded-2xl"
-              }>
-                <CardBody className="p-6 text-center space-y-2">
-                  <Users size={28} className="mx-auto text-default-400" />
-                  <p className="text-sm font-semibold text-default-600">部員プロフィールはまだありません</p>
-                  <p className="text-xs text-default-400">設定タブでペンネーム・自己紹介を登録すると表示されます。</p>
-                </CardBody>
-              </Card>
-            ) : (
-              memberProfiles.map((member) => {
-                const iconUrl = getUserIconUrl(member.email, member.userIcon || undefined);
-                const fallbackName = member.email ? member.email.split("@")[0] : "匿名部員";
-                const displayName = member.penName || fallbackName;
-                const displayTags = Array.isArray(member.aiTags) && member.aiTags.length > 0
-                  ? member.aiTags.slice(0, 3)
-                  : ["#文芸部", "#創作", "#部員紹介"];
-
-                return (
-                  <Card key={member.email} shadow="none" className={isChromeTheme
-                    ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
-                    : isLibraryTheme
-                      ? "jsr-card bg-[#ECE7DB] rounded-2xl"
-                      : "jsr-card bg-gradient-to-br from-cyan-200 to-blue-300 dark:bg-black rounded-2xl"
-                  }>
-                    <CardBody className="p-5 space-y-3">
-                      <div className="flex items-center gap-3">
-                        {iconUrl ? (
-                          <img
-                            src={iconUrl}
-                            alt={`${displayName}のアイコン`}
-                            className="w-20 h-20 rounded-full object-cover border-2 border-black dark:border-white shadow-[0_3px_0_rgba(0,0,0,0.8)]"
-                          />
-                        ) : (
-                          <div className="w-20 h-20 rounded-full bg-yellow-300 border-2 border-black dark:border-white shadow-[0_3px_0_rgba(0,0,0,0.8)]" />
-                        )}
-                        <p className="font-black text-xl uppercase tracking-wide text-black dark:text-white">{displayName}</p>
-                      </div>
-
-                      <div className={isChromeTheme
-                        ? "pt-3 border-t border-white/20"
-                        : "rounded-lg bg-white dark:bg-black border-3 border-black dark:border-white p-3"
-                      }>
-                        <p className="text-xs font-black uppercase text-black dark:text-white mb-1">自己紹介</p>
-                        <p className="text-sm font-semibold text-black dark:text-white">{member.selfIntro || "未設定"}</p>
-                      </div>
-
-                      {(aiReadingEnabled || member.email !== session?.user?.email) && (
-                        <div className={isChromeTheme
-                          ? "pt-3 border-t border-white/20"
-                          : "rounded-lg bg-pink-200 dark:bg-black border-3 border-black dark:border-white p-3"
-                        }>
-                          <p className="text-xs font-black uppercase text-black dark:text-white mb-1">AI短文分析</p>
-                          <p className="text-sm font-semibold text-black dark:text-white">
-                            {member.aiSummary || "過去投稿ベースのAI分析は準備中です。"}
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="flex flex-wrap gap-2">
-                        {displayTags.map((tag, index) => (
-                          <Chip key={`${member.email}-${tag}-${index}`} size="md" className="bg-yellow-300 dark:bg-black text-black dark:text-white font-bold border-2 border-black dark:border-white">
-                            {tag}
-                          </Chip>
-                        ))}
-                      </div>
-                    </CardBody>
-                  </Card>
-                );
-              })
-            )}
-          </div>
+          <MembersTabContent
+            memberProfiles={memberProfiles}
+            isChromeTheme={isChromeTheme}
+            isLibraryTheme={isLibraryTheme}
+            aiReadingEnabled={aiReadingEnabled}
+            sessionEmail={session?.user?.email}
+          />
         </Tab>
       </Tabs>
 
@@ -1176,7 +780,6 @@ export default function Home() {
                       setNewPost({ title: "", body: "", tag: "創作" });
                       setIsProposalModalOpen(false);
                       await mutatePosts();
-                      router.refresh();
                     } else {
                       alert("投稿に失敗しました");
                     }
@@ -1307,7 +910,6 @@ export default function Home() {
                       setSelectedTopicId(null);
                       setIsPostModalOpen(false);
                       await mutatePosts();
-                      router.refresh();
                     } else {
                       alert("投稿に失敗しました");
                     }
