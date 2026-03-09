@@ -27,26 +27,32 @@ export function ProposalModal({ isOpen, onClose }: ProposalModalProps) {
     onClose();
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!title || !body) {
       alert("タイトルと内容は必須です");
       return;
     }
-    try {
-      await trigger({
+    trigger(
+      {
         title,
         body,
         author: penName || session?.user?.name || "匿名部員",
         authorEmail: session?.user?.email || null,
         tag: "お題案",
-      });
-      alert("お題案を投稿しました！");
-      setTitle("");
-      setBody("");
-      onClose();
-    } catch {
-      alert("投稿に失敗しました");
-    }
+      },
+      {
+        throwOnError: false,
+        onSuccess: () => {
+          alert("お題案を投稿しました！");
+          setTitle("");
+          setBody("");
+          onClose();
+        },
+        onError: () => {
+          alert("投稿に失敗しました");
+        },
+      },
+    );
   };
 
   return (

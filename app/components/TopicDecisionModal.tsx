@@ -57,7 +57,7 @@ export function TopicDecisionModal({ isOpen, onClose }: TopicDecisionModalProps)
     }
   };
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     if (!proposalDeadline) return;
 
     const candidate = selectedProposal || selectedPoolTopic;
@@ -75,16 +75,19 @@ export function TopicDecisionModal({ isOpen, onClose }: TopicDecisionModalProps)
           authorEmail: session?.user?.email || null,
         };
 
-    try {
-      await trigger(topicData);
-      alert("お題を追加しました！");
-      setSelectedProposalId(null);
-      setSelectedPoolTopicId(null);
-      setProposalDeadline(null);
-      onClose();
-    } catch {
-      alert("お題への変換に失敗しました");
-    }
+    trigger(topicData, {
+      throwOnError: false,
+      onSuccess: () => {
+        alert("お題を追加しました！");
+        setSelectedProposalId(null);
+        setSelectedPoolTopicId(null);
+        setProposalDeadline(null);
+        onClose();
+      },
+      onError: () => {
+        alert("お題への変換に失敗しました");
+      },
+    });
   };
 
   return (

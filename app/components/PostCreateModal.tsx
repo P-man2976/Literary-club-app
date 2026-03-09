@@ -37,27 +37,33 @@ export function PostCreateModal({ isOpen, onClose }: PostCreateModalProps) {
     await parseFile(file, setNewPost);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!newPost.title || !newPost.body) {
       alert("タイトルと本文は必須です");
       return;
     }
-    try {
-      await trigger({
+    trigger(
+      {
         title: newPost.title,
         body: newPost.body,
         author: penName || session?.user?.name || "匿名部員",
         authorEmail: session?.user?.email || null,
         tag: selectedTopicId ? "作品" : "創作",
         parentPostId: selectedTopicId || null,
-      });
-      alert("投稿しました！");
-      setNewPost({ title: "", body: "", tag: "創作" });
-      setSelectedTopicId(null);
-      onClose();
-    } catch {
-      alert("投稿に失敗しました");
-    }
+      },
+      {
+        throwOnError: false,
+        onSuccess: () => {
+          alert("投稿しました！");
+          setNewPost({ title: "", body: "", tag: "創作" });
+          setSelectedTopicId(null);
+          onClose();
+        },
+        onError: () => {
+          alert("投稿に失敗しました");
+        },
+      },
+    );
   };
 
   return (
