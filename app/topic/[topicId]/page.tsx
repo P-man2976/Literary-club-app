@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
-import { getUserIconUrl } from "@/app/lib/imageUtils";
+import { useIconUrlMap } from "@/app/hooks/useIconUrl";
 import {
   ArrowLeft,
   FileCheck2,
@@ -90,6 +90,8 @@ export default function TopicPage() {
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<TopicAnalysis | null>(null);
   const [scrollingPostId, setScrollingPostId] = useState<string | null>(null);
+
+  const getDisplayIcon = useIconUrlMap(userIconMap);
   const scrollHideTimerRef = useRef<number | null>(null);
   const [showHorizontalHint, setShowHorizontalHint] = useState(false);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
@@ -313,11 +315,6 @@ export default function TopicPage() {
       return penNameMap[authorEmail];
     }
     return authorName;
-  };
-
-  const getDisplayIcon = (authorEmail: string | null | undefined) => {
-    // メールアドレスから画像URLを生成（R2対応 + 後方互換性あり）
-    return getUserIconUrl(authorEmail, userIconMap[authorEmail || ""]);
   };
 
   const getReplyParticipants = () => {
