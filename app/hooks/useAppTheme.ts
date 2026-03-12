@@ -11,9 +11,9 @@ export type AppTheme = "street" | "chrome" | "library";
 export function useAppTheme() {
   const { resolvedTheme, theme, setTheme } = useTheme();
 
-  // next-themes のテーマ名 → AppTheme の正規化
+  // next-themes のテーマ名がそのまま AppTheme に対応
   const appTheme: AppTheme =
-    resolvedTheme === "dark"
+    resolvedTheme === "chrome"
       ? "chrome"
       : resolvedTheme === "library"
         ? "library"

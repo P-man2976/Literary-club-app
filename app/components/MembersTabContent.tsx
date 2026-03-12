@@ -13,7 +13,7 @@ const memberSection = tv({
   base: "",
   variants: {
     theme: {
-      street: "rounded-lg bg-white dark:bg-black border-3 border-black dark:border-white p-3",
+      street: "rounded-lg bg-white chrome:bg-black border-3 border-black chrome:border-white p-3",
       chrome: "pt-3 border-t border-white/20",
       library: "rounded-xl bg-[#F8F5EE] p-3 shadow-[inset_2px_2px_5px_rgba(163,141,115,0.1),inset_-2px_-2px_5px_rgba(255,255,255,0.4)]",
     },
@@ -24,7 +24,7 @@ const memberAiSection = tv({
   base: "",
   variants: {
     theme: {
-      street: "rounded-lg bg-pink-200 dark:bg-black border-3 border-black dark:border-white p-3",
+      street: "rounded-lg bg-pink-200 chrome:bg-black border-3 border-black chrome:border-white p-3",
       chrome: "pt-3 border-t border-white/20",
       library: "rounded-xl bg-[#F8F5EE] p-3 shadow-[inset_2px_2px_5px_rgba(163,141,115,0.1),inset_-2px_-2px_5px_rgba(255,255,255,0.4)]",
     },
@@ -85,23 +85,23 @@ export function MembersTabContent() {
                     <img
                       src={iconUrl}
                       alt={`${displayName}のアイコン`}
-                      className="w-20 h-20 rounded-full object-cover border-2 border-black dark:border-white shadow-[0_3px_0_rgba(0,0,0,0.8)]"
+                      className="w-20 h-20 rounded-full object-cover border-2 border-black chrome:border-white shadow-[0_3px_0_rgba(0,0,0,0.8)]"
                     />
                   ) : (
-                    <div className="w-20 h-20 rounded-full bg-yellow-300 border-2 border-black dark:border-white shadow-[0_3px_0_rgba(0,0,0,0.8)]" />
+                    <div className="w-20 h-20 rounded-full bg-yellow-300 border-2 border-black chrome:border-white shadow-[0_3px_0_rgba(0,0,0,0.8)]" />
                   )}
-                  <p className="font-black text-xl uppercase tracking-wide text-black dark:text-white">{displayName}</p>
+                  <p className="font-black text-xl uppercase tracking-wide text-black chrome:text-white">{displayName}</p>
                 </div>
 
                 <div className={memberSection({ theme: appTheme })}>
-                  <p className="text-xs font-black uppercase text-black dark:text-white mb-1">自己紹介</p>
-                  <p className="text-sm font-semibold text-black dark:text-white">{member.selfIntro || "未設定"}</p>
+                  <p className="text-xs font-black uppercase text-black chrome:text-white mb-1">自己紹介</p>
+                  <p className="text-sm font-semibold text-black chrome:text-white">{member.selfIntro || "未設定"}</p>
                 </div>
 
                 {(aiReadingEnabled || member.email !== sessionEmail) && (
                   <div className={memberAiSection({ theme: appTheme })}>
-                    <p className="text-xs font-black uppercase text-black dark:text-white mb-1">AI短文分析</p>
-                    <p className="text-sm font-semibold text-black dark:text-white">
+                    <p className="text-xs font-black uppercase text-black chrome:text-white mb-1">AI短文分析</p>
+                    <p className="text-sm font-semibold text-black chrome:text-white">
                       {member.aiSummary || "過去投稿ベースのAI分析は準備中です。"}
                     </p>
                   </div>
@@ -109,7 +109,7 @@ export function MembersTabContent() {
 
                 <div className="flex flex-wrap gap-2">
                   {displayTags.map((tag, index) => (
-                    <Chip key={`${member.email}-${tag}-${index}`} size="md" className="bg-yellow-300 dark:bg-black text-black dark:text-white font-bold border-2 border-black dark:border-white">
+                    <Chip key={`${member.email}-${tag}-${index}`} size="md" className="bg-yellow-300 chrome:bg-black text-black chrome:text-white font-bold border-2 border-black chrome:border-white">
                       {tag}
                     </Chip>
                   ))}

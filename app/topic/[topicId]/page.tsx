@@ -102,7 +102,7 @@ const parentTopicBox = tv({
   base: "p-4 mb-6",
   variants: {
     theme: {
-      street: "bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400 rounded-xl",
+      street: "bg-blue-50 chrome:bg-blue-900/20 border-l-4 border-blue-500 chrome:border-blue-400 rounded-xl",
       chrome: "border-l-2 border-white/40",
       library: "bg-[#F8F5EE] border-l-4 border-[#A38D73] rounded-xl shadow-[inset_2px_2px_5px_rgba(163,141,115,0.1),inset_-2px_-2px_5px_rgba(255,255,255,0.4)]",
     },
@@ -113,7 +113,7 @@ const topicCard = tv({
   base: "p-6 mb-8",
   variants: {
     theme: {
-      street: "jsr-card bg-white dark:bg-gray-900 rounded-2xl",
+      street: "jsr-card bg-white chrome:bg-gray-900 rounded-2xl",
       chrome: "bg-transparent border-0 border-b border-white/25 rounded-none",
       library: "jsr-card bg-[#ECE7DB] rounded-2xl",
     },
@@ -124,7 +124,7 @@ const aiSection = tv({
   base: "p-6 mb-8",
   variants: {
     theme: {
-      street: "jsr-card bg-linear-to-br from-purple-300 to-pink-300 dark:from-purple-950 dark:to-pink-950 rounded-2xl",
+      street: "jsr-card bg-linear-to-br from-purple-300 to-pink-300 chrome:from-purple-950 chrome:to-pink-950 rounded-2xl",
       chrome: "bg-transparent border-0 border-b border-white/25 rounded-none",
       library: "jsr-card bg-[#F8F5EE] rounded-2xl shadow-[4px_4px_10px_rgba(163,141,115,0.15),-4px_-4px_10px_rgba(255,255,255,0.5)]",
     },
@@ -135,7 +135,7 @@ const postFormSection = tv({
   base: "p-6 mb-8",
   variants: {
     theme: {
-      street: "bg-white dark:bg-slate-900 rounded-2xl shadow-md",
+      street: "bg-white chrome:bg-slate-900 rounded-2xl shadow-md",
       chrome: "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none",
       library: "bg-[#F8F5EE] rounded-2xl shadow-[4px_4px_10px_rgba(163,141,115,0.15),-4px_-4px_10px_rgba(255,255,255,0.5)]",
     },
@@ -146,7 +146,7 @@ const postFormTitle = tv({
   base: "mb-4 flex items-center gap-2",
   variants: {
     theme: {
-      street: "text-lg font-bold dark:text-slate-100",
+      street: "text-lg font-bold chrome:text-slate-100",
       chrome: "text-base font-medium text-white",
       library: "text-lg font-serif font-bold text-[#3F3427]",
     },
@@ -168,7 +168,7 @@ const replyCard = tv({
   base: "p-6 mb-4",
   variants: {
     theme: {
-      street: "jsr-card bg-white dark:bg-gray-900 rounded-2xl spray-hover",
+      street: "jsr-card bg-white chrome:bg-gray-900 rounded-2xl spray-hover",
       chrome: "bg-transparent border-0 border-b border-white/25 rounded-none",
       library: "jsr-card bg-[#ECE7DB] rounded-2xl",
     },
@@ -176,7 +176,7 @@ const replyCard = tv({
 });
 
 const commentBubble = tv({
-  base: "bg-yellow-100 dark:bg-gray-800 border-3 border-black dark:border-green-600 rounded-xl p-3 text-sm",
+  base: "bg-yellow-100 chrome:bg-gray-800 border-3 border-black chrome:border-green-600 rounded-xl p-3 text-sm",
   variants: {
     theme: {
       street: "shadow-[4px_4px_0_rgba(0,0,0,0.8)]",
@@ -907,7 +907,7 @@ export default function TopicPage() {
         <p>投稿が見つかりませんでした</p>
         <button
           onClick={() => router.back()}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-xs"
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-sm"
         >
           戻る
         </button>
@@ -933,15 +933,15 @@ export default function TopicPage() {
         {/* 親のお題（お題への返信の場合） */}
         {parentTopic && (
           <div className={parentTopicBox({ theme: appTheme })}>
-            <p className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-2">このお題への返信です</p>
-            <h3 className="text-lg font-black text-black dark:text-blue-200 mb-2 uppercase">{parentTopic.title}</h3>
-            <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">{parentTopic.body}</p>
+            <p className="text-sm font-bold text-blue-600 chrome:text-blue-400 mb-2">このお題への返信です</p>
+            <h3 className="text-lg font-black text-black chrome:text-blue-200 mb-2 uppercase">{parentTopic.title}</h3>
+            <p className="text-sm text-gray-700 chrome:text-gray-300 line-clamp-2">{parentTopic.body}</p>
           </div>
         )}
 
         {/* トピック表示 */}
         {editingPostId === topic.id ? (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md p-6 mb-8 border-l-4 border-blue-500 dark:border-blue-400">
+          <div className="bg-white chrome:bg-slate-900 rounded-2xl shadow-md p-6 mb-8 border-l-4 border-blue-500 chrome:border-blue-400">
             <h3 className="text-lg font-bold mb-4">投稿を編集</h3>
             <div className="space-y-4">
               <div>
@@ -950,7 +950,7 @@ export default function TopicPage() {
                   type="text"
                   value={editingPostTitle}
                   onChange={(e) => setEditingPostTitle(e.target.value)}
-                  className="w-full px-4 py-2 border border-default-300 dark:border-default-600 bg-default-50 dark:bg-default-800 text-default-900 dark:text-slate-100 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-default-300 chrome:border-default-600 bg-default-50 chrome:bg-default-800 text-default-900 chrome:text-slate-100 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
@@ -958,7 +958,7 @@ export default function TopicPage() {
                 <textarea
                   value={editingPostBody}
                   onChange={(e) => setEditingPostBody(e.target.value)}
-                  className="w-full px-4 py-2 border border-default-300 dark:border-default-600 bg-default-50 dark:bg-default-800 text-default-900 dark:text-slate-100 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[200px]"
+                  className="w-full px-4 py-2 border border-default-300 chrome:border-default-600 bg-default-50 chrome:bg-default-800 text-default-900 chrome:text-slate-100 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[200px]"
                 />
               </div>
               <div className="flex gap-4">
@@ -970,7 +970,7 @@ export default function TopicPage() {
                 </button>
                 <button
                   onClick={cancelEditingPost}
-                  className="px-4 py-2 bg-default-300 dark:bg-default-700 text-default-700 dark:text-slate-200 rounded-lg font-semibold hover:bg-default-400 dark:hover:bg-default-600"
+                  className="px-4 py-2 bg-default-300 chrome:bg-default-700 text-default-700 chrome:text-slate-200 rounded-lg font-semibold hover:bg-default-400 chrome:hover:bg-default-600"
                 >
                   キャンセル
                 </button>
@@ -980,23 +980,23 @@ export default function TopicPage() {
         ) : (
         <div className={topicCard({ theme: appTheme })}>
           {getDeadlineStatus(topic.deadline) && (
-            <div className={`inline-block px-3 py-1 rounded-full text-xs font-black mb-3 border-2 border-black dark:border-green-500 ${getDeadlineStatus(topic.deadline)!.bgColor} ${getDeadlineStatus(topic.deadline)!.textColor}`}>
+            <div className={`inline-block px-3 py-1 rounded-full text-xs font-black mb-3 border-2 border-black chrome:border-green-500 ${getDeadlineStatus(topic.deadline)!.bgColor} ${getDeadlineStatus(topic.deadline)!.textColor}`}>
               {getDeadlineStatus(topic.deadline)!.label}
             </div>
           )}
           <div className="mb-2">
-            <h2 className="text-2xl font-black uppercase tracking-wide text-black dark:text-green-300">{topic.title}</h2>
+            <h2 className="text-2xl font-black uppercase tracking-wide text-black chrome:text-green-300">{topic.title}</h2>
           </div>
           {topic.subtitle && (
-            <p className="text-sm text-gray-600 dark:text-slate-200 mb-4 italic">{topic.subtitle}</p>
+            <p className="text-sm text-gray-600 chrome:text-slate-200 mb-4 italic">{topic.subtitle}</p>
           )}
           
           {/* 本体表示 - お題の場合は通常表示、通常投稿の場合は縦読み形式 */}
           {topic.isTopicPost === 1 ? (
-            <p className="text-gray-700 dark:text-green-100 mb-4 whitespace-pre-wrap font-semibold">{topic.body}</p>
+            <p className="text-gray-700 chrome:text-green-100 mb-4 whitespace-pre-wrap font-semibold">{topic.body}</p>
           ) : (
             <div 
-              className="mb-4 overflow-x-auto border border-gray-200 dark:border-green-700 rounded-lg p-4 bg-slate-50 dark:bg-gray-950 relative group"
+              className="mb-4 overflow-x-auto border border-gray-200 chrome:border-green-700 rounded-lg p-4 bg-slate-50 chrome:bg-gray-950 relative group"
               onScroll={() => handleBodyScroll(topic.id)}
               onWheel={(event) => {
                 if (event.shiftKey && showHorizontalHint) {
@@ -1006,11 +1006,11 @@ export default function TopicPage() {
               style={{ direction: 'rtl' }}
             >
               {showHorizontalHint && scrollingPostId !== topic.id && (
-                <div className="hidden group-hover:flex absolute top-2 left-2 bg-blue-600 dark:bg-green-600 text-white dark:text-black text-xs px-3 py-1 rounded-md pointer-events-none z-10 font-black uppercase">
+                <div className="hidden group-hover:flex absolute top-2 left-2 bg-blue-600 chrome:bg-green-600 text-white chrome:text-black text-xs px-3 py-1 rounded-md pointer-events-none z-10 font-black uppercase">
                   Shift + スクロールで横スクロールできます
                 </div>
               )}
-              <p className="text-default-900 dark:text-green-200 whitespace-pre-wrap font-semibold" style={{ writingMode: 'vertical-rl', height: '400px', minWidth: 'fit-content', direction: 'ltr' }}>{topic.body}</p>
+              <p className="text-default-900 chrome:text-green-200 whitespace-pre-wrap font-semibold" style={{ writingMode: 'vertical-rl', height: '400px', minWidth: 'fit-content', direction: 'ltr' }}>{topic.body}</p>
             </div>
           )}
           
@@ -1104,15 +1104,15 @@ export default function TopicPage() {
                 {topic.comments.sort((a, b) => a.createdAt - b.createdAt).map((comment) => (
                   <div key={comment.commentId} className={commentBubble({ theme: appTheme })}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-black flex items-center gap-2 uppercase text-xs text-black dark:text-green-300">
+                      <span className="font-black flex items-center gap-2 uppercase text-xs text-black chrome:text-green-300">
                         {getDisplayIcon(comment.authorEmail) ? (
                           <img
                             src={`${getDisplayIcon(comment.authorEmail)}?_=${iconCacheBust}`}
                             alt="コメント投稿者アイコン"
-                            className="w-6 h-6 rounded-full object-cover border-2 border-black dark:border-green-400"
+                            className="w-6 h-6 rounded-full object-cover border-2 border-black chrome:border-green-400"
                           />
                         ) : (
-                          <div className="w-6 h-6 rounded-full bg-gray-300 border-2 border-black dark:border-green-400" />
+                          <div className="w-6 h-6 rounded-full bg-gray-300 border-2 border-black chrome:border-green-400" />
                         )}
                         {getDisplayName(comment.authorEmail, comment.author)}
                         {comment.editedAt && (
@@ -1128,19 +1128,19 @@ export default function TopicPage() {
                         <textarea
                           value={editingCommentText}
                           onChange={(e) => setEditingCommentText(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 chrome:border-slate-700 bg-slate-50 chrome:bg-slate-800 text-gray-900 chrome:text-slate-100 rounded-lg text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                           rows={3}
                         />
                         <div className="flex gap-2">
                           <button
                             onClick={() => editComment(comment.commentId)}
-                            className="px-3 py-1 bg-blue-500 text-white rounded-xs text-xs hover:bg-blue-600"
+                            className="px-3 py-1 bg-blue-500 text-white rounded-sm text-xs hover:bg-blue-600"
                           >
                             保存
                           </button>
                           <button
                             onClick={cancelEditingComment}
-                            className="px-3 py-1 bg-default-300 dark:bg-default-700 text-default-700 dark:text-slate-200 rounded-xs text-xs hover:bg-default-400 dark:hover:bg-default-600"
+                            className="px-3 py-1 bg-default-300 chrome:bg-default-700 text-default-700 chrome:text-slate-200 rounded-sm text-xs hover:bg-default-400 chrome:hover:bg-default-600"
                           >
                             キャンセル
                           </button>
@@ -1148,7 +1148,7 @@ export default function TopicPage() {
                       </div>
                     ) : (
                       <>
-                        <p className="text-black dark:text-green-100 mb-2 whitespace-pre-wrap font-semibold">{comment.text}</p>
+                        <p className="text-black chrome:text-green-100 mb-2 whitespace-pre-wrap font-semibold">{comment.text}</p>
                         <div className="flex gap-2">
                           <button
                             onClick={() => toggleCommentLike(comment.commentId)}
@@ -1187,13 +1187,13 @@ export default function TopicPage() {
 
           {/* 通常投稿の詳細画面ではコメントをその場で投稿可能にする */}
           {topic.isTopicPost !== 1 && (
-            <div className="pt-4 border-t-4 border-black dark:border-green-600">
+            <div className="pt-4 border-t-4 border-black chrome:border-green-600">
               <div className="flex gap-2">
                 <textarea
                   placeholder="コメントを入力..."
                   value={commentTexts[topic.id] || ""}
                   onChange={(e) => setCommentTexts({ ...commentTexts, [topic.id]: e.target.value })}
-                  className="flex-1 px-3 py-2 border-3 border-black dark:border-green-600 bg-white dark:bg-gray-900 dark:text-green-200 rounded-lg text-sm font-semibold focus:outline-hidden focus:ring-4 focus:ring-cyan-400 dark:focus:ring-green-500"
+                  className="flex-1 px-3 py-2 border-3 border-black chrome:border-green-600 bg-white chrome:bg-gray-900 chrome:text-green-200 rounded-lg text-sm font-semibold focus:outline-hidden focus:ring-4 focus:ring-cyan-400 chrome:focus:ring-green-500"
                   rows={2}
                 />
                 <button
@@ -1214,7 +1214,7 @@ export default function TopicPage() {
         {topic.isTopicPost === 1 && (
         <div className={aiSection({ theme: appTheme })}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-            <h3 className="text-2xl font-black uppercase tracking-wide text-black dark:text-purple-300">AI講評</h3>
+            <h3 className="text-2xl font-black uppercase tracking-wide text-black chrome:text-purple-300">AI講評</h3>
             <button
               onClick={generateAnalysis}
               disabled={analysisLoading || replies.length === 0}
@@ -1225,27 +1225,27 @@ export default function TopicPage() {
           </div>
 
           {!aiReadingEnabled && (
-            <p className="text-sm text-slate-500 dark:text-slate-200 mb-3">あなたの設定はOFFのため、あなたの投稿は講評対象から除外されます。</p>
+            <p className="text-sm text-slate-500 chrome:text-slate-200 mb-3">あなたの設定はOFFのため、あなたの投稿は講評対象から除外されます。</p>
           )}
 
           {replies.length === 0 && (
-            <p className="text-sm text-slate-500 dark:text-slate-200">投稿が集まると分析できます。</p>
+            <p className="text-sm text-slate-500 chrome:text-slate-200">投稿が集まると分析できます。</p>
           )}
 
           {analysisError && (
-            <p className="text-sm text-red-600 dark:text-red-400 mb-3">{analysisError}</p>
+            <p className="text-sm text-red-600 chrome:text-red-400 mb-3">{analysisError}</p>
           )}
 
           {analysisResult && (
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-100 mb-1">総評</p>
-                <p className="text-sm text-slate-600 dark:text-slate-100 whitespace-pre-wrap">{analysisResult.overview}</p>
+                <p className="text-sm font-semibold text-slate-700 chrome:text-slate-100 mb-1">総評</p>
+                <p className="text-sm text-slate-600 chrome:text-slate-100 whitespace-pre-wrap">{analysisResult.overview}</p>
               </div>
 
               <div>
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-100 mb-1">良かった点</p>
-                <ul className="list-disc pl-5 text-sm text-slate-600 dark:text-slate-100 space-y-1">
+                <p className="text-sm font-semibold text-slate-700 chrome:text-slate-100 mb-1">良かった点</p>
+                <ul className="list-disc pl-5 text-sm text-slate-600 chrome:text-slate-100 space-y-1">
                   {analysisResult.strengths?.map((item, idx) => (
                     <li key={`strength-${idx}`}>{item}</li>
                   ))}
@@ -1253,8 +1253,8 @@ export default function TopicPage() {
               </div>
 
               <div>
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-100 mb-1">改善提案</p>
-                <ul className="list-disc pl-5 text-sm text-slate-600 dark:text-slate-100 space-y-1">
+                <p className="text-sm font-semibold text-slate-700 chrome:text-slate-100 mb-1">改善提案</p>
+                <ul className="list-disc pl-5 text-sm text-slate-600 chrome:text-slate-100 space-y-1">
                   {analysisResult.suggestions?.map((item, idx) => (
                     <li key={`suggestion-${idx}`}>{item}</li>
                   ))}
@@ -1262,28 +1262,28 @@ export default function TopicPage() {
               </div>
 
               <div>
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-100 mb-2">投稿者ごとの講評</p>
+                <p className="text-sm font-semibold text-slate-700 chrome:text-slate-100 mb-2">投稿者ごとの講評</p>
                 <div className="space-y-2">
                   {analysisResult.authorFeedback?.map((item, idx) => (
-                    <div key={`author-${idx}`} className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
-                      <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{item.author}</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-100 mt-1">ほめる: {item.praise}</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-100 mt-1">批評: {item.critique}</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-100 mt-1">次の一歩: {item.nextStep}</p>
+                    <div key={`author-${idx}`} className="rounded-lg border border-slate-200 chrome:border-slate-700 p-3">
+                      <p className="text-sm font-bold text-slate-800 chrome:text-slate-100">{item.author}</p>
+                      <p className="text-sm text-slate-600 chrome:text-slate-100 mt-1">ほめる: {item.praise}</p>
+                      <p className="text-sm text-slate-600 chrome:text-slate-100 mt-1">批評: {item.critique}</p>
+                      <p className="text-sm text-slate-600 chrome:text-slate-100 mt-1">次の一歩: {item.nextStep}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
               <div>
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-100 mb-2">投稿ごとの講評</p>
+                <p className="text-sm font-semibold text-slate-700 chrome:text-slate-100 mb-2">投稿ごとの講評</p>
                 <div className="space-y-2">
                   {analysisResult.postFeedback?.map((item, idx) => (
-                    <div key={`post-${item.postId || idx}`} className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
-                      <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{item.title}</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-100 mt-1">ほめる: {item.praise}</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-100 mt-1">批評: {item.critique}</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-100 mt-1">次の一歩: {item.nextStep}</p>
+                    <div key={`post-${item.postId || idx}`} className="rounded-lg border border-slate-200 chrome:border-slate-700 p-3">
+                      <p className="text-sm font-bold text-slate-800 chrome:text-slate-100">{item.title}</p>
+                      <p className="text-sm text-slate-600 chrome:text-slate-100 mt-1">ほめる: {item.praise}</p>
+                      <p className="text-sm text-slate-600 chrome:text-slate-100 mt-1">批評: {item.critique}</p>
+                      <p className="text-sm text-slate-600 chrome:text-slate-100 mt-1">次の一歩: {item.nextStep}</p>
                     </div>
                   ))}
                 </div>
@@ -1302,8 +1302,8 @@ export default function TopicPage() {
             </h3>
             
             {isDeadlineExpired(topic.deadline) ? (
-              <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                <p className="text-red-600 dark:text-red-400 font-semibold flex items-center gap-2">
+              <div className="bg-red-50 chrome:bg-red-950/20 border border-red-200 chrome:border-red-800 rounded-lg p-4">
+                <p className="text-red-600 chrome:text-red-400 font-semibold flex items-center gap-2">
                   <TriangleAlert size={16} />
                   このお題の締め切りが過ぎているため、投稿できません
                 </p>
@@ -1315,10 +1315,10 @@ export default function TopicPage() {
                     type="file"
                     accept=".txt,.pdf,.docx"
                     onChange={handleFileChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-xs cursor-pointer"
+                    className="w-full px-4 py-2 border border-gray-300 chrome:border-slate-700 bg-white chrome:bg-slate-800 text-slate-900 chrome:text-slate-100 rounded-sm cursor-pointer"
                   />
-                  <p className="text-xs text-gray-500 dark:text-slate-200 mt-2">対応形式: テキスト (.txt), PDF, Word (.docx)</p>
-                  <p className="text-xs text-gray-400 dark:text-slate-300 mt-1">ファイルのタイトルと内容から自動で投稿が作成されます</p>
+                  <p className="text-xs text-gray-500 chrome:text-slate-200 mt-2">対応形式: テキスト (.txt), PDF, Word (.docx)</p>
+                  <p className="text-xs text-gray-400 chrome:text-slate-300 mt-1">ファイルのタイトルと内容から自動で投稿が作成されます</p>
                 </div>
 
                 {newPost.title && (
@@ -1337,7 +1337,7 @@ export default function TopicPage() {
                       <select
                         value={newPost.tag || "創作"}
                         onChange={(e) => setNewPost({ ...newPost, tag: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                       >
                         <option>創作</option>
                         <option>随筆</option>
@@ -1419,7 +1419,7 @@ export default function TopicPage() {
                           type="text"
                           value={editingPostTitle}
                           onChange={(e) => setEditingPostTitle(e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 chrome:border-slate-700 bg-slate-50 chrome:bg-slate-800 text-gray-900 chrome:text-slate-100 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                       <div>
@@ -1427,7 +1427,7 @@ export default function TopicPage() {
                         <textarea
                           value={editingPostBody}
                           onChange={(e) => setEditingPostBody(e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[200px]"
+                          className="w-full px-4 py-2 border border-gray-300 chrome:border-slate-700 bg-slate-50 chrome:bg-slate-800 text-gray-900 chrome:text-slate-100 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[200px]"
                         />
                       </div>
                       <div className="flex gap-4">
@@ -1439,7 +1439,7 @@ export default function TopicPage() {
                         </button>
                         <button
                           onClick={cancelEditingPost}
-                          className="px-4 py-2 bg-gray-300 dark:bg-slate-700 text-gray-700 dark:text-slate-200 rounded-lg font-semibold hover:bg-gray-400 dark:hover:bg-slate-600"
+                          className="px-4 py-2 bg-gray-300 chrome:bg-slate-700 text-gray-700 chrome:text-slate-200 rounded-lg font-semibold hover:bg-gray-400 chrome:hover:bg-slate-600"
                         >
                           キャンセル
                         </button>
@@ -1450,9 +1450,9 @@ export default function TopicPage() {
                   <>
                 {/* 投稿本体 */}
                 <div className="mb-4">
-                  <h4 className="text-xl font-black uppercase tracking-wide text-black dark:text-green-300 mb-3">{reply.title}</h4>
+                  <h4 className="text-xl font-black uppercase tracking-wide text-black chrome:text-green-300 mb-3">{reply.title}</h4>
                   <div 
-                      className="mb-4 overflow-x-auto border-3 border-black dark:border-green-700 rounded-xl p-4 bg-cyan-50 dark:bg-gray-950 relative group" 
+                      className="mb-4 overflow-x-auto border-3 border-black chrome:border-green-700 rounded-xl p-4 bg-cyan-50 chrome:bg-gray-950 relative group" 
                       onScroll={() => handleBodyScroll(reply.id)}
                       onWheel={(event) => {
                         if (event.shiftKey && showHorizontalHint) {
@@ -1462,11 +1462,11 @@ export default function TopicPage() {
                     style={{ direction: 'rtl' }}
                   >
                       {showHorizontalHint && scrollingPostId !== reply.id && (
-                        <div className="hidden group-hover:flex absolute top-2 left-2 bg-cyan-600 dark:bg-green-600 text-white dark:text-black text-xs px-3 py-2 rounded-lg font-black uppercase pointer-events-none z-10 border-2 border-black dark:border-green-500">
+                        <div className="hidden group-hover:flex absolute top-2 left-2 bg-cyan-600 chrome:bg-green-600 text-white chrome:text-black text-xs px-3 py-2 rounded-lg font-black uppercase pointer-events-none z-10 border-2 border-black chrome:border-green-500">
                           Shift + スクロールで横スクロールできます
                         </div>
                       )}
-                      <p className="text-black dark:text-green-200 whitespace-pre-wrap font-semibold" style={{ writingMode: 'vertical-rl', height: '400px', minWidth: 'fit-content', direction: 'ltr' }}>{reply.body}</p>
+                      <p className="text-black chrome:text-green-200 whitespace-pre-wrap font-semibold" style={{ writingMode: 'vertical-rl', height: '400px', minWidth: 'fit-content', direction: 'ltr' }}>{reply.body}</p>
                   </div>
                   <div className="flex items-center justify-between text-sm font-bold mb-4">
                     <span className="flex items-center gap-2">
@@ -1474,12 +1474,12 @@ export default function TopicPage() {
                         <img
                           src={`${getDisplayIcon(reply.authorEmail)}?_=${iconCacheBust}`}
                           alt="投稿者アイコン"
-                          className="w-7 h-7 rounded-full object-cover border-2 border-black dark:border-green-400"
+                          className="w-7 h-7 rounded-full object-cover border-2 border-black chrome:border-green-400"
                         />
                       ) : (
-                        <div className="w-7 h-7 rounded-full bg-gray-300 border-2 border-black dark:border-green-400" />
+                        <div className="w-7 h-7 rounded-full bg-gray-300 border-2 border-black chrome:border-green-400" />
                       )}
-                      <span className="uppercase font-black text-black dark:text-green-300">{getDisplayName(reply.authorEmail, reply.author)}</span>
+                      <span className="uppercase font-black text-black chrome:text-green-300">{getDisplayName(reply.authorEmail, reply.author)}</span>
                     </span>
                     <span className="text-xs">{new Date(reply.createdAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
@@ -1553,15 +1553,15 @@ export default function TopicPage() {
                       {reply.comments.sort((a, b) => a.createdAt - b.createdAt).map((comment) => (
                         <div key={comment.commentId} className={commentBubble({ theme: appTheme })}>
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-black flex items-center gap-2 uppercase text-xs text-black dark:text-green-300">
+                            <span className="font-black flex items-center gap-2 uppercase text-xs text-black chrome:text-green-300">
                               {getDisplayIcon(comment.authorEmail) ? (
                                 <img
                                   src={`${getDisplayIcon(comment.authorEmail)}?_=${iconCacheBust}`}
                                   alt="コメント投稿者アイコン"
-                                  className="w-6 h-6 rounded-full object-cover border-2 border-black dark:border-green-400"
+                                  className="w-6 h-6 rounded-full object-cover border-2 border-black chrome:border-green-400"
                                 />
                               ) : (
-                                <div className="w-6 h-6 rounded-full bg-gray-300 border-2 border-black dark:border-green-400" />
+                                <div className="w-6 h-6 rounded-full bg-gray-300 border-2 border-black chrome:border-green-400" />
                               )}
                               {getDisplayName(comment.authorEmail, comment.author)}
                               {comment.editedAt && (
@@ -1577,19 +1577,19 @@ export default function TopicPage() {
                               <textarea
                                 value={editingCommentText}
                                 onChange={(e) => setEditingCommentText(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border border-gray-300 chrome:border-slate-700 bg-slate-50 chrome:bg-slate-800 text-gray-900 chrome:text-slate-100 rounded-lg text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                                 rows={3}
                               />
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => editComment(comment.commentId)}
-                                  className="px-3 py-1 bg-blue-500 text-white rounded-xs text-xs hover:bg-blue-600"
+                                  className="px-3 py-1 bg-blue-500 text-white rounded-sm text-xs hover:bg-blue-600"
                                 >
                                   保存
                                 </button>
                                 <button
                                   onClick={cancelEditingComment}
-                                  className="px-3 py-1 bg-default-300 dark:bg-default-700 text-default-700 dark:text-slate-200 rounded-xs text-xs hover:bg-default-400 dark:hover:bg-default-600"
+                                  className="px-3 py-1 bg-default-300 chrome:bg-default-700 text-default-700 chrome:text-slate-200 rounded-sm text-xs hover:bg-default-400 chrome:hover:bg-default-600"
                                 >
                                   キャンセル
                                 </button>
@@ -1597,7 +1597,7 @@ export default function TopicPage() {
                             </div>
                           ) : (
                             <>
-                              <p className="text-black dark:text-green-100 mb-2 whitespace-pre-wrap font-semibold">{comment.text}</p>
+                              <p className="text-black chrome:text-green-100 mb-2 whitespace-pre-wrap font-semibold">{comment.text}</p>
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => toggleCommentLike(comment.commentId)}
@@ -1635,13 +1635,13 @@ export default function TopicPage() {
                 )}
 
                 {/* コメント入力フォーム */}
-                <div className="pt-4 border-t-4 border-black dark:border-green-600">
+                <div className="pt-4 border-t-4 border-black chrome:border-green-600">
                   <div className="flex gap-2">
                     <textarea
                       placeholder="コメントを入力..."
                       value={commentTexts[reply.id] || ""}
                       onChange={(e) => setCommentTexts({ ...commentTexts, [reply.id]: e.target.value })}
-                      className="flex-1 px-3 py-2 border-3 border-black dark:border-green-600 bg-white dark:bg-gray-900 dark:text-green-200 rounded-lg text-sm font-semibold focus:outline-hidden focus:ring-4 focus:ring-cyan-400 dark:focus:ring-green-500"
+                      className="flex-1 px-3 py-2 border-3 border-black chrome:border-green-600 bg-white chrome:bg-gray-900 chrome:text-green-200 rounded-lg text-sm font-semibold focus:outline-hidden focus:ring-4 focus:ring-cyan-400 chrome:focus:ring-green-500"
                       rows={2}
                     />
                     <button

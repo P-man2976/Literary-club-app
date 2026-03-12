@@ -1,8 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=Noto+Sans+JP:wght@300;400;700;900&family=Noto+Serif+JP:wght@500;700&family=Orbitron:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap') layer(base);
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=Noto+Sans+JP:wght@300;400;700;900&family=Noto+Serif+JP:wght@500;700&family=Orbitron:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap')
+layer(base);
 
 @import 'tailwindcss';
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant chrome (&:is(.chrome *));
+@custom-variant street (&:is(.street *));
+@custom-variant library (&:is(.library *));
 
 @theme {
   --color-octo-dark: #0b1a1a;
@@ -15,30 +18,88 @@
   --color-jsr-blue: #00bfff;
   --color-jsr-black: #000000;
 
+  /* === STREET テーマ === */
+  --color-street-bg: #FDFD96;
+  --color-street-text: #000000;
+  --color-street-accent: #FF8C00;
+  --color-street-border: #000000;
+  --color-street-card-border: #000000;
+
+  /* === CHROME テーマ === */
+  --color-chrome-bg: #000000;
+  --color-chrome-surface: #060606;
+  --color-chrome-surface-alt: #070707;
+  --color-chrome-surface-dark: #050505;
+  --color-chrome-button-bg: #0d0d0f;
+  --color-chrome-card-bg: #0a0a0b;
+  --color-chrome-text: #ffffff;
+  --color-chrome-text-muted: #f2f2f2;
+  --color-chrome-text-subtle: #f8f8f8;
+  --color-chrome-text-dim: #e6e6e6;
+  --color-chrome-text-placeholder: #d8d8d8;
+  --color-chrome-border: #bcbcbc;
+  --color-chrome-border-alt: #c4c4c4;
+  --color-chrome-border-light: #c7c7c7;
+  --color-chrome-border-modal: #c9c9c9;
+  --color-chrome-border-detail: #bdbdbd;
+  --color-chrome-accent: #6eff39;
+  --color-chrome-gradient-start: #ffffff;
+  --color-chrome-gradient-mid: #cfcfcf;
+  --color-chrome-gradient-end: #f7f7f7;
+
+  /* === LIBRARY テーマ === */
+  --color-library-bg: #F2F0E9;
+  --color-library-surface: #ECE7DB;
+  --color-library-cream: #F8F5EE;
+  --color-library-text: #1A1A1A;
+  --color-library-border: #8B7355;
+  --color-library-shadow-dark: rgba(163, 141, 115, 0.2);
+  --color-library-shadow-light: rgba(255, 255, 255, 0.6);
+
   --animate-in: fade-in 150ms ease-out;
   --animate-out: fade-out 150ms ease-in;
 
   @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
   @keyframes fade-out {
-    from { opacity: 1; }
-    to { opacity: 0; }
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
   }
   @keyframes zoom-in-95 {
-    from { transform: scale(0.95); }
-    to { transform: scale(1); }
+    from {
+      transform: scale(0.95);
+    }
+    to {
+      transform: scale(1);
+    }
   }
   @keyframes zoom-out-95 {
-    from { transform: scale(1); }
-    to { transform: scale(0.95); }
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(0.95);
+    }
   }
 }
 
 /*
-  Tailwind v4 compat: v3 では border-color のデフォルトが currentColor だったが、
-  v4 ではグレーに変わるため、既存UIの見た目を維持するために currentColor に戻す。
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
 */
 @layer base {
   *,
@@ -46,7 +107,7 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: currentColor;
+    border-color: var(--color-gray-200, currentcolor);
   }
 }
 
@@ -55,14 +116,14 @@
 }
 
 /* ジェットセットラジオ風の背景 */
-html.light body {
-  background: #FDFD96;
+html.street body {
+  background: var(--color-street-bg);
   background-attachment: fixed;
-  color: #000000;
+  color: var(--color-street-text);
   position: relative;
 }
 
-html.light body::before {
+html.street body::before {
   content: '';
   position: fixed;
   top: 0;
@@ -79,27 +140,27 @@ html.light body::before {
   z-index: 0;
 }
 
-html.dark body {
-  background: #000000;
+html.chrome body {
+  background: var(--color-chrome-bg);
   background-attachment: fixed;
-  color: #FFFFFF;
+  color: var(--color-chrome-text);
   position: relative;
 }
 
-html.dark body,
-html.dark button,
-html.dark h1,
-html.dark h2,
-html.dark h3,
-html.dark h4 {
+html.chrome body,
+html.chrome button,
+html.chrome h1,
+html.chrome h2,
+html.chrome h3,
+html.chrome h4 {
   font-family: 'Orbitron', 'Noto Sans JP', sans-serif;
   font-weight: 500;
 }
 
 html.library body {
-  background: #F2F0E9;
+  background: var(--color-library-bg);
   background-attachment: fixed;
-  color: #1A1A1A;
+  color: var(--color-library-text);
   position: relative;
   font-family: 'Noto Serif JP', 'Yu Mincho', serif;
 }
@@ -124,7 +185,7 @@ html.library h3,
 html.library h4,
 html.library h5,
 html.library h6 {
-  color: #1A1A1A !important;
+  color: var(--color-library-text);
   font-family: 'Noto Serif JP', 'Yu Mincho', serif;
   letter-spacing: 0.01em;
   font-style: normal;
@@ -142,15 +203,15 @@ html.library [class*="bg-orange"],
 html.library [class*="bg-purple"],
 html.library [class*="bg-green"],
 html.library [class*="bg-blue"] {
-  background: #ECE7DB !important;
+  background: var(--color-library-surface);
 }
 
 html.library [class*="bg-gradient"],
 html.library [class*="from-"],
 html.library [class*="to-"],
 html.library [class*="via-"] {
-  background-image: none !important;
-  background: #ECE7DB !important;
+  background-image: none;
+  background: var(--color-library-surface);
 }
 
 html.library [class*="text-pink"],
@@ -161,7 +222,7 @@ html.library [class*="text-purple"],
 html.library [class*="text-green"],
 html.library [class*="text-blue"],
 html.library [class*="text-white"] {
-  color: #1A1A1A !important;
+  color: var(--color-library-text);
 }
 
 html.library [class*="border-white"],
@@ -172,7 +233,7 @@ html.library [class*="border-orange"],
 html.library [class*="border-purple"],
 html.library [class*="border-green"],
 html.library [class*="border-blue"] {
-  border-color: #8B7355 !important;
+  border-color: var(--color-library-border);
 }
 
 html.library .shake-hover:hover {
@@ -185,40 +246,40 @@ html.library .spray-hover::before {
 }
 
 html.library [class*="uppercase"] {
-  text-transform: none !important;
+  text-transform: none;
 }
 
 /* LIBRARY: お題決定モーダルもニューモーフィズム適用 */
 html.library .library-topic-modal {
-  background: #F8F5EE !important;
+  background: var(--color-library-cream);
   box-shadow: 
     6px 6px 12px rgba(163, 141, 115, 0.2),
-    -6px -6px 12px rgba(255, 255, 255, 0.6) !important;
-  border-radius: 12px !important;
+    -6px -6px 12px rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
 }
 
 html.library .library-topic-modal-header {
-  background: #ECE7DB !important;
-  border-radius: 12px 12px 0 0 !important;
+  background: var(--color-library-surface);
+  border-radius: 12px 12px 0 0;
 }
 
 html.library .library-topic-modal-header h2,
 html.library .library-topic-modal-header button {
-  color: #1A1A1A !important;
+  color: var(--color-library-text);
 }
 
 /* LIBRARY: 全ページで縁取りをなくす */
 html.library *,
 html.library *::before,
 html.library *::after {
-  border-width: 0 !important;
-  border-color: transparent !important;
-  border-style: none !important;
+  border-width: 0;
+  border-color: transparent;
+  border-style: none;
 }
 
 /* LIBRARY: すべての角を丸くする */
 html.library * {
-  border-radius: 12px !important;
+  border-radius: 12px;
 }
 
 /* LIBRARY: ニューモーフィズム風の柔らかい立体感を適用 */
@@ -240,7 +301,7 @@ html.library div[class*="bg-red"],
 html.library div[class*="bg-indigo"] {
   box-shadow: 
     6px 6px 12px rgba(163, 141, 115, 0.2),
-    -6px -6px 12px rgba(255, 255, 255, 0.6) !important;
+    -6px -6px 12px rgba(255, 255, 255, 0.6);
 }
 
 /* ボタン - 通常時 */
@@ -249,8 +310,8 @@ html.library [type="button"]:not(:disabled),
 html.library a[role="button"] {
   box-shadow: 
     4px 4px 8px rgba(163, 141, 115, 0.15),
-    -4px -4px 8px rgba(255, 255, 255, 0.5) !important;
-  transform: translateY(0) !important;
+    -4px -4px 8px rgba(255, 255, 255, 0.5);
+  transform: translateY(0);
 }
 
 /* ボタン - ホバー時 */
@@ -259,7 +320,7 @@ html.library [type="button"]:not(:disabled):hover,
 html.library a[role="button"]:hover {
   box-shadow: 
     5px 5px 10px rgba(163, 141, 115, 0.18),
-    -5px -5px 10px rgba(255, 255, 255, 0.6) !important;
+    -5px -5px 10px rgba(255, 255, 255, 0.6);
 }
 
 /* ボタン - アクティブ時（押下） */
@@ -268,7 +329,7 @@ html.library [type="button"]:active:not(:disabled),
 html.library a[role="button"]:active {
   box-shadow: 
     inset 3px 3px 6px rgba(163, 141, 115, 0.25),
-    inset -2px -2px 5px rgba(255, 255, 255, 0.3) !important;
+    inset -2px -2px 5px rgba(255, 255, 255, 0.3);
 }
 
 /* 入力欄 - 内側影で凹んだ印象 */
@@ -277,42 +338,42 @@ html.library textarea,
 html.library select {
   box-shadow: 
     inset 2px 2px 5px rgba(163, 141, 115, 0.15),
-    inset -2px -2px 5px rgba(255, 255, 255, 0.5) !important;
+    inset -2px -2px 5px rgba(255, 255, 255, 0.5);
 }
 
 /* アイコン画像だけは円形を維持 */
 html.library img.rounded-full {
-  border-radius: 9999px !important;
+  border-radius: 9999px;
 }
 
 /* CHROMEモード: 鏡面シルバー + ホログラム反射 */
-html.dark h1,
-html.dark h2,
-html.dark h3 {
-  color: #ffffff !important;
-  background: none !important;
-  text-shadow: none !important;
+html.chrome h1,
+html.chrome h2,
+html.chrome h3 {
+  color: var(--color-chrome-text);
+  background: none;
+  text-shadow: none;
   letter-spacing: 0.01em;
 }
 
 /* CHROME: 英数字を太く */
-html.dark {
+html.chrome {
   font-weight: 500;
 }
 
-html.dark .font-semibold {
-  font-weight: 600 !important;
+html.chrome .font-semibold {
+  font-weight: 600;
 }
 
-html.dark .font-bold {
-  font-weight: 700 !important;
+html.chrome .font-bold {
+  font-weight: 700;
 }
 
-html.dark .font-black {
-  font-weight: 800 !important;
+html.chrome .font-black {
+  font-weight: 800;
 }
 
-html.dark body::before {
+html.chrome body::before {
   content: '';
   position: fixed;
   top: 0;
@@ -342,103 +403,97 @@ html.dark body::before {
 }
 
 /* ライトモード時：太い黒枠でJSR風に */
-html.light .jsr-card {
-  border: 3px solid #000000;
+html.street .jsr-card {
+  border: 3px solid var(--color-street-border);
   filter: drop-shadow(6px 6px 0px rgba(0, 0, 0, 0.9));
   transform: rotate(-1deg);
 }
 
 /* STREET: 一律ではなくランダムに重なる傾き */
-html.light .jsr-card:nth-of-type(4n + 1) {
+html.street .jsr-card:nth-of-type(4n + 1) {
   transform: rotate(-1.8deg) translateX(-2px);
 }
 
-html.light .jsr-card:nth-of-type(4n + 2) {
+html.street .jsr-card:nth-of-type(4n + 2) {
   transform: rotate(0.9deg) translateX(1px);
 }
 
-html.light .jsr-card:nth-of-type(4n + 3) {
+html.street .jsr-card:nth-of-type(4n + 3) {
   transform: rotate(-0.4deg) translateX(-1px);
 }
 
-html.light .jsr-card:nth-of-type(4n) {
+html.street .jsr-card:nth-of-type(4n) {
   transform: rotate(1.4deg) translateX(2px);
 }
 
-html.dark .jsr-card {
-  border: 1px solid #bcbcbc !important;
-  background: #0a0a0b;
+html.chrome .jsr-card {
+  border: 1px solid var(--color-chrome-border);
+  background: var(--color-chrome-card-bg);
   filter: none;
   box-shadow: none;
-  border-radius: 0 !important;
+  border-radius: 0;
   clip-path: none;
 }
 
-html.dark button {
-  border: 1px solid #bcbcbc !important;
-  background: #0d0d0f !important;
-  color: #f8f8f8 !important;
+html.chrome button {
+  border: 1px solid var(--color-chrome-border);
+  background: var(--color-chrome-button-bg);
+  color: var(--color-chrome-text-subtle);
   text-shadow: none;
   box-shadow: none;
-  border-radius: 0 !important;
+  border-radius: 0;
   clip-path: none;
 }
 
 /* CHROME: 文字は真っ白 + 細めウェイト */
-html.dark h1,
-html.dark h2,
-html.dark h3,
-html.dark h4,
-html.dark h5,
-html.dark h6,
-html.dark p,
-html.dark span,
-html.dark a,
-html.dark li,
-html.dark label,
-html.dark small,
-html.dark strong,
-html.dark em {
-  color: #ffffff !important;
-  background: none !important;
-  -webkit-text-fill-color: #ffffff !important;
-  font-weight: 500 !important;
+html.chrome h1,
+html.chrome h2,
+html.chrome h3,
+html.chrome h4,
+html.chrome h5,
+html.chrome h6,
+html.chrome p,
+html.chrome span,
+html.chrome a,
+html.chrome li,
+html.chrome label,
+html.chrome small,
+html.chrome strong,
+html.chrome em {
+  color: var(--color-chrome-text);
+  background: none;
+  -webkit-text-fill-color: var(--color-chrome-text);
+  font-weight: 500;
 }
 
 /* 黒背景での可読性確保: ボタン文字は常に白 */
-html.dark button,
-html.dark button * {
-  color: #ffffff !important;
-  background: none !important;
-  -webkit-text-fill-color: #ffffff !important;
-  text-shadow: none !important;
+html.chrome button,
+html.chrome button * {
+  color: var(--color-chrome-text);
+  background: none;
+  -webkit-text-fill-color: var(--color-chrome-text);
+  text-shadow: none;
 }
 
-html.dark input,
-html.dark textarea,
-html.dark select,
-html.dark option {
-  color: #f2f2f2 !important;
-  -webkit-text-fill-color: #f2f2f2;
+html.chrome input,
+html.chrome textarea,
+html.chrome select,
+html.chrome option {
+  color: var(--color-chrome-text-muted);
+  -webkit-text-fill-color: var(--color-chrome-text-muted);
 }
 
-html.dark svg {
-  color: #e6e6e6 !important;
+html.chrome svg {
+  color: var(--color-chrome-text-dim);
 }
 
-html.dark ::placeholder {
-  color: #d8d8d8 !important;
-}
-
-html.dark [class*="dark:border-green"],
-html.dark [class*="dark:border-cyan"],
-html.dark [class*="dark:border-pink"] {
-  border-color: #c4c4c4 !important;
+html.chrome ::placeholder {
+  color: var(--color-chrome-text-placeholder);
 }
 
 /* ごく限定的なY2K差し色（蛍光グリーン） */
-html.dark .chrome-acid {
-  color: #6eff39 !important;
+html.chrome .chrome-acid {
+  color: var(--color-chrome-accent);
 }
 
 .jsr-card:hover {
@@ -453,7 +508,7 @@ html.dark .chrome-acid {
 }
 
 /* ライトモード限定: カードをモインと拡大して元に戻す */
-html.light .jsr-card:hover {
+html.street .jsr-card:hover {
   transform: rotate(-1deg);
   animation: boing-card 0.22s ease-out 1;
   filter: drop-shadow(6px 6px 0px rgba(0, 0, 0, 0.88));
@@ -468,11 +523,11 @@ html.light .jsr-card:hover {
   display: inline-block;
 }
 
-html.light .themed-icon-emoji {
+html.street .themed-icon-emoji {
   display: inline-block;
 }
 
-html.light .themed-icon-svg {
+html.street .themed-icon-svg {
   display: none;
 }
 
@@ -495,22 +550,22 @@ html.light .themed-icon-svg {
 }
 
 /* CHROMEモード時、shake-hoverを無効化して金属ハイライトに変更 */
-html.dark .shake-hover:hover {
+html.chrome .shake-hover:hover {
   animation: none;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.42),
               0 0 0 2px rgba(226,226,226,0.58);
   transition: box-shadow 0.3s ease;
 }
 
-html.dark .jsr-card:hover,
-html.dark button:hover {
-  transform: scale(1.015) !important;
-  animation: none !important;
-  filter: none !important;
-  box-shadow: none !important;
+html.chrome .jsr-card:hover,
+html.chrome button:hover {
+  transform: scale(1.015);
+  animation: none;
+  filter: none;
+  box-shadow: none;
 }
 
-html.dark .spray-hover::before {
+html.chrome .spray-hover::before {
   display: none;
 }
 
@@ -554,29 +609,29 @@ html.dark .spray-hover::before {
 
 /* 太字フォント強制 + 斜体でふざけた感じに */
 h1, h2, h3, h4, h5, h6, button, .font-bold {
-  font-weight: 900 !important;
+  font-weight: 900;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   font-style: italic;
 }
 
 /* ライトモード時のアクセントカラー */
-html.light h1,
-html.light h2,
-html.light h3 {
-  color: #FF8C00;
+html.street h1,
+html.street h2,
+html.street h3 {
+  color: var(--color-street-accent);
   text-shadow: 2px 2px 0px #000000;
 }
 
-html.light button {
-  border: 3px solid #000000;
+html.street button {
+  border: 3px solid var(--color-street-border);
 }
 
 /* ヘッダーのロゴはライトモードでも重なり影を無効化 */
-html.light .site-title,
-html.light .site-title span {
-  color: inherit !important;
-  text-shadow: none !important;
+html.street .site-title,
+html.street .site-title span {
+  color: inherit;
+  text-shadow: none;
 }
 
 /* 投稿本文など、斜体を適用しない要素 */
@@ -586,24 +641,24 @@ textarea,
 input[type="text"],
 input[type="email"],
 input[type="password"] {
-  font-style: normal !important;
+  font-style: normal;
 }
 
 /* CHROME: エッジの硬い反射を強調 */
-html.dark .border-3,
-html.dark .border-4 {
+html.chrome .border-3,
+html.chrome .border-4 {
   box-shadow: none;
 }
 
 /* CHROME: タブアイコンを液体金属調に */
-html.dark .chrome-tab-icon-wrap {
+html.chrome .chrome-tab-icon-wrap {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-html.dark .chrome-tab-icon-wrap::before {
+html.chrome .chrome-tab-icon-wrap::before {
   content: '';
   position: absolute;
   inset: -5px;
@@ -612,166 +667,160 @@ html.dark .chrome-tab-icon-wrap::before {
   pointer-events: none;
 }
 
-html.dark .chrome-tab-icon {
-  color: #f5f5f5 !important;
+html.chrome .chrome-tab-icon {
+  color: var(--color-chrome-text);
   filter: drop-shadow(0 0 1px rgba(255,255,255,0.85)) drop-shadow(0 0 6px rgba(255,255,255,0.18));
 }
 
 /* CHROME: 設定トグルは白黒で明確に */
-html.dark .chrome-toggle {
-  border: 1px solid #ffffff !important;
+html.chrome .chrome-toggle {
+  border: 1px solid var(--color-chrome-text);
 }
 
-html.dark .chrome-toggle-on {
-  background: #ffffff !important;
+html.chrome .chrome-toggle-on {
+  background: var(--color-chrome-text);
 }
 
-html.dark .chrome-toggle-off {
-  background: #000000 !important;
+html.chrome .chrome-toggle-off {
+  background: var(--color-chrome-bg);
 }
 
-html.dark .chrome-toggle-on .chrome-toggle-knob {
-  background: #000000 !important;
+html.chrome .chrome-toggle-on .chrome-toggle-knob {
+  background: var(--color-chrome-bg);
 }
 
-html.dark .chrome-toggle-off .chrome-toggle-knob {
-  background: #ffffff !important;
+html.chrome .chrome-toggle-off .chrome-toggle-knob {
+  background: var(--color-chrome-text);
 }
 
 /* CHROME: 使用色を黒/液体金属/白系に限定 */
-html.dark [class*="bg-pink"],
-html.dark [class*="bg-purple"],
-html.dark [class*="bg-cyan"],
-html.dark [class*="bg-blue"],
-html.dark [class*="bg-green"],
-html.dark [class*="bg-yellow"],
-html.dark [class*="bg-orange"],
-html.dark [class*="bg-red"],
-html.dark [class*="bg-emerald"],
-html.dark [class*="bg-indigo"],
-html.dark [class*="bg-violet"],
-html.dark [class*="bg-sky"],
-html.dark [class*="bg-lime"],
-html.dark [class*="bg-rose"],
-html.dark [class*="dark:bg-"] {
-  background: #060606 !important;
+html.chrome [class*="bg-pink"],
+html.chrome [class*="bg-purple"],
+html.chrome [class*="bg-cyan"],
+html.chrome [class*="bg-blue"],
+html.chrome [class*="bg-green"],
+html.chrome [class*="bg-yellow"],
+html.chrome [class*="bg-orange"],
+html.chrome [class*="bg-red"],
+html.chrome [class*="bg-emerald"],
+html.chrome [class*="bg-indigo"],
+html.chrome [class*="bg-violet"],
+html.chrome [class*="bg-sky"],
+html.chrome [class*="bg-lime"],
+html.chrome [class*="bg-rose"] {
+  background: var(--color-chrome-surface);
 }
 
-html.dark [class*="text-pink"],
-html.dark [class*="text-purple"],
-html.dark [class*="text-cyan"],
-html.dark [class*="text-blue"],
-html.dark [class*="text-green"],
-html.dark [class*="text-yellow"],
-html.dark [class*="text-orange"],
-html.dark [class*="text-red"],
-html.dark [class*="text-emerald"],
-html.dark [class*="text-indigo"],
-html.dark [class*="text-violet"],
-html.dark [class*="text-sky"],
-html.dark [class*="text-lime"],
-html.dark [class*="text-rose"],
-html.dark [class*="dark:text-"] {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  background: none !important;
+html.chrome [class*="text-pink"],
+html.chrome [class*="text-purple"],
+html.chrome [class*="text-cyan"],
+html.chrome [class*="text-blue"],
+html.chrome [class*="text-green"],
+html.chrome [class*="text-yellow"],
+html.chrome [class*="text-orange"],
+html.chrome [class*="text-red"],
+html.chrome [class*="text-emerald"],
+html.chrome [class*="text-indigo"],
+html.chrome [class*="text-violet"],
+html.chrome [class*="text-sky"],
+html.chrome [class*="text-lime"],
+html.chrome [class*="text-rose"] {
+  color: var(--color-chrome-text);
+  -webkit-text-fill-color: var(--color-chrome-text);
+  background: none;
 }
 
-html.dark [class*="border-pink"],
-html.dark [class*="border-purple"],
-html.dark [class*="border-cyan"],
-html.dark [class*="border-blue"],
-html.dark [class*="border-green"],
-html.dark [class*="border-yellow"],
-html.dark [class*="border-orange"],
-html.dark [class*="border-red"],
-html.dark [class*="border-emerald"],
-html.dark [class*="border-indigo"],
-html.dark [class*="border-violet"],
-html.dark [class*="border-sky"],
-html.dark [class*="border-lime"],
-html.dark [class*="border-rose"],
-html.dark [class*="dark:border-"] {
-  border-color: #c7c7c7 !important;
+html.chrome [class*="border-pink"],
+html.chrome [class*="border-purple"],
+html.chrome [class*="border-cyan"],
+html.chrome [class*="border-blue"],
+html.chrome [class*="border-green"],
+html.chrome [class*="border-yellow"],
+html.chrome [class*="border-orange"],
+html.chrome [class*="border-red"],
+html.chrome [class*="border-emerald"],
+html.chrome [class*="border-indigo"],
+html.chrome [class*="border-violet"],
+html.chrome [class*="border-sky"],
+html.chrome [class*="border-lime"],
+html.chrome [class*="border-rose"] {
+  border-color: var(--color-chrome-border-light);
 }
 
 /* CHROME: お題決定モーダルを無彩色に統一 */
-html.dark .library-topic-modal {
-  background: #050505 !important;
-  border: 1px solid #c9c9c9 !important;
-  box-shadow: none !important;
+html.chrome .library-topic-modal {
+  background: var(--color-chrome-surface-dark);
+  border: 1px solid var(--color-chrome-border-modal);
+  box-shadow: none;
 }
 
-html.dark .library-topic-modal-header {
-  background: #050505 !important;
-  border-bottom: 1px solid #c9c9c9 !important;
+html.chrome .library-topic-modal-header {
+  background: var(--color-chrome-surface-dark);
+  border-bottom: 1px solid var(--color-chrome-border-modal);
 }
 
-html.dark .library-topic-modal,
-html.dark .library-topic-modal * {
-  border-color: #bdbdbd !important;
+html.chrome .library-topic-modal,
+html.chrome .library-topic-modal * {
+  border-color: var(--color-chrome-border-detail);
 }
 
-html.dark .library-topic-modal [class*="bg-"],
-html.dark .library-topic-modal [class*="dark:bg-"] {
-  background: #070707 !important;
+html.chrome .library-topic-modal [class*="bg-"] {
+  background: var(--color-chrome-surface-alt);
 }
 
-html.dark .library-topic-modal h1,
-html.dark .library-topic-modal h2,
-html.dark .library-topic-modal h3,
-html.dark .library-topic-modal p,
-html.dark .library-topic-modal span,
-html.dark .library-topic-modal label,
-html.dark .library-topic-modal button {
+html.chrome .library-topic-modal h1,
+html.chrome .library-topic-modal h2,
+html.chrome .library-topic-modal h3,
+html.chrome .library-topic-modal p,
+html.chrome .library-topic-modal span,
+html.chrome .library-topic-modal label,
+html.chrome .library-topic-modal button {
   background: linear-gradient(180deg, #ffffff 0%, #cfcfcf 45%, #f7f7f7 100%);
   -webkit-background-clip: text;
   background-clip: text;
-  color: transparent !important;
+  color: transparent;
 }
 
 /* CHROME: 投稿詳細シーンの灰色/カラフルを排除 */
-html.dark .topic-detail-scene [class*="bg-gray"],
-html.dark .topic-detail-scene [class*="bg-slate"],
-html.dark .topic-detail-scene [class*="bg-yellow"],
-html.dark .topic-detail-scene [class*="bg-cyan"],
-html.dark .topic-detail-scene [class*="bg-pink"],
-html.dark .topic-detail-scene [class*="bg-red"],
-html.dark .topic-detail-scene [class*="bg-blue"],
-html.dark .topic-detail-scene [class*="bg-green"],
-html.dark .topic-detail-scene [class*="dark:bg-"] {
-  background: #070707 !important;
+html.chrome .topic-detail-scene [class*="bg-gray"],
+html.chrome .topic-detail-scene [class*="bg-slate"],
+html.chrome .topic-detail-scene [class*="bg-yellow"],
+html.chrome .topic-detail-scene [class*="bg-cyan"],
+html.chrome .topic-detail-scene [class*="bg-pink"],
+html.chrome .topic-detail-scene [class*="bg-red"],
+html.chrome .topic-detail-scene [class*="bg-blue"],
+html.chrome .topic-detail-scene [class*="bg-green"] {
+  background: var(--color-chrome-surface-alt);
 }
 
-html.dark .topic-detail-scene [class*="border-"],
-html.dark .topic-detail-scene [class*="dark:border-"] {
-  border-color: #bdbdbd !important;
+html.chrome .topic-detail-scene [class*="border-"] {
+  border-color: var(--color-chrome-border-detail);
 }
 
-html.dark .topic-detail-scene h1,
-html.dark .topic-detail-scene h2,
-html.dark .topic-detail-scene h3,
-html.dark .topic-detail-scene h4,
-html.dark .topic-detail-scene p,
-html.dark .topic-detail-scene span,
-html.dark .topic-detail-scene label,
-html.dark .topic-detail-scene button,
-html.dark .topic-detail-scene a {
+html.chrome .topic-detail-scene h1,
+html.chrome .topic-detail-scene h2,
+html.chrome .topic-detail-scene h3,
+html.chrome .topic-detail-scene h4,
+html.chrome .topic-detail-scene p,
+html.chrome .topic-detail-scene span,
+html.chrome .topic-detail-scene label,
+html.chrome .topic-detail-scene button,
+html.chrome .topic-detail-scene a {
   background: linear-gradient(180deg, #ffffff 0%, #cfcfcf 45%, #f7f7f7 100%);
   -webkit-background-clip: text;
   background-clip: text;
-  color: transparent !important;
+  color: transparent;
 }
 
 /* CHROMEは斜体より硬質な直線フォントを優先 */
-html.dark h1,
-html.dark h2,
-html.dark h3,
-html.dark h4,
-html.dark h5,
-html.dark h6,
-html.dark button {
-  font-style: normal !important;
-  text-transform: none !important;
-  font-weight: 500 !important;
+html.chrome h1,
+html.chrome h2,
+html.chrome h3,
+html.chrome h4,
+html.chrome h5,
+html.chrome h6,
+html.chrome button {
+  font-style: normal;
+  text-transform: none;
+  font-weight: 500;
 }

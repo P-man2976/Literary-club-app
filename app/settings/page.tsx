@@ -213,24 +213,24 @@ export default function SettingsPage() {
                   </Button>
                   <div className="border-t border-divider" />
                   <Button
-                    onPress={() => setTheme("dark")}
+                    onPress={() => setTheme("chrome")}
                     variant="light"
-                    className={`w-full justify-start px-4 py-6 rounded-none ${theme === "dark" ? "bg-primary-50" : ""}`}
+                    className={`w-full justify-start px-4 py-6 rounded-none ${theme === "chrome" ? "bg-primary-50" : ""}`}
                   >
                     <div className="flex items-center gap-3 w-full">
-                      <p className={`font-bold ${theme === "dark" ? "text-primary" : ""}`}>CHROME</p>
-                      {theme === "dark" && <Check size={16} className="text-primary" />}
+                      <p className={`font-bold ${theme === "chrome" ? "text-primary" : ""}`}>CHROME</p>
+                      {theme === "chrome" && <Check size={16} className="text-primary" />}
                     </div>
                   </Button>
                   <div className="border-t border-divider" />
                   <Button
-                    onPress={() => setTheme("light")}
+                    onPress={() => setTheme("street")}
                     variant="light"
-                    className={`w-full justify-start px-4 py-6 rounded-none ${theme === "light" ? "bg-primary-50" : ""}`}
+                    className={`w-full justify-start px-4 py-6 rounded-none ${theme === "street" ? "bg-primary-50" : ""}`}
                   >
                     <div className="flex items-center gap-3 w-full">
-                      <p className={`font-bold ${theme === "light" ? "text-primary" : ""}`}>STREET</p>
-                      {theme === "light" && <Check size={16} className="text-primary" />}
+                      <p className={`font-bold ${theme === "street" ? "text-primary" : ""}`}>STREET</p>
+                      {theme === "street" && <Check size={16} className="text-primary" />}
                     </div>
                   </Button>
                 </>
@@ -308,8 +308,8 @@ export default function SettingsPage() {
                     </button>
                   </div>
 
-                  <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
-                    <p className="text-xs text-slate-600 dark:text-slate-200">
+                  <div className="bg-slate-50 chrome:bg-slate-800 border border-slate-200 chrome:border-slate-700 rounded-lg p-3">
+                    <p className="text-xs text-slate-600 chrome:text-slate-200">
                       注意: AI講評をONにした場合、講評生成のために入力内容が外部AI APIへ送信されます。通常は学習用途で再利用されない前提ですが、最終的には利用中のAI提供元のポリシーに従います。
                     </p>
                   </div>

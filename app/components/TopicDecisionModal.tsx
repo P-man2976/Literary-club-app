@@ -92,33 +92,33 @@ export function TopicDecisionModal({ isOpen, onClose }: TopicDecisionModalProps)
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 dark:bg-black/80 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/50 chrome:bg-black/80 z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
-        className="library-topic-modal bg-white dark:bg-gray-900 rounded-2xl border-4 border-white dark:border-green-400 shadow-[0_10px_0_rgba(0,0,0,0.9)] dark:shadow-[0_0_30px_rgba(0,255,255,0.5)] max-w-3xl w-full"
+        className="library-topic-modal bg-white chrome:bg-gray-900 rounded-2xl border-4 border-white chrome:border-green-400 shadow-[0_10px_0_rgba(0,0,0,0.9)] chrome:shadow-[0_0_30px_rgba(0,255,255,0.5)] max-w-3xl w-full"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
-        <div className="library-topic-modal-header rounded-t-[14px] flex justify-between items-center border-b-4 border-black dark:border-green-400 p-6 bg-linear-to-r from-yellow-300 to-pink-400 dark:bg-[#00FFFF]">
-          <h2 className="text-2xl font-black uppercase flex items-center gap-2 text-black dark:text-gray-900">
+        <div className="library-topic-modal-header rounded-t-[14px] flex justify-between items-center border-b-4 border-black chrome:border-green-400 p-6 bg-linear-to-r from-yellow-300 to-pink-400 chrome:bg-[#00FFFF]">
+          <h2 className="text-2xl font-black uppercase flex items-center gap-2 text-black chrome:text-gray-900">
             <HandDrawnTopicIcon size={24} />
             お題を決定
           </h2>
           <button
             onClick={onClose}
-            className="text-3xl font-black text-black dark:text-gray-900 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+            className="text-3xl font-black text-black chrome:text-gray-900 hover:text-red-600 chrome:hover:text-red-400 transition-colors"
           >
             ×
           </button>
         </div>
 
         {/* ボディ */}
-        <div className="p-6 dark:bg-gray-900 dark:text-green-300">
+        <div className="p-6 chrome:bg-gray-900 chrome:text-green-300">
           {!hasDecisionCandidates ? (
             <div className="text-center py-8">
-              <p className="text-xl font-black uppercase text-black dark:text-green-300">候補がまだありません</p>
-              <p className="text-sm font-bold text-black/70 dark:text-green-400 mt-2">
+              <p className="text-xl font-black uppercase text-black chrome:text-green-300">候補がまだありません</p>
+              <p className="text-sm font-bold text-black/70 chrome:text-green-400 mt-2">
                 「お題」タブ右下のボタンからお題案を投稿してください。
               </p>
             </div>
@@ -129,7 +129,7 @@ export function TopicDecisionModal({ isOpen, onClose }: TopicDecisionModalProps)
                   <button
                     onClick={selectRandomCandidate}
                     disabled={decisionCandidates.length === 0}
-                    className="px-6 py-3 bg-orange-500 dark:bg-green-600 text-white rounded-lg font-black uppercase border-3 border-white dark:border-green-400 shadow-[0_4px_0_rgba(0,0,0,0.8)] dark:shadow-[0_0_15px_rgba(0,240,168,0.5)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] dark:hover:shadow-[0_0_25px_rgba(0,240,168,0.7)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="px-6 py-3 bg-orange-500 chrome:bg-green-600 text-white rounded-lg font-black uppercase border-3 border-white chrome:border-green-400 shadow-[0_4px_0_rgba(0,0,0,0.8)] chrome:shadow-[0_0_15px_rgba(0,240,168,0.5)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] chrome:hover:shadow-[0_0_25px_rgba(0,240,168,0.7)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
                     ランダム
                   </button>
@@ -137,14 +137,14 @@ export function TopicDecisionModal({ isOpen, onClose }: TopicDecisionModalProps)
                     type="button"
                     disabled
                     title="AIお題作成は準備中です"
-                    className="px-6 py-3 bg-sky-600 dark:bg-gray-700 text-white dark:text-gray-500 rounded-lg font-black uppercase opacity-50 cursor-not-allowed border-3 border-white dark:border-gray-600"
+                    className="px-6 py-3 bg-sky-600 chrome:bg-gray-700 text-white chrome:text-gray-500 rounded-lg font-black uppercase opacity-50 cursor-not-allowed border-3 border-white chrome:border-gray-600"
                   >
                     生成AI (準備中)
                   </button>
                 </div>
 
                 <select
-                  className="w-full border border-gray-300 dark:border-green-400 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-slate-900 dark:text-green-300 font-semibold"
+                  className="w-full border border-gray-300 chrome:border-green-400 rounded-lg px-3 py-2 bg-white chrome:bg-gray-900 text-slate-900 chrome:text-green-300 font-semibold"
                   value={selectedProposalId ? `proposal:${selectedProposalId}` : selectedPoolTopicId ? `pool:${selectedPoolTopicId}` : ""}
                   onChange={(e) => {
                     const selectedValue = e.target.value;
@@ -174,7 +174,7 @@ export function TopicDecisionModal({ isOpen, onClose }: TopicDecisionModalProps)
 
               <input
                 type="datetime-local"
-                className="w-full border border-gray-300 dark:border-green-400 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-slate-900 dark:text-green-300 font-semibold"
+                className="w-full border border-gray-300 chrome:border-green-400 rounded-lg px-3 py-2 bg-white chrome:bg-gray-900 text-slate-900 chrome:text-green-300 font-semibold"
                 onChange={(e) => {
                   if (e.target.value) {
                     setProposalDeadline(new Date(e.target.value).getTime());
@@ -185,16 +185,16 @@ export function TopicDecisionModal({ isOpen, onClose }: TopicDecisionModalProps)
               />
 
               {selectedDecisionCandidate ? (
-                <div className="rounded-lg border border-gray-200 dark:border-green-400 bg-gray-50 dark:bg-gray-900 p-3">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-green-300">
+                <div className="rounded-lg border border-gray-200 chrome:border-green-400 bg-gray-50 chrome:bg-gray-900 p-3">
+                  <p className="text-sm font-semibold text-slate-900 chrome:text-green-300">
                     {selectedDecisionCandidate.title}
                   </p>
-                  <p className="text-xs text-slate-600 dark:text-green-400 mt-1 line-clamp-4">
+                  <p className="text-xs text-slate-600 chrome:text-green-400 mt-1 line-clamp-4">
                     {selectedDecisionCandidate.body}
                   </p>
                 </div>
               ) : (
-                <p className="text-xs text-slate-500 dark:text-green-400">
+                <p className="text-xs text-slate-500 chrome:text-green-400">
                   候補を選択してください。
                 </p>
               )}
@@ -203,17 +203,17 @@ export function TopicDecisionModal({ isOpen, onClose }: TopicDecisionModalProps)
         </div>
 
         {/* フッター */}
-        <div className="flex justify-end gap-2 border-t border-gray-200 dark:border-green-400 p-6 dark:bg-gray-900">
+        <div className="flex justify-end gap-2 border-t border-gray-200 chrome:border-green-400 p-6 chrome:bg-gray-900">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 dark:text-green-300 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:shadow-[0_0_10px_rgba(0,240,168,0.5)] rounded-lg font-semibold border border-transparent dark:border-green-400 transition-all"
+            className="px-4 py-2 text-gray-700 chrome:text-green-300 hover:bg-gray-100 chrome:hover:bg-gray-800 chrome:hover:shadow-[0_0_10px_rgba(0,240,168,0.5)] rounded-lg font-semibold border border-transparent chrome:border-green-400 transition-all"
           >
             キャンセル
           </button>
           <button
             disabled={(!selectedProposalId && !selectedPoolTopicId) || !proposalDeadline || isMutating}
             onClick={handleConfirm}
-            className="px-6 py-3 bg-pink-500 dark:bg-[#00FFFF] text-white dark:text-gray-900 rounded-lg font-black uppercase border-3 border-white dark:border-green-400 shadow-[0_4px_0_rgba(0,0,0,0.8)] dark:shadow-[0_0_20px_rgba(0,255,255,0.6)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] dark:hover:shadow-[0_0_30px_rgba(0,255,255,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="px-6 py-3 bg-pink-500 chrome:bg-[#00FFFF] text-white chrome:text-gray-900 rounded-lg font-black uppercase border-3 border-white chrome:border-green-400 shadow-[0_4px_0_rgba(0,0,0,0.8)] chrome:shadow-[0_0_20px_rgba(0,255,255,0.6)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] chrome:hover:shadow-[0_0_30px_rgba(0,255,255,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isMutating ? "処理中..." : "この内容でお題化"}
           </button>

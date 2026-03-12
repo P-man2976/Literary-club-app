@@ -69,12 +69,12 @@ export function PostsTabContent({
                           <img
                             src={getDisplayIcon(post.authorEmail) || ""}
                             alt="投稿者アイコン"
-                            className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full object-cover border-2 border-black dark:border-white"
+                            className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full object-cover border-2 border-black chrome:border-white"
                           />
                         ) : (
-                          <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-yellow-300 border-2 border-black dark:border-white" />
+                          <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-yellow-300 border-2 border-black chrome:border-white" />
                         )}
-                        <span className="font-black text-base uppercase text-black dark:text-green-300">{getDisplayName(post.authorEmail, post.author)}</span>
+                        <span className="font-black text-base uppercase text-black chrome:text-green-300">{getDisplayName(post.authorEmail, post.author)}</span>
                         {isTopicReply ? (
                           <Chip
                             size="md"
@@ -93,7 +93,7 @@ export function PostsTabContent({
                           </Chip>
                         )}
                       </div>
-                      <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
+                      <span className="text-xs font-bold text-gray-700 chrome:text-gray-300 uppercase">
                         {new Date(post.createdAt).toLocaleDateString('ja-JP')}
                       </span>
                     </div>
@@ -102,16 +102,16 @@ export function PostsTabContent({
                       href={`/topic/${post.id}`}
                       className="block spray-hover"
                     >
-                      <h3 className="text-xl font-black mb-2 uppercase tracking-wide text-black dark:text-green-200">{post.title}</h3>
-                      <p className="text-sm font-semibold text-gray-700 dark:text-green-100 line-clamp-3 whitespace-pre-wrap">{post.body}</p>
+                      <h3 className="text-xl font-black mb-2 uppercase tracking-wide text-black chrome:text-green-200">{post.title}</h3>
+                      <p className="text-sm font-semibold text-gray-700 chrome:text-green-100 line-clamp-3 whitespace-pre-wrap">{post.body}</p>
                       <div className="mt-2 flex items-center justify-between gap-3 text-xs font-bold">
-                        <p className="text-orange-600 dark:text-yellow-300 uppercase">→ クリックして詳細表示</p>
+                        <p className="text-orange-600 chrome:text-yellow-300 uppercase">→ クリックして詳細表示</p>
                         <div className="flex items-center gap-4 text-[1.08rem] leading-normal pt-0.5 pb-1 pr-1 overflow-visible">
-                          <span className="flex items-center gap-2 text-blue-600 dark:text-cyan-400 leading-normal min-w-max">
+                          <span className="flex items-center gap-2 text-blue-600 chrome:text-cyan-400 leading-normal min-w-max">
                             {appTheme === "chrome" ? <ChromeMessageIcon size={21} /> : <HandDrawnCommentIcon size={21} className="overflow-visible shrink-0" />}
                             {post.commentCount || 0}
                           </span>
-                          <span className="flex items-center gap-2 text-red-500 dark:text-pink-400 leading-normal min-w-max">
+                          <span className="flex items-center gap-2 text-red-500 chrome:text-pink-400 leading-normal min-w-max">
                             <HandDrawnHeartIcon size={21} className="overflow-visible shrink-0" />
                             {post.likes || 0}
                           </span>

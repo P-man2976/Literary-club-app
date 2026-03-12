@@ -107,12 +107,12 @@ export default function MyContentPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 max-w-2xl mx-auto border-x border-slate-200 dark:border-slate-700">
+    <main className="min-h-screen bg-white chrome:bg-slate-950 text-slate-900 chrome:text-slate-100 max-w-2xl mx-auto border-x border-slate-200 chrome:border-slate-700">
       {/* ヘッダー */}
-      <header className="sticky top-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 p-4 flex items-center gap-4">
+      <header className="sticky top-0 bg-white/90 chrome:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 chrome:border-slate-700 p-4 flex items-center gap-4">
         <Link 
           href="/settings" 
-          className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-600 dark:text-slate-400"
+          className="p-2 hover:bg-slate-100 chrome:hover:bg-slate-800 rounded-full transition-colors text-slate-600 chrome:text-slate-400"
           aria-label="戻る"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -124,44 +124,44 @@ export default function MyContentPage() {
 
       <div className="p-4 space-y-4">
         {loading ? (
-          <div className="text-center py-10 text-slate-400 dark:text-slate-500">読み込み中...</div>
+          <div className="text-center py-10 text-slate-400 chrome:text-slate-500">読み込み中...</div>
         ) : posts.length === 0 ? (
           <div className="text-center py-10">
-            <p className="text-slate-400 dark:text-slate-500 mb-2">📭</p>
-            <p className="text-slate-500 dark:text-slate-400 font-medium">投稿がありません</p>
+            <p className="text-slate-400 chrome:text-slate-500 mb-2">📭</p>
+            <p className="text-slate-500 chrome:text-slate-400 font-medium">投稿がありません</p>
           </div>
         ) : (
           <>
-            <div className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-4">
+            <div className="text-sm text-slate-500 chrome:text-slate-400 font-medium mb-4">
               全 {posts.length} 件の投稿
             </div>
-            <div className="divide-y divide-slate-200 dark:divide-slate-700">
+            <div className="divide-y divide-slate-200 chrome:divide-slate-700">
               {posts.map((post) => (
                 <article 
                   key={post.id} 
-                  className="p-4 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors group"
+                  className="p-4 hover:bg-slate-50 chrome:hover:bg-slate-900 transition-colors group"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       {/* タイプバッジ */}
                       <div className="flex items-center gap-2 mb-2">
                         {post.isTopicPost === 1 ? (
-                          <span className="text-[10px] bg-purple-200 dark:bg-purple-900 px-2 py-0.5 rounded-xs text-purple-700 dark:text-purple-200 font-bold uppercase tracking-wider">お題</span>
+                          <span className="text-[10px] bg-purple-200 chrome:bg-purple-900 px-2 py-0.5 rounded-sm text-purple-700 chrome:text-purple-200 font-bold uppercase tracking-wider">お題</span>
                         ) : post.parentPostId ? (
-                          <span className="text-[10px] bg-green-200 dark:bg-green-900 px-2 py-0.5 rounded-xs text-green-700 dark:text-green-200 font-bold uppercase tracking-wider">投稿</span>
+                          <span className="text-[10px] bg-green-200 chrome:bg-green-900 px-2 py-0.5 rounded-sm text-green-700 chrome:text-green-200 font-bold uppercase tracking-wider">投稿</span>
                         ) : (
-                          <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">{post.tag}</span>
+                          <span className="text-[10px] bg-slate-100 chrome:bg-slate-800 px-2 py-0.5 rounded-sm text-slate-500 chrome:text-slate-400 font-bold uppercase tracking-wider">{post.tag}</span>
                         )}
                       </div>
 
                       {/* タイトル */}
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2 wrap-break-word">{post.title}</h3>
+                      <h3 className="text-lg font-bold text-slate-900 chrome:text-slate-100 mb-2 wrap-break-word">{post.title}</h3>
 
                       {/* 本文プレビュー */}
-                      <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-3">{post.body}</p>
+                      <p className="text-sm text-slate-600 chrome:text-slate-400 line-clamp-2 mb-3">{post.body}</p>
 
                       {/* メタ情報 */}
-                      <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 mb-3">
+                      <div className="flex items-center gap-4 text-xs text-slate-500 chrome:text-slate-400 mb-3">
                         <span className="text-xs">{new Date(post.createdAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
                         <span className="flex items-center gap-1"><Heart size={14} /> {post.likes || 0}</span>
                         <span className="flex items-center gap-1"><MessageCircle size={14} /> {post.comments?.length || 0}</span>
@@ -178,8 +178,8 @@ export default function MyContentPage() {
                       className={`shrink-0 p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100 ${
                         post.isTopicPost === 1 && 
                         allPosts.filter(p => p.parentPostId === post.id).length > 0
-                          ? "text-gray-300 dark:text-slate-600 cursor-not-allowed"
-                          : "text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
+                          ? "text-gray-300 chrome:text-slate-600 cursor-not-allowed"
+                          : "text-red-400 hover:text-red-600 hover:bg-red-50 chrome:hover:bg-red-900/30"
                       }`}
                       title={
                         post.isTopicPost === 1 && 

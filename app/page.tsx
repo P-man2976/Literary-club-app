@@ -152,10 +152,10 @@ export default function Home() {
       <header className={header({ theme: appTheme })}>
         <div className="flex justify-between items-center">
           <h1 className="site-title leading-none">
-            <span className="block text-[10px] md:text-xs font-black uppercase tracking-[0.15em] text-black/80 dark:text-cyan-200">
+            <span className="block text-[10px] md:text-xs font-black uppercase tracking-[0.15em] text-black/80 chrome:text-cyan-200">
               東京理科大学
             </span>
-            <span className="block text-3xl font-black uppercase tracking-tight text-black dark:text-cyan-300">
+            <span className="block text-3xl font-black uppercase tracking-tight text-black chrome:text-cyan-300">
               文芸部
             </span>
           </h1>
