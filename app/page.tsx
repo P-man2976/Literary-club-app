@@ -34,7 +34,7 @@ const header = tv({
     theme: {
       street: "bg-white shadow-street-hard-soft",
       chrome: "bg-linear-to-b from-black/75 via-black/45 to-transparent backdrop-blur-md shadow-street-hard-soft",
-      library: "bg-library-bg/90 backdrop-blur-md",
+      library: "bg-white shadow-street-hard backdrop-blur-md",
     },
   },
 });

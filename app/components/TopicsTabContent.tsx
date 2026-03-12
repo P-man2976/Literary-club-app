@@ -128,7 +128,7 @@ export function TopicsTabContent({
                 <Card
                   shadow="none"
                   theme={appTheme}
-                  className={appTheme === "street" ? "bg-white" : ""}
+                  className={appTheme !== "chrome" ? "bg-white" : ""}
                 >
                   <CardBody className="p-5">
                     <p className="text-sm font-black uppercase text-gray-700 chrome:text-gray-200">今週のお題はありません</p>

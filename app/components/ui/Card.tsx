@@ -26,7 +26,7 @@ const card = tv({
         base: "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none",
       },
       library: {
-        base: "jsr-card bg-library-surface rounded-2xl",
+        base: "jsr-card bg-white rounded-2xl",
       },
     },
   },

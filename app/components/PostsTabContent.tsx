@@ -18,8 +18,8 @@ const fab = tv({
   base: "fixed right-6 bottom-24 z-40 h-14 rounded-full text-base font-black px-6 transition-all flex items-center gap-2 uppercase",
   variants: {
     theme: {
-      street: "bg-yellow-400 text-black border-4 border-white shadow-street-hard-lg hover:shadow-street-hard-lg-hover hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-street-hard-lg-active shake-hover",
-      chrome: "bg-gray-600 text-white border-0 shadow-chrome-hard-lg hover:shadow-chrome-hard-lg-hover hover:bg-gray-500 hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-chrome-hard-lg-active",
+      street: "bg-yellow-400 text-black border-4 border-white shadow-[0_8px_0_rgba(0,0,0,0.9)] hover:shadow-[0_10px_0_rgba(0,0,0,0.9)] hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-[0_6px_0_rgba(0,0,0,0.9)] shake-hover",
+      chrome: "bg-gray-600 text-white border-0 shadow-[0_8px_0_rgba(20,20,20,0.9)] hover:shadow-[0_10px_0_rgba(20,20,20,0.9)] hover:bg-gray-500 hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-[0_6px_0_rgba(20,20,20,0.9)]",
       library: "bg-library-surface text-[#3F3427] border-0 shadow-library-neu-sm hover:shadow-library-neu-hover",
     },
   },
@@ -60,7 +60,7 @@ export function PostsTabContent({
                   key={post.id}
                   shadow="none"
                   theme={appTheme}
-                  className={appTheme === "street" ? "bg-white" : ""}
+                  className={appTheme !== "chrome" ? "bg-white" : ""}
                 >
                   <CardBody className="p-4 gap-3">
                     <div className="flex items-center justify-between">

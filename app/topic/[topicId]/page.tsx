@@ -82,7 +82,7 @@ const topicHeader = tv({
     theme: {
       street: "bg-white/20 backdrop-blur-md shadow-street-hard rounded-2xl",
       chrome: "bg-black border-b border-white/30",
-      library: "bg-library-cream rounded-2xl shadow-library-neu",
+      library: "bg-library-bg rounded-2xl shadow-library-neu-lg",
     },
   },
 });
@@ -92,7 +92,7 @@ const topicHeaderTitle = tv({
   variants: {
     theme: {
       street: "text-3xl font-black uppercase",
-      chrome: "text-xl font-medium text-white",
+      chrome: "text-xl font-black text-white",
       library: "text-2xl font-serif font-bold text-[#3F3427]",
     },
   },
@@ -103,8 +103,8 @@ const parentTopicBox = tv({
   variants: {
     theme: {
       street: "bg-blue-50 border-l-4 border-blue-500 rounded-xl",
-      chrome: "border-l-2 border-white/40",
-      library: "bg-library-surface border-l-4 border-[#A38D73] rounded-xl shadow-library-neu-inset-subtle",
+      chrome: "border-l-2 font-black border-white/40",
+      library: "bg-library-surface border-l-4 border-[#A38D73] rounded-xl shadow-library-neu-lg",
     },
   },
 });
@@ -115,7 +115,7 @@ const topicCard = tv({
     theme: {
       street: "jsr-card bg-white rounded-2xl",
       chrome: "bg-transparent border-0 border-b border-white/25 rounded-none",
-      library: "jsr-card bg-library-surface rounded-2xl",
+      library: "jsr-card bg-white rounded-2xl",
     },
   },
 });
@@ -126,7 +126,7 @@ const aiSection = tv({
     theme: {
       street: "jsr-card bg-linear-to-br from-purple-300 to-pink-300 rounded-2xl",
       chrome: "bg-transparent border-0 border-b border-white/25 rounded-none",
-      library: "jsr-card bg-library-cream rounded-2xl shadow-library-neu",
+      library: "jsr-card bg-library-surface rounded-2xl shadow-library-neu",
     },
   },
 });
@@ -137,7 +137,7 @@ const postFormSection = tv({
     theme: {
       street: "bg-white rounded-2xl shadow-md",
       chrome: "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none",
-      library: "bg-library-cream rounded-2xl shadow-library-neu",
+      library: "bg-white rounded-2xl shadow-library-neu",
     },
   },
 });
@@ -170,7 +170,7 @@ const replyCard = tv({
     theme: {
       street: "jsr-card bg-white rounded-2xl spray-hover",
       chrome: "bg-transparent border-0 border-b border-white/25 rounded-none",
-      library: "jsr-card bg-library-surface rounded-2xl",
+      library: "jsr-card bg-white rounded-2xl",
     },
   },
 });
