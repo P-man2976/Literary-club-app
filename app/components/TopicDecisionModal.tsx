@@ -96,7 +96,7 @@ export function TopicDecisionModal({ isOpen, onClose }: TopicDecisionModalProps)
       onClick={onClose}
     >
       <div
-        className="library-topic-modal bg-white chrome:bg-gray-900 rounded-2xl border-4 border-white chrome:border-green-400 shadow-[0_10px_0_rgba(0,0,0,0.9)] chrome:shadow-[0_0_30px_rgba(0,255,255,0.5)] max-w-3xl w-full"
+        className="library-topic-modal bg-white chrome:bg-gray-900 rounded-2xl border-4 border-white chrome:border-green-400 shadow-street-hard-lg-hover chrome:shadow-[0_0_30px_rgba(0,255,255,0.5)] max-w-3xl w-full"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
@@ -129,7 +129,7 @@ export function TopicDecisionModal({ isOpen, onClose }: TopicDecisionModalProps)
                   <button
                     onClick={selectRandomCandidate}
                     disabled={decisionCandidates.length === 0}
-                    className="px-6 py-3 bg-orange-500 chrome:bg-green-600 text-white rounded-lg font-black uppercase border-3 border-white chrome:border-green-400 shadow-[0_4px_0_rgba(0,0,0,0.8)] chrome:shadow-[0_0_15px_rgba(0,240,168,0.5)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] chrome:hover:shadow-[0_0_25px_rgba(0,240,168,0.7)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="px-6 py-3 bg-orange-500 chrome:bg-green-600 text-white rounded-lg font-black uppercase border-3 border-white chrome:border-green-400 shadow-street-hard chrome:shadow-[0_0_15px_rgba(0,240,168,0.5)] hover:translate-y-[-2px] hover:shadow-street-hard-hover chrome:hover:shadow-[0_0_25px_rgba(0,240,168,0.7)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
                     ランダム
                   </button>
@@ -213,7 +213,7 @@ export function TopicDecisionModal({ isOpen, onClose }: TopicDecisionModalProps)
           <button
             disabled={(!selectedProposalId && !selectedPoolTopicId) || !proposalDeadline || isMutating}
             onClick={handleConfirm}
-            className="px-6 py-3 bg-pink-500 chrome:bg-[#00FFFF] text-white chrome:text-gray-900 rounded-lg font-black uppercase border-3 border-white chrome:border-green-400 shadow-[0_4px_0_rgba(0,0,0,0.8)] chrome:shadow-[0_0_20px_rgba(0,255,255,0.6)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] chrome:hover:shadow-[0_0_30px_rgba(0,255,255,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="px-6 py-3 bg-pink-500 chrome:bg-[#00FFFF] text-white chrome:text-gray-900 rounded-lg font-black uppercase border-3 border-white chrome:border-green-400 shadow-street-hard chrome:shadow-[0_0_20px_rgba(0,255,255,0.6)] hover:translate-y-[-2px] hover:shadow-street-hard-hover chrome:hover:shadow-[0_0_30px_rgba(0,255,255,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isMutating ? "処理中..." : "この内容でお題化"}
           </button>

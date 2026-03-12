@@ -32,8 +32,8 @@ const header = tv({
   base: "sticky top-0 p-4 z-30 mb-2",
   variants: {
     theme: {
-      street: "bg-white shadow-[0_4px_0_rgba(0,0,0,0.6)]",
-      chrome: "bg-linear-to-b from-black/75 via-black/45 to-transparent backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.6)]",
+      street: "bg-white shadow-street-hard-soft",
+      chrome: "bg-linear-to-b from-black/75 via-black/45 to-transparent backdrop-blur-md shadow-street-hard-soft",
       library: "bg-library-bg/90 backdrop-blur-md",
     },
   },
@@ -43,7 +43,7 @@ const profileImage = tv({
   base: "w-12 h-12 rounded-full object-cover",
   variants: {
     theme: {
-      street: "border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)]",
+      street: "border-3 border-black shadow-street-hard",
       chrome: "border-2 border-white shadow-[0_2px_0_rgba(255,255,255,0.4)]",
       library: "border-2 border-library-border",
     },
@@ -54,7 +54,7 @@ const profilePlaceholder = tv({
   base: "w-12 h-12 rounded-full flex items-center justify-center",
   variants: {
     theme: {
-      street: "bg-yellow-300 border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)]",
+      street: "bg-yellow-300 border-3 border-black shadow-street-hard",
       chrome: "bg-gray-700 border-2 border-white",
       library: "bg-library-surface border-2 border-library-border",
     },
@@ -164,7 +164,7 @@ export default function Home() {
             <Link
               href="/settings"
               aria-label="設定"
-              className="w-12 h-12 rounded-full border-3 border-black bg-cyan-400 flex items-center justify-center shake-hover shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
+              className="w-12 h-12 rounded-full border-3 border-black bg-cyan-400 flex items-center justify-center shake-hover shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover transition-all"
             >
               {appTheme === "chrome" ? <ChromeSettingsIcon size={24} /> : <HandDrawnSettingsIcon size={22} />}
             </Link>
@@ -184,7 +184,7 @@ export default function Home() {
             ) : (
               <button 
                 onClick={() => signIn("google")}
-                className="h-10 px-4 rounded-full bg-pink-500 text-white font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] active:translate-y-[2px] active:shadow-[0_2px_0_rgba(0,0,0,0.8)] transition-all shake-hover"
+                className="h-10 px-4 rounded-full bg-pink-500 text-white font-black uppercase border-3 border-white shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover active:translate-y-[2px] active:shadow-street-hard-active transition-all shake-hover"
               >
                 ログイン
               </button>

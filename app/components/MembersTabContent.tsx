@@ -85,10 +85,10 @@ export function MembersTabContent() {
                     <img
                       src={iconUrl}
                       alt={`${displayName}のアイコン`}
-                      className="w-20 h-20 rounded-full object-cover border-2 border-black chrome:border-white shadow-[0_3px_0_rgba(0,0,0,0.8)]"
+                      className="w-20 h-20 rounded-full object-cover border-2 border-black chrome:border-white shadow-street-hard-xs"
                     />
                   ) : (
-                    <div className="w-20 h-20 rounded-full bg-yellow-300 border-2 border-black chrome:border-white shadow-[0_3px_0_rgba(0,0,0,0.8)]" />
+                    <div className="w-20 h-20 rounded-full bg-yellow-300 border-2 border-black chrome:border-white shadow-street-hard-xs" />
                   )}
                   <p className="font-black text-xl uppercase tracking-wide text-black chrome:text-white">{displayName}</p>
                 </div>

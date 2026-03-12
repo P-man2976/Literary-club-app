@@ -72,7 +72,7 @@ export function PostCreateModal({ isOpen, onClose }: PostCreateModalProps) {
       onClick={handleClose}
     >
       <div
-        className="bg-white rounded-2xl border-4 border-white shadow-[0_10px_0_rgba(0,0,0,0.9)] max-w-2xl w-full"
+        className="bg-white rounded-2xl border-4 border-white shadow-street-hard-lg-hover max-w-2xl w-full"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
@@ -145,14 +145,14 @@ export function PostCreateModal({ isOpen, onClose }: PostCreateModalProps) {
         <div className="flex justify-end gap-3 border-t-4 border-black p-6 bg-gray-50">
           <button
             onClick={handleClose}
-            className="px-6 py-3 text-black font-black uppercase bg-gray-300 border-3 border-black rounded-lg shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
+            className="px-6 py-3 text-black font-black uppercase bg-gray-300 border-3 border-black rounded-lg shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover transition-all"
           >
             キャンセル
           </button>
           <button
             onClick={handleSubmit}
             disabled={!newPost.title || !newPost.body || isMutating}
-            className="px-6 py-3 bg-yellow-400 text-black rounded-lg font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="px-6 py-3 bg-yellow-400 text-black rounded-lg font-black uppercase border-3 border-white shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isMutating ? "投稿中..." : "投稿"}
           </button>

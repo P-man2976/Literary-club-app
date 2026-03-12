@@ -157,7 +157,7 @@ export function TopicsTabContent({
                         }
                         onOpenTopicDecision();
                       }}
-                      className="px-6 py-3 bg-pink-500 text-white rounded-lg font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] active:translate-y-[2px] active:shadow-[0_2px_0_rgba(0,0,0,0.8)] transition-all text-sm whitespace-nowrap shake-hover"
+                      className="px-6 py-3 bg-pink-500 text-white rounded-lg font-black uppercase border-3 border-white shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover active:translate-y-[2px] active:shadow-street-hard-active transition-all text-sm whitespace-nowrap shake-hover"
                     >
                       お題決定
                     </button>
@@ -253,7 +253,7 @@ export function TopicsTabContent({
       {/* お題案登録フロートボタン */}
       {session && (
         <button
-          className="fixed right-6 bottom-24 z-40 h-14 rounded-full bg-orange-500 text-white text-base font-black px-6 border-4 border-white shadow-[0_8px_0_rgba(0,0,0,0.9)] hover:shadow-[0_10px_0_rgba(0,0,0,0.9)] hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-[0_6px_0_rgba(0,0,0,0.9)] transition-all flex items-center gap-2 uppercase shake-hover"
+          className="fixed right-6 bottom-24 z-40 h-14 rounded-full bg-orange-500 text-white text-base font-black px-6 border-4 border-white shadow-street-hard-lg hover:shadow-street-hard-lg-hover hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-street-hard-lg-active transition-all flex items-center gap-2 uppercase shake-hover"
           onClick={onCreateProposal}
           aria-label="お題案を投稿"
         >

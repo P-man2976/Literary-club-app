@@ -26,7 +26,7 @@ const tabsList = tv({
   base: "sticky top-[73px] w-full grid grid-cols-3 z-20",
   variants: {
     theme: {
-      street: "gap-2 px-2 bg-white/20 backdrop-blur-md border border-white/40 shadow-[0_4px_0_rgba(0,0,0,0.6)]",
+      street: "gap-2 px-2 bg-white/20 backdrop-blur-md border border-white/40 shadow-street-hard-soft",
       chrome: "gap-0 px-0 bg-transparent backdrop-blur-xs border-0 shadow-none",
       library: "gap-2 px-2 bg-library-surface/90 backdrop-blur-md",
     },

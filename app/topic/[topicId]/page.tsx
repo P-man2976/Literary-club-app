@@ -80,7 +80,7 @@ const topicHeader = tv({
   base: "flex items-center mb-8 p-4",
   variants: {
     theme: {
-      street: "bg-white/20 backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.8)] rounded-2xl",
+      street: "bg-white/20 backdrop-blur-md shadow-street-hard rounded-2xl",
       chrome: "bg-black border-b border-white/30",
       library: "bg-library-cream rounded-2xl shadow-library-neu",
     },
@@ -157,7 +157,7 @@ const repliesHeader = tv({
   base: "flex items-center justify-between mb-4 p-4",
   variants: {
     theme: {
-      street: "bg-white/20 backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.8)] rounded-2xl",
+      street: "bg-white/20 backdrop-blur-md shadow-street-hard rounded-2xl",
       chrome: "border-b border-white/30",
       library: "bg-library-cream rounded-2xl shadow-library-neu",
     },
@@ -179,8 +179,8 @@ const commentBubble = tv({
   base: "bg-yellow-100 border-3 border-black rounded-xl p-3 text-sm",
   variants: {
     theme: {
-      street: "shadow-[4px_4px_0_rgba(0,0,0,0.8)]",
-      chrome: "shadow-[4px_4px_0_rgba(0,0,0,0.8)]",
+      street: "shadow-street-hard-md",
+      chrome: "shadow-street-hard-md",
       library: "",
     },
   },
@@ -1034,7 +1034,7 @@ export default function TopicPage() {
           <div className="flex gap-3 mb-4">
             <button
               onClick={() => handleLike(topic.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition border-3 shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition border-3 shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover ${
                 likedPosts.includes(topic.id)
                   ? "bg-pink-400 text-white border-white"
                   : "bg-gray-200 text-black border-black"
@@ -1074,17 +1074,17 @@ export default function TopicPage() {
               <>
                 <button
                   onClick={() => startEditingPost(topic.id, topic.title, topic.body)}
-                  className="px-3 py-1.5 text-xs bg-cyan-400 text-black rounded-lg font-black uppercase border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
+                  className="px-3 py-1.5 text-xs bg-cyan-400 text-black rounded-lg font-black uppercase border-3 border-black shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover transition-all"
                 >
                   編集
                 </button>
                 <button
                   onClick={() => deletePost(topic.id)}
                   disabled={replies.length > 0}
-                  className={`px-3 py-1.5 text-xs rounded-lg font-black uppercase border-3 shadow-[0_4px_0_rgba(0,0,0,0.8)] transition-all ${
+                  className={`px-3 py-1.5 text-xs rounded-lg font-black uppercase border-3 shadow-street-hard transition-all ${
                     replies.length > 0
                       ? "bg-gray-300 text-gray-500 border-gray-400 cursor-not-allowed opacity-50"
-                      : "bg-red-400 text-white border-white hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)]"
+                      : "bg-red-400 text-white border-white hover:translate-y-[-2px] hover:shadow-street-hard-hover"
                   }`}
                   title={replies.length > 0 ? "この投稿に返信があるため削除できません" : "削除"}
                 >
@@ -1152,7 +1152,7 @@ export default function TopicPage() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => toggleCommentLike(comment.commentId)}
-                            className={`text-xs px-3 py-1 rounded-lg font-black uppercase transition border-2 shadow-[2px_2px_0_rgba(0,0,0,0.8)] hover:-translate-y-px hover:shadow-[3px_3px_0_rgba(0,0,0,0.8)] ${
+                            className={`text-xs px-3 py-1 rounded-lg font-black uppercase transition border-2 shadow-street-hard-sm hover:-translate-y-px hover:shadow-street-hard-sm-hover ${
                               commentLikes[comment.commentId]
                                 ? "bg-pink-400 text-white border-white"
                                 : "bg-white text-black border-black"
@@ -1164,13 +1164,13 @@ export default function TopicPage() {
                             <>
                               <button
                                 onClick={() => startEditingComment(comment.commentId, comment.text)}
-                                className="text-xs px-3 py-1 bg-cyan-400 text-black rounded-lg font-black uppercase border-2 border-black hover:-translate-y-px transition-all shadow-[2px_2px_0_rgba(0,0,0,0.8)]"
+                                className="text-xs px-3 py-1 bg-cyan-400 text-black rounded-lg font-black uppercase border-2 border-black hover:-translate-y-px transition-all shadow-street-hard-sm"
                               >
                                 編集
                               </button>
                               <button
                                 onClick={() => deleteComment(comment.commentId)}
-                                className="text-xs px-3 py-1 bg-red-400 text-white rounded-lg font-black uppercase border-2 border-white hover:-translate-y-px transition-all shadow-[2px_2px_0_rgba(0,0,0,0.8)]"
+                                className="text-xs px-3 py-1 bg-red-400 text-white rounded-lg font-black uppercase border-2 border-white hover:-translate-y-px transition-all shadow-street-hard-sm"
                               >
                                 削除
                               </button>
@@ -1199,7 +1199,7 @@ export default function TopicPage() {
                 <button
                   onClick={() => saveComment(topic.id)}
                   disabled={!commentTexts[topic.id]}
-                  className="px-4 py-2 bg-cyan-400 text-black rounded-lg font-black uppercase text-sm border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] disabled:bg-gray-300 disabled:border-gray-400 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
+                  className="px-4 py-2 bg-cyan-400 text-black rounded-lg font-black uppercase text-sm border-3 border-black shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover disabled:bg-gray-300 disabled:border-gray-400 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
                 >
                   送信
                 </button>
@@ -1349,7 +1349,7 @@ export default function TopicPage() {
 
                     <button
                       onClick={saveReply}
-                      className="w-full px-4 py-3 bg-yellow-400 text-black font-black uppercase rounded-lg border-3 border-black shadow-[0_6px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_8px_0_rgba(0,0,0,0.8)] transition-all flex items-center justify-center gap-2"
+                      className="w-full px-4 py-3 bg-yellow-400 text-black font-black uppercase rounded-lg border-3 border-black shadow-street-hard-hover hover:translate-y-[-2px] hover:shadow-street-hard-lg transition-all flex items-center justify-center gap-2"
                     >
                       <Send size={18} strokeWidth={3} />
                       投稿
@@ -1379,20 +1379,20 @@ export default function TopicPage() {
                           src={participant.icon}
                           alt={participant.name}
                           title={participant.name}
-                          className="w-8 h-8 rounded-full object-cover border-3 border-white shadow-[0_2px_0_rgba(0,0,0,0.8)]"
+                          className="w-8 h-8 rounded-full object-cover border-3 border-white shadow-street-hard-active"
                         />
                       ) : (
                         <div
                           key={participant.key}
                           title={participant.name}
-                          className="w-8 h-8 rounded-full bg-gray-300 text-xs font-black text-black border-3 border-white shadow-[0_2px_0_rgba(0,0,0,0.8)] flex items-center justify-center"
+                          className="w-8 h-8 rounded-full bg-gray-300 text-xs font-black text-black border-3 border-white shadow-street-hard-active flex items-center justify-center"
                         >
                           {participant.name.slice(0, 1)}
                         </div>
                       )
                     ))}
                   {getReplyParticipants().length > 8 && (
-                    <div className="w-8 h-8 rounded-full bg-pink-400 text-xs font-black text-white border-3 border-white shadow-[0_2px_0_rgba(0,0,0,0.8)] flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-pink-400 text-xs font-black text-white border-3 border-white shadow-street-hard-active flex items-center justify-center">
                       +{getReplyParticipants().length - 8}
                     </div>
                   )}
@@ -1486,7 +1486,7 @@ export default function TopicPage() {
                   <div className="flex gap-3">
                     <button
                       onClick={() => handleLike(reply.id)}
-                      className={`px-3 py-1.5 text-xs rounded-lg font-black uppercase transition border-3 shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] ${
+                      className={`px-3 py-1.5 text-xs rounded-lg font-black uppercase transition border-3 shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover ${
                         likedPosts.includes(reply.id)
                           ? "bg-pink-400 text-white border-white"
                           : "bg-gray-200 text-black border-black"
@@ -1526,13 +1526,13 @@ export default function TopicPage() {
                       <>
                         <button
                           onClick={() => startEditingPost(reply.id, reply.title, reply.body)}
-                          className="px-3 py-1.5 text-xs bg-cyan-400 text-black rounded-lg font-black uppercase border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
+                          className="px-3 py-1.5 text-xs bg-cyan-400 text-black rounded-lg font-black uppercase border-3 border-black shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover transition-all"
                         >
                           編集
                         </button>
                         <button
                           onClick={() => deletePost(reply.id)}
-                          className="px-3 py-1.5 text-xs bg-red-400 text-white rounded-lg font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
+                          className="px-3 py-1.5 text-xs bg-red-400 text-white rounded-lg font-black uppercase border-3 border-white shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover transition-all"
                         >
                           削除
                         </button>
@@ -1601,7 +1601,7 @@ export default function TopicPage() {
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => toggleCommentLike(comment.commentId)}
-                                  className={`text-xs px-3 py-1 rounded-lg font-black uppercase transition border-2 shadow-[2px_2px_0_rgba(0,0,0,0.8)] hover:-translate-y-px hover:shadow-[3px_3px_0_rgba(0,0,0,0.8)] ${
+                                  className={`text-xs px-3 py-1 rounded-lg font-black uppercase transition border-2 shadow-street-hard-sm hover:-translate-y-px hover:shadow-street-hard-sm-hover ${
                                     commentLikes[comment.commentId]
                                       ? "bg-pink-400 text-white border-white"
                                       : "bg-white text-black border-black"
@@ -1613,13 +1613,13 @@ export default function TopicPage() {
                                   <>
                                     <button
                                       onClick={() => startEditingComment(comment.commentId, comment.text)}
-                                      className="text-xs px-3 py-1 bg-cyan-400 text-black rounded-lg font-black uppercase border-2 border-black hover:-translate-y-px transition-all shadow-[2px_2px_0_rgba(0,0,0,0.8)]"
+                                      className="text-xs px-3 py-1 bg-cyan-400 text-black rounded-lg font-black uppercase border-2 border-black hover:-translate-y-px transition-all shadow-street-hard-sm"
                                     >
                                       編集
                                     </button>
                                     <button
                                       onClick={() => deleteComment(comment.commentId)}
-                                      className="text-xs px-3 py-1 bg-red-400 text-white rounded-lg font-black uppercase border-2 border-white hover:-translate-y-px transition-all shadow-[2px_2px_0_rgba(0,0,0,0.8)]"
+                                      className="text-xs px-3 py-1 bg-red-400 text-white rounded-lg font-black uppercase border-2 border-white hover:-translate-y-px transition-all shadow-street-hard-sm"
                                     >
                                       削除
                                     </button>
@@ -1647,7 +1647,7 @@ export default function TopicPage() {
                     <button
                       onClick={() => saveComment(reply.id)}
                       disabled={!commentTexts[reply.id]}
-                      className="px-4 py-2 bg-cyan-400 text-black rounded-lg font-black uppercase text-sm border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] disabled:bg-gray-300 disabled:border-gray-400 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
+                      className="px-4 py-2 bg-cyan-400 text-black rounded-lg font-black uppercase text-sm border-3 border-black shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover disabled:bg-gray-300 disabled:border-gray-400 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
                     >
                       送信
                     </button>

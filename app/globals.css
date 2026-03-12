@@ -25,6 +25,20 @@ layer(base);
   --color-street-border: #000000;
   --color-street-card-border: #000000;
 
+  /* === STREET シャドウトークン === */
+  --shadow-street-hard: 0 4px 0 rgba(0,0,0,0.8);
+  --shadow-street-hard-hover: 0 6px 0 rgba(0,0,0,0.8);
+  --shadow-street-hard-active: 0 2px 0 rgba(0,0,0,0.8);
+  --shadow-street-hard-sm: 2px 2px 0 rgba(0,0,0,0.8);
+  --shadow-street-soft: 0 4px 12px rgba(0,0,0,0.3);
+  --shadow-street-xs: 0 1px 0 rgba(0,0,0,0.6);
+  --shadow-street-sm: 0 2px 0 rgba(0,0,0,0.6);
+  --shadow-street-sm-hover: 0 3px 0 rgba(0,0,0,0.6);
+  --shadow-street-md: 0 3px 0 rgba(0,0,0,0.8);
+  --shadow-street-lg: 0 8px 0 rgba(0,0,0,0.9);
+  --shadow-street-lg-hover: 0 10px 0 rgba(0,0,0,0.9);
+  --shadow-street-lg-active: 0 4px 0 rgba(0,0,0,0.9);
+
   /* === CHROME テーマ === */
   --color-chrome-bg: #000000;
   --color-chrome-surface: #060606;
@@ -47,6 +61,11 @@ layer(base);
   --color-chrome-gradient-mid: #cfcfcf;
   --color-chrome-gradient-end: #f7f7f7;
 
+  /* === CHROME シャドウトークン === */
+  --shadow-chrome-hard-lg: 0 8px 0 rgba(255,255,255,0.15);
+  --shadow-chrome-hard-lg-hover: 0 10px 0 rgba(255,255,255,0.2);
+  --shadow-chrome-hard-lg-active: 0 4px 0 rgba(255,255,255,0.15);
+
   /* === LIBRARY テーマ === */
   --color-library-bg: #F2F0E9;
   --color-library-surface: #ECE7DB;
@@ -62,6 +81,8 @@ layer(base);
   --shadow-library-neu-hover: 5px 5px 10px rgba(163,141,115,0.18), -5px -5px 10px rgba(255,255,255,0.6);
   --shadow-library-neu-inset: inset 2px 2px 5px rgba(163,141,115,0.15), inset -2px -2px 5px rgba(255,255,255,0.5);
   --shadow-library-neu-inset-subtle: inset 2px 2px 5px rgba(163,141,115,0.1), inset -2px -2px 5px rgba(255,255,255,0.4);
+  --shadow-library-neu-lg: 6px 6px 12px rgba(163,141,115,0.2), -6px -6px 12px rgba(255,255,255,0.6);
+  --shadow-library-neu-active: inset 3px 3px 6px rgba(163,141,115,0.25), inset -2px -2px 5px rgba(255,255,255,0.3);
 
   --animate-in: fade-in 150ms ease-out;
   --animate-out: fade-out 150ms ease-in;
@@ -306,18 +327,14 @@ html.library div[class*="bg-purple"],
 html.library div[class*="bg-orange"],
 html.library div[class*="bg-red"],
 html.library div[class*="bg-indigo"] {
-  box-shadow: 
-    6px 6px 12px rgba(163, 141, 115, 0.2),
-    -6px -6px 12px rgba(255, 255, 255, 0.6);
+  box-shadow: var(--shadow-library-neu-lg);
 }
 
 /* ボタン - 通常時 */
 html.library button:not(:disabled),
 html.library [type="button"]:not(:disabled),
 html.library a[role="button"] {
-  box-shadow: 
-    4px 4px 8px rgba(163, 141, 115, 0.15),
-    -4px -4px 8px rgba(255, 255, 255, 0.5);
+  box-shadow: var(--shadow-library-neu-sm);
   transform: translateY(0);
 }
 
@@ -325,27 +342,21 @@ html.library a[role="button"] {
 html.library button:not(:disabled):hover,
 html.library [type="button"]:not(:disabled):hover,
 html.library a[role="button"]:hover {
-  box-shadow: 
-    5px 5px 10px rgba(163, 141, 115, 0.18),
-    -5px -5px 10px rgba(255, 255, 255, 0.6);
+  box-shadow: var(--shadow-library-neu-hover);
 }
 
 /* ボタン - アクティブ時（押下） */
 html.library button:active:not(:disabled),
 html.library [type="button"]:active:not(:disabled),
 html.library a[role="button"]:active {
-  box-shadow: 
-    inset 3px 3px 6px rgba(163, 141, 115, 0.25),
-    inset -2px -2px 5px rgba(255, 255, 255, 0.3);
+  box-shadow: var(--shadow-library-neu-active);
 }
 
 /* 入力欄 - 内側影で凹んだ印象 */
 html.library input:not([type="checkbox"]):not([type="radio"]),
 html.library textarea,
 html.library select {
-  box-shadow: 
-    inset 2px 2px 5px rgba(163, 141, 115, 0.15),
-    inset -2px -2px 5px rgba(255, 255, 255, 0.5);
+  box-shadow: var(--shadow-library-neu-inset);
 }
 
 /* アイコン画像だけは円形を維持 */
