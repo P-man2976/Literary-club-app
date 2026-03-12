@@ -77,7 +77,7 @@ export function MembersTabContent() {
 
           return (
             <Card key={member.email} shadow="none" theme={appTheme}
-              className={appTheme === "street" ? "bg-gradient-to-br from-cyan-200 to-blue-300" : ""}
+              className={appTheme === "street" ? "bg-linear-to-br from-cyan-200 to-blue-300" : ""}
             >
               <CardBody className="p-5 space-y-3">
                 <div className="flex items-center gap-3">

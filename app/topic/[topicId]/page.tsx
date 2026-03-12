@@ -124,7 +124,7 @@ const aiSection = tv({
   base: "p-6 mb-8",
   variants: {
     theme: {
-      street: "jsr-card bg-gradient-to-br from-purple-300 to-pink-300 dark:from-purple-950 dark:to-pink-950 rounded-2xl",
+      street: "jsr-card bg-linear-to-br from-purple-300 to-pink-300 dark:from-purple-950 dark:to-pink-950 rounded-2xl",
       chrome: "bg-transparent border-0 border-b border-white/25 rounded-none",
       library: "jsr-card bg-[#F8F5EE] rounded-2xl shadow-[4px_4px_10px_rgba(163,141,115,0.15),-4px_-4px_10px_rgba(255,255,255,0.5)]",
     },
@@ -907,7 +907,7 @@ export default function TopicPage() {
         <p>投稿が見つかりませんでした</p>
         <button
           onClick={() => router.back()}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-sm"
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-xs"
         >
           戻る
         </button>
@@ -950,7 +950,7 @@ export default function TopicPage() {
                   type="text"
                   value={editingPostTitle}
                   onChange={(e) => setEditingPostTitle(e.target.value)}
-                  className="w-full px-4 py-2 border border-default-300 dark:border-default-600 bg-default-50 dark:bg-default-800 text-default-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-default-300 dark:border-default-600 bg-default-50 dark:bg-default-800 text-default-900 dark:text-slate-100 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
@@ -958,7 +958,7 @@ export default function TopicPage() {
                 <textarea
                   value={editingPostBody}
                   onChange={(e) => setEditingPostBody(e.target.value)}
-                  className="w-full px-4 py-2 border border-default-300 dark:border-default-600 bg-default-50 dark:bg-default-800 text-default-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[200px]"
+                  className="w-full px-4 py-2 border border-default-300 dark:border-default-600 bg-default-50 dark:bg-default-800 text-default-900 dark:text-slate-100 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[200px]"
                 />
               </div>
               <div className="flex gap-4">
@@ -1128,19 +1128,19 @@ export default function TopicPage() {
                         <textarea
                           value={editingCommentText}
                           onChange={(e) => setEditingCommentText(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                           rows={3}
                         />
                         <div className="flex gap-2">
                           <button
                             onClick={() => editComment(comment.commentId)}
-                            className="px-3 py-1 bg-blue-500 text-white rounded-sm text-xs hover:bg-blue-600"
+                            className="px-3 py-1 bg-blue-500 text-white rounded-xs text-xs hover:bg-blue-600"
                           >
                             保存
                           </button>
                           <button
                             onClick={cancelEditingComment}
-                            className="px-3 py-1 bg-default-300 dark:bg-default-700 text-default-700 dark:text-slate-200 rounded-sm text-xs hover:bg-default-400 dark:hover:bg-default-600"
+                            className="px-3 py-1 bg-default-300 dark:bg-default-700 text-default-700 dark:text-slate-200 rounded-xs text-xs hover:bg-default-400 dark:hover:bg-default-600"
                           >
                             キャンセル
                           </button>
@@ -1193,7 +1193,7 @@ export default function TopicPage() {
                   placeholder="コメントを入力..."
                   value={commentTexts[topic.id] || ""}
                   onChange={(e) => setCommentTexts({ ...commentTexts, [topic.id]: e.target.value })}
-                  className="flex-1 px-3 py-2 border-3 border-black dark:border-green-600 bg-white dark:bg-gray-900 dark:text-green-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-cyan-400 dark:focus:ring-green-500"
+                  className="flex-1 px-3 py-2 border-3 border-black dark:border-green-600 bg-white dark:bg-gray-900 dark:text-green-200 rounded-lg text-sm font-semibold focus:outline-hidden focus:ring-4 focus:ring-cyan-400 dark:focus:ring-green-500"
                   rows={2}
                 />
                 <button
@@ -1315,7 +1315,7 @@ export default function TopicPage() {
                     type="file"
                     accept=".txt,.pdf,.docx"
                     onChange={handleFileChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-sm cursor-pointer"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-xs cursor-pointer"
                   />
                   <p className="text-xs text-gray-500 dark:text-slate-200 mt-2">対応形式: テキスト (.txt), PDF, Word (.docx)</p>
                   <p className="text-xs text-gray-400 dark:text-slate-300 mt-1">ファイルのタイトルと内容から自動で投稿が作成されます</p>
@@ -1337,7 +1337,7 @@ export default function TopicPage() {
                       <select
                         value={newPost.tag || "創作"}
                         onChange={(e) => setNewPost({ ...newPost, tag: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                       >
                         <option>創作</option>
                         <option>随筆</option>
@@ -1419,7 +1419,7 @@ export default function TopicPage() {
                           type="text"
                           value={editingPostTitle}
                           onChange={(e) => setEditingPostTitle(e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                       <div>
@@ -1427,7 +1427,7 @@ export default function TopicPage() {
                         <textarea
                           value={editingPostBody}
                           onChange={(e) => setEditingPostBody(e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[200px]"
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[200px]"
                         />
                       </div>
                       <div className="flex gap-4">
@@ -1577,19 +1577,19 @@ export default function TopicPage() {
                               <textarea
                                 value={editingCommentText}
                                 onChange={(e) => setEditingCommentText(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                                 rows={3}
                               />
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => editComment(comment.commentId)}
-                                  className="px-3 py-1 bg-blue-500 text-white rounded-sm text-xs hover:bg-blue-600"
+                                  className="px-3 py-1 bg-blue-500 text-white rounded-xs text-xs hover:bg-blue-600"
                                 >
                                   保存
                                 </button>
                                 <button
                                   onClick={cancelEditingComment}
-                                  className="px-3 py-1 bg-default-300 dark:bg-default-700 text-default-700 dark:text-slate-200 rounded-sm text-xs hover:bg-default-400 dark:hover:bg-default-600"
+                                  className="px-3 py-1 bg-default-300 dark:bg-default-700 text-default-700 dark:text-slate-200 rounded-xs text-xs hover:bg-default-400 dark:hover:bg-default-600"
                                 >
                                   キャンセル
                                 </button>
@@ -1641,7 +1641,7 @@ export default function TopicPage() {
                       placeholder="コメントを入力..."
                       value={commentTexts[reply.id] || ""}
                       onChange={(e) => setCommentTexts({ ...commentTexts, [reply.id]: e.target.value })}
-                      className="flex-1 px-3 py-2 border-3 border-black dark:border-green-600 bg-white dark:bg-gray-900 dark:text-green-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-cyan-400 dark:focus:ring-green-500"
+                      className="flex-1 px-3 py-2 border-3 border-black dark:border-green-600 bg-white dark:bg-gray-900 dark:text-green-200 rounded-lg text-sm font-semibold focus:outline-hidden focus:ring-4 focus:ring-cyan-400 dark:focus:ring-green-500"
                       rows={2}
                     />
                     <button

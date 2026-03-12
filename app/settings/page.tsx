@@ -255,7 +255,7 @@ export default function SettingsPage() {
                         <button
                           onClick={toggleNotifications}
                           disabled={notificationPermission === "denied"}
-                          className={`chrome-toggle relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                          className={`chrome-toggle relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-hidden focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                             notificationEnabled ? "bg-primary" : "bg-gray-300"
                           } ${notificationEnabled ? "chrome-toggle-on" : "chrome-toggle-off"} ${notificationPermission === "denied" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                         >
@@ -296,7 +296,7 @@ export default function SettingsPage() {
                     </div>
                     <button
                       onClick={toggleAiReading}
-                      className={`chrome-toggle relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                      className={`chrome-toggle relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-hidden focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                         aiReadingEnabled ? "bg-primary" : "bg-gray-300"
                       } ${aiReadingEnabled ? "chrome-toggle-on" : "chrome-toggle-off"}`}
                     >

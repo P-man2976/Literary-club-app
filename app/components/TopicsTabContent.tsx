@@ -51,7 +51,7 @@ export function TopicsTabContent({
                 <Card 
                   shadow="none"
                   theme={appTheme}
-                  className={appTheme === "street" ? "bg-gradient-to-br from-pink-300 to-purple-400" : ""}
+                  className={appTheme === "street" ? "bg-linear-to-br from-pink-300 to-purple-400" : ""}
                 >
                   <CardBody className="p-5 gap-3">
                     <div className="flex items-center">

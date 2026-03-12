@@ -146,11 +146,11 @@ export default function MyContentPage() {
                       {/* タイプバッジ */}
                       <div className="flex items-center gap-2 mb-2">
                         {post.isTopicPost === 1 ? (
-                          <span className="text-[10px] bg-purple-200 dark:bg-purple-900 px-2 py-0.5 rounded-sm text-purple-700 dark:text-purple-200 font-bold uppercase tracking-wider">お題</span>
+                          <span className="text-[10px] bg-purple-200 dark:bg-purple-900 px-2 py-0.5 rounded-xs text-purple-700 dark:text-purple-200 font-bold uppercase tracking-wider">お題</span>
                         ) : post.parentPostId ? (
-                          <span className="text-[10px] bg-green-200 dark:bg-green-900 px-2 py-0.5 rounded-sm text-green-700 dark:text-green-200 font-bold uppercase tracking-wider">投稿</span>
+                          <span className="text-[10px] bg-green-200 dark:bg-green-900 px-2 py-0.5 rounded-xs text-green-700 dark:text-green-200 font-bold uppercase tracking-wider">投稿</span>
                         ) : (
-                          <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-sm text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">{post.tag}</span>
+                          <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">{post.tag}</span>
                         )}
                       </div>
 

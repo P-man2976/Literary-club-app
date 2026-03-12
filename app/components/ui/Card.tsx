@@ -12,7 +12,7 @@ const card = tv({
   variants: {
     shadow: {
       none: { base: "shadow-none" },
-      sm: { base: "shadow-sm" },
+      sm: { base: "shadow-xs" },
       md: { base: "shadow-md" },
     },
     isPressable: {

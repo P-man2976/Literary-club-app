@@ -100,7 +100,7 @@ export function TopicDecisionModal({ isOpen, onClose }: TopicDecisionModalProps)
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
-        <div className="library-topic-modal-header rounded-t-[14px] flex justify-between items-center border-b-4 border-black dark:border-green-400 p-6 bg-gradient-to-r from-yellow-300 to-pink-400 dark:bg-[#00FFFF]">
+        <div className="library-topic-modal-header rounded-t-[14px] flex justify-between items-center border-b-4 border-black dark:border-green-400 p-6 bg-linear-to-r from-yellow-300 to-pink-400 dark:bg-[#00FFFF]">
           <h2 className="text-2xl font-black uppercase flex items-center gap-2 text-black dark:text-gray-900">
             <HandDrawnTopicIcon size={24} />
             お題を決定

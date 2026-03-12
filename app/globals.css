@@ -1,8 +1,54 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=Noto+Sans+JP:wght@300;400;700;900&family=Noto+Serif+JP:wght@500;700&family=Orbitron:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=Noto+Sans+JP:wght@300;400;700;900&family=Noto+Serif+JP:wght@500;700&family=Orbitron:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap') layer(base);
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-octo-dark: #0b1a1a;
+  --color-octo-mint: #00f0a8;
+  --color-octo-magenta: #ff008c;
+  --color-octo-text: #e0f7fa;
+
+  --color-jsr-yellow: #fdfd96;
+  --color-jsr-orange: #ff8c00;
+  --color-jsr-blue: #00bfff;
+  --color-jsr-black: #000000;
+
+  --animate-in: fade-in 150ms ease-out;
+  --animate-out: fade-out 150ms ease-in;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  @keyframes zoom-in-95 {
+    from { transform: scale(0.95); }
+    to { transform: scale(1); }
+  }
+  @keyframes zoom-out-95 {
+    from { transform: scale(1); }
+    to { transform: scale(0.95); }
+  }
+}
+
+/*
+  Tailwind v4 compat: v3 では border-color のデフォルトが currentColor だったが、
+  v4 ではグレーに変わるため、既存UIの見た目を維持するために currentColor に戻す。
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: currentColor;
+  }
+}
 
 :root {
   font-family: 'Noto Sans JP', 'Anton', 'Bebas Neue', Impact, sans-serif;

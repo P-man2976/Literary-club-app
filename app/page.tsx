@@ -33,7 +33,7 @@ const header = tv({
   variants: {
     theme: {
       street: "bg-white shadow-[0_4px_0_rgba(0,0,0,0.6)]",
-      chrome: "bg-gradient-to-b from-black/75 via-black/45 to-transparent backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.6)]",
+      chrome: "bg-linear-to-b from-black/75 via-black/45 to-transparent backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.6)]",
       library: "bg-[#F2F0E9]/90 backdrop-blur-md",
     },
   },

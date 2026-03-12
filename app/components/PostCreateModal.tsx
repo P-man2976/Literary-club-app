@@ -76,7 +76,7 @@ export function PostCreateModal({ isOpen, onClose }: PostCreateModalProps) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
-        <div className="flex justify-between items-center border-b-4 border-black p-6 bg-gradient-to-r from-purple-300 to-pink-400">
+        <div className="flex justify-between items-center border-b-4 border-black p-6 bg-linear-to-r from-purple-300 to-pink-400">
           <h2 className="text-2xl font-black uppercase flex items-center gap-2">
             <HandDrawnPostIcon size={24} />
             投稿を作成

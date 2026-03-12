@@ -65,7 +65,7 @@ export function ProposalModal({ isOpen, onClose }: ProposalModalProps) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
-        <div className="flex justify-between items-center border-b-4 border-black p-6 bg-gradient-to-r from-yellow-300 to-orange-400">
+        <div className="flex justify-between items-center border-b-4 border-black p-6 bg-linear-to-r from-yellow-300 to-orange-400">
           <h2 className="text-2xl font-black uppercase flex items-center gap-2">
             <Lightbulb size={24} strokeWidth={3} />
             お題案を投稿

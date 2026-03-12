@@ -48,7 +48,7 @@ const TabsList = React.forwardRef<
 TabsList.displayName = "TabsList";
 
 const tabsTrigger = tv({
-  base: "h-14 w-full inline-flex items-center justify-center font-black text-lg tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50",
+  base: "h-14 w-full inline-flex items-center justify-center font-black text-lg tracking-wider transition-all focus-visible:outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50",
   variants: {
     theme: {
       street: "rounded-none uppercase text-white data-[state=active]:font-black data-[state=active]:text-black data-[state=active]:bg-yellow-400 shake-hover",
@@ -78,7 +78,7 @@ const TabsContent = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <TabsPrimitive.Content
     ref={ref}
-    className={cn("focus-visible:outline-none", className)}
+    className={cn("focus-visible:outline-hidden", className)}
     {...props}
   />
 ));
