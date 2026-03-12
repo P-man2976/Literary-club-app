@@ -2,12 +2,8 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useTheme } from "next-themes";
-import {
-  Card,
-  CardBody,
-  Chip,
-} from "@heroui/react";
+import { useAppTheme } from "@/app/hooks/useAppTheme";
+import { Card, CardBody, Chip } from "@/app/components/ui";
 import { Lightbulb, Pin } from "lucide-react";
 import type { Post } from "@/app/types/post";
 import { formatDateTime } from "@/app/lib/formatUtils";
@@ -23,9 +19,7 @@ export function TopicsTabContent({
   onCreateProposal,
 }: TopicsTabContentProps) {
   const { data: session } = useSession();
-  const { resolvedTheme } = useTheme();
-  const isChromeTheme = resolvedTheme === "dark";
-  const isLibraryTheme = resolvedTheme === "library";
+  const { appTheme } = useAppTheme();
   const {
     topicPosts,
     topicProposals,
@@ -56,12 +50,8 @@ export function TopicsTabContent({
                 <h2 className="text-2xl font-black px-2 uppercase tracking-wide text-black dark:text-green-300">今週のお題</h2>
                 <Card 
                   shadow="none"
-                  className={isChromeTheme
-                    ? "bg-transparent border-0 border-b border-white/35 rounded-none shadow-none"
-                    : isLibraryTheme
-                      ? "jsr-card bg-[#ECE7DB] rounded-2xl"
-                      : "jsr-card bg-gradient-to-br from-pink-300 to-purple-400 dark:from-green-900 dark:to-cyan-900 rounded-2xl"
-                  }
+                  theme={appTheme}
+                  className={appTheme === "street" ? "bg-gradient-to-br from-pink-300 to-purple-400" : ""}
                 >
                   <CardBody className="p-5 gap-3">
                     <div className="flex items-center">
@@ -137,10 +127,8 @@ export function TopicsTabContent({
                 <h2 className="text-2xl font-black px-2 uppercase tracking-wide text-black dark:text-green-300">今週のお題</h2>
                 <Card
                   shadow="none"
-                  className={isChromeTheme
-                    ? "bg-transparent border-0 border-b border-white/35 rounded-none shadow-none"
-                    : "jsr-card bg-white dark:bg-gray-900 rounded-2xl"
-                  }
+                  theme={appTheme}
+                  className={appTheme === "street" ? "bg-white" : ""}
                 >
                   <CardBody className="p-5">
                     <p className="text-sm font-black uppercase text-gray-700 dark:text-gray-200">今週のお題はありません</p>
@@ -152,10 +140,9 @@ export function TopicsTabContent({
 
             {/* お題決定ボタン */}
             {session && (
-              <Card shadow="sm" className={isChromeTheme
-                ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
-                : "jsr-card border border-blue-300 dark:border-green-600 rounded-2xl bg-blue-50/80 dark:bg-green-950/10"
-              }>
+              <Card shadow="sm" theme={appTheme}
+                className={appTheme === "street" ? "border border-blue-300 bg-blue-50/80" : ""}
+              >
                 <CardBody className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -187,10 +174,8 @@ export function TopicsTabContent({
                   <Card 
                     key={topic.id}
                     shadow="none"
-                    className={isChromeTheme
-                      ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
-                      : "jsr-card bg-white dark:bg-gray-900 rounded-xl"
-                    }
+                    theme={appTheme}
+                    className={appTheme === "street" ? "bg-white" : ""}
                   >
                     <CardBody className="p-4 gap-2">
                       <div className="flex items-center">

@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { useTheme } from "next-themes";
+import { useAppTheme } from "@/app/hooks/useAppTheme";
 import { useIconUrlMap } from "@/app/hooks/useIconUrl";
 import {
   ArrowLeft,
@@ -18,6 +18,7 @@ import {
   HandDrawnHeartIcon,
   HandDrawnCommentIcon,
 } from "@/app/components/HandDrawnIcons";
+import { tv } from "tailwind-variants";
 
 type Comment = {
   commentId: string;
@@ -64,11 +65,131 @@ type TopicAnalysis = {
   }>;
 };
 
+const topicScene = tv({
+  base: "topic-detail-scene min-h-screen p-4 md:p-6 relative z-10",
+  variants: {
+    theme: {
+      street: "",
+      chrome: "chrome-theme-detail",
+      library: "",
+    },
+  },
+});
+
+const topicHeader = tv({
+  base: "flex items-center mb-8 p-4",
+  variants: {
+    theme: {
+      street: "bg-white/20 backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.8)] rounded-2xl",
+      chrome: "bg-black border-b border-white/30",
+      library: "bg-[#F8F5EE] rounded-2xl shadow-[4px_4px_10px_rgba(163,141,115,0.15),-4px_-4px_10px_rgba(255,255,255,0.5)]",
+    },
+  },
+});
+
+const topicHeaderTitle = tv({
+  base: "text-center flex-1 tracking-wide",
+  variants: {
+    theme: {
+      street: "text-3xl font-black uppercase",
+      chrome: "text-xl font-medium text-white",
+      library: "text-2xl font-serif font-bold text-[#3F3427]",
+    },
+  },
+});
+
+const parentTopicBox = tv({
+  base: "p-4 mb-6",
+  variants: {
+    theme: {
+      street: "bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400 rounded-xl",
+      chrome: "border-l-2 border-white/40",
+      library: "bg-[#F8F5EE] border-l-4 border-[#A38D73] rounded-xl shadow-[inset_2px_2px_5px_rgba(163,141,115,0.1),inset_-2px_-2px_5px_rgba(255,255,255,0.4)]",
+    },
+  },
+});
+
+const topicCard = tv({
+  base: "p-6 mb-8",
+  variants: {
+    theme: {
+      street: "jsr-card bg-white dark:bg-gray-900 rounded-2xl",
+      chrome: "bg-transparent border-0 border-b border-white/25 rounded-none",
+      library: "jsr-card bg-[#ECE7DB] rounded-2xl",
+    },
+  },
+});
+
+const aiSection = tv({
+  base: "p-6 mb-8",
+  variants: {
+    theme: {
+      street: "jsr-card bg-gradient-to-br from-purple-300 to-pink-300 dark:from-purple-950 dark:to-pink-950 rounded-2xl",
+      chrome: "bg-transparent border-0 border-b border-white/25 rounded-none",
+      library: "jsr-card bg-[#F8F5EE] rounded-2xl shadow-[4px_4px_10px_rgba(163,141,115,0.15),-4px_-4px_10px_rgba(255,255,255,0.5)]",
+    },
+  },
+});
+
+const postFormSection = tv({
+  base: "p-6 mb-8",
+  variants: {
+    theme: {
+      street: "bg-white dark:bg-slate-900 rounded-2xl shadow-md",
+      chrome: "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none",
+      library: "bg-[#F8F5EE] rounded-2xl shadow-[4px_4px_10px_rgba(163,141,115,0.15),-4px_-4px_10px_rgba(255,255,255,0.5)]",
+    },
+  },
+});
+
+const postFormTitle = tv({
+  base: "mb-4 flex items-center gap-2",
+  variants: {
+    theme: {
+      street: "text-lg font-bold dark:text-slate-100",
+      chrome: "text-base font-medium text-white",
+      library: "text-lg font-serif font-bold text-[#3F3427]",
+    },
+  },
+});
+
+const repliesHeader = tv({
+  base: "flex items-center justify-between mb-4 p-4",
+  variants: {
+    theme: {
+      street: "bg-white/20 backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.8)] rounded-2xl",
+      chrome: "border-b border-white/30",
+      library: "bg-[#F8F5EE] rounded-2xl shadow-[4px_4px_10px_rgba(163,141,115,0.15),-4px_-4px_10px_rgba(255,255,255,0.5)]",
+    },
+  },
+});
+
+const replyCard = tv({
+  base: "p-6 mb-4",
+  variants: {
+    theme: {
+      street: "jsr-card bg-white dark:bg-gray-900 rounded-2xl spray-hover",
+      chrome: "bg-transparent border-0 border-b border-white/25 rounded-none",
+      library: "jsr-card bg-[#ECE7DB] rounded-2xl",
+    },
+  },
+});
+
+const commentBubble = tv({
+  base: "bg-yellow-100 dark:bg-gray-800 border-3 border-black dark:border-green-600 rounded-xl p-3 text-sm",
+  variants: {
+    theme: {
+      street: "shadow-[4px_4px_0_rgba(0,0,0,0.8)]",
+      chrome: "shadow-[4px_4px_0_rgba(0,0,0,0.8)]",
+      library: "",
+    },
+  },
+});
+
 export default function TopicPage() {
   const aiReadingSettingKey = "lit-club-ai-reading-enabled";
   const { data: session } = useSession();
-  const { resolvedTheme } = useTheme();
-  const isChromeTheme = resolvedTheme === "dark";
+  const { appTheme } = useAppTheme();
   const params = useParams();
   const router = useRouter();
   const topicId = params.topicId as string;
@@ -786,7 +907,7 @@ export default function TopicPage() {
         <p>投稿が見つかりませんでした</p>
         <button
           onClick={() => router.back()}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-sm"
         >
           戻る
         </button>
@@ -795,13 +916,10 @@ export default function TopicPage() {
   }
 
   return (
-    <div className={`topic-detail-scene min-h-screen p-4 md:p-6 relative z-10 ${isChromeTheme ? "chrome-theme-detail" : ""}`}>
+    <div className={topicScene({ theme: appTheme })}>
       <div className="max-w-3xl mx-auto">
         {/* ヘッダー */}
-        <div className={isChromeTheme
-          ? "flex items-center mb-8 bg-black border-b border-white/30 p-4"
-          : "flex items-center mb-8 bg-white/20 backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.8)] rounded-2xl p-4"
-        }>
+        <div className={topicHeader({ theme: appTheme })}>
           <button
             onClick={() => router.back()}
             className="px-4 py-2 bg-cyan-400 text-black border-3 border-black rounded-full font-black uppercase shake-hover flex items-center gap-2 hover:translate-y-[-2px] transition-all"
@@ -809,18 +927,12 @@ export default function TopicPage() {
             <ArrowLeft size={18} strokeWidth={3} />
             戻る
           </button>
-          <h1 className={isChromeTheme
-            ? "text-xl font-medium text-center flex-1 tracking-wide text-white"
-            : "text-3xl font-black text-center flex-1 uppercase tracking-wide"
-          }>投稿詳細</h1>
+          <h1 className={topicHeaderTitle({ theme: appTheme })}>投稿詳細</h1>
         </div>
 
         {/* 親のお題（お題への返信の場合） */}
         {parentTopic && (
-          <div className={isChromeTheme
-            ? "border-l-2 border-white/40 p-4 mb-6"
-            : "bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400 rounded-xl p-4 mb-6"
-          }>
+          <div className={parentTopicBox({ theme: appTheme })}>
             <p className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-2">このお題への返信です</p>
             <h3 className="text-lg font-black text-black dark:text-blue-200 mb-2 uppercase">{parentTopic.title}</h3>
             <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">{parentTopic.body}</p>
@@ -866,10 +978,7 @@ export default function TopicPage() {
             </div>
           </div>
         ) : (
-        <div className={isChromeTheme
-          ? "bg-transparent border-0 border-b border-white/25 rounded-none p-6 mb-8"
-          : "jsr-card bg-white dark:bg-gray-900 rounded-2xl p-6 mb-8"
-        }>
+        <div className={topicCard({ theme: appTheme })}>
           {getDeadlineStatus(topic.deadline) && (
             <div className={`inline-block px-3 py-1 rounded-full text-xs font-black mb-3 border-2 border-black dark:border-green-500 ${getDeadlineStatus(topic.deadline)!.bgColor} ${getDeadlineStatus(topic.deadline)!.textColor}`}>
               {getDeadlineStatus(topic.deadline)!.label}
@@ -993,7 +1102,7 @@ export default function TopicPage() {
               </p>
               <div className="space-y-3">
                 {topic.comments.sort((a, b) => a.createdAt - b.createdAt).map((comment) => (
-                  <div key={comment.commentId} className={`bg-yellow-100 dark:bg-gray-800 border-3 border-black dark:border-green-600 rounded-xl p-3 text-sm ${resolvedTheme !== 'library' ? 'shadow-[4px_4px_0_rgba(0,0,0,0.8)]' : ''}`}>
+                  <div key={comment.commentId} className={commentBubble({ theme: appTheme })}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-black flex items-center gap-2 uppercase text-xs text-black dark:text-green-300">
                         {getDisplayIcon(comment.authorEmail) ? (
@@ -1025,13 +1134,13 @@ export default function TopicPage() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => editComment(comment.commentId)}
-                            className="px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600"
+                            className="px-3 py-1 bg-blue-500 text-white rounded-sm text-xs hover:bg-blue-600"
                           >
                             保存
                           </button>
                           <button
                             onClick={cancelEditingComment}
-                            className="px-3 py-1 bg-default-300 dark:bg-default-700 text-default-700 dark:text-slate-200 rounded text-xs hover:bg-default-400 dark:hover:bg-default-600"
+                            className="px-3 py-1 bg-default-300 dark:bg-default-700 text-default-700 dark:text-slate-200 rounded-sm text-xs hover:bg-default-400 dark:hover:bg-default-600"
                           >
                             キャンセル
                           </button>
@@ -1043,7 +1152,7 @@ export default function TopicPage() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => toggleCommentLike(comment.commentId)}
-                            className={`text-xs px-3 py-1 rounded-lg font-black uppercase transition border-2 shadow-[2px_2px_0_rgba(0,0,0,0.8)] hover:translate-y-[-1px] hover:shadow-[3px_3px_0_rgba(0,0,0,0.8)] ${
+                            className={`text-xs px-3 py-1 rounded-lg font-black uppercase transition border-2 shadow-[2px_2px_0_rgba(0,0,0,0.8)] hover:-translate-y-px hover:shadow-[3px_3px_0_rgba(0,0,0,0.8)] ${
                               commentLikes[comment.commentId]
                                 ? "bg-pink-400 text-white border-white"
                                 : "bg-white text-black border-black"
@@ -1055,13 +1164,13 @@ export default function TopicPage() {
                             <>
                               <button
                                 onClick={() => startEditingComment(comment.commentId, comment.text)}
-                                className="text-xs px-3 py-1 bg-cyan-400 text-black rounded-lg font-black uppercase border-2 border-black hover:translate-y-[-1px] transition-all shadow-[2px_2px_0_rgba(0,0,0,0.8)]"
+                                className="text-xs px-3 py-1 bg-cyan-400 text-black rounded-lg font-black uppercase border-2 border-black hover:-translate-y-px transition-all shadow-[2px_2px_0_rgba(0,0,0,0.8)]"
                               >
                                 編集
                               </button>
                               <button
                                 onClick={() => deleteComment(comment.commentId)}
-                                className="text-xs px-3 py-1 bg-red-400 text-white rounded-lg font-black uppercase border-2 border-white hover:translate-y-[-1px] transition-all shadow-[2px_2px_0_rgba(0,0,0,0.8)]"
+                                className="text-xs px-3 py-1 bg-red-400 text-white rounded-lg font-black uppercase border-2 border-white hover:-translate-y-px transition-all shadow-[2px_2px_0_rgba(0,0,0,0.8)]"
                               >
                                 削除
                               </button>
@@ -1103,10 +1212,7 @@ export default function TopicPage() {
 
         {/* AI分析 - お題の場合のみ表示 */}
         {topic.isTopicPost === 1 && (
-        <div className={isChromeTheme
-          ? "bg-transparent border-0 border-b border-white/25 rounded-none p-6 mb-8"
-          : "jsr-card bg-gradient-to-br from-purple-300 to-pink-300 dark:from-purple-950 dark:to-pink-950 rounded-2xl p-6 mb-8"
-        }>
+        <div className={aiSection({ theme: appTheme })}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h3 className="text-2xl font-black uppercase tracking-wide text-black dark:text-purple-300">AI講評</h3>
             <button
@@ -1189,14 +1295,8 @@ export default function TopicPage() {
 
         {/* 投稿フォーム（ファイルインポート専用） - お題の場合のみ表示 */}
         {session && topic.isTopicPost === 1 && (
-          <div className={isChromeTheme
-            ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none p-6 mb-8"
-            : "bg-white dark:bg-slate-900 rounded-2xl shadow-md p-6 mb-8"
-          }>
-            <h3 className={isChromeTheme
-              ? "text-base font-medium text-white mb-4 flex items-center gap-2"
-              : "text-lg font-bold dark:text-slate-100 mb-4 flex items-center gap-2"
-            }>
+          <div className={postFormSection({ theme: appTheme })}>
+            <h3 className={postFormTitle({ theme: appTheme })}>
               <PenLine size={18} />
               このお題に投稿する
             </h3>
@@ -1215,7 +1315,7 @@ export default function TopicPage() {
                     type="file"
                     accept=".txt,.pdf,.docx"
                     onChange={handleFileChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded cursor-pointer"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-sm cursor-pointer"
                   />
                   <p className="text-xs text-gray-500 dark:text-slate-200 mt-2">対応形式: テキスト (.txt), PDF, Word (.docx)</p>
                   <p className="text-xs text-gray-400 dark:text-slate-300 mt-1">ファイルのタイトルと内容から自動で投稿が作成されます</p>
@@ -1237,7 +1337,7 @@ export default function TopicPage() {
                       <select
                         value={newPost.tag || "創作"}
                         onChange={(e) => setNewPost({ ...newPost, tag: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option>創作</option>
                         <option>随筆</option>
@@ -1264,10 +1364,7 @@ export default function TopicPage() {
         {/* 投稿一覧 - お題の場合のみ表示 */}
         {topic.isTopicPost === 1 && (
         <div>
-          <div className={isChromeTheme
-            ? "flex items-center justify-between mb-4 border-b border-white/30 p-4"
-            : "flex items-center justify-between mb-4 bg-white/20 backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.8)] rounded-2xl p-4"
-          }>
+          <div className={repliesHeader({ theme: appTheme })}>
             <h3 className="text-xl font-black uppercase tracking-wide">このお題への投稿 ({replies.length})</h3>
             {getReplyParticipants().length > 0 && (
               <div className="flex items-center gap-2">
@@ -1309,10 +1406,7 @@ export default function TopicPage() {
             replies.map((reply) => (
               <div
                 key={reply.id}
-                className={isChromeTheme
-                  ? "bg-transparent border-0 border-b border-white/25 rounded-none p-6 mb-4"
-                  : "jsr-card bg-white dark:bg-gray-900 rounded-2xl p-6 mb-4 spray-hover"
-                }
+                className={replyCard({ theme: appTheme })}
               >
                 {/* 編集フォーム */}
                 {editingPostId === reply.id ? (
@@ -1457,7 +1551,7 @@ export default function TopicPage() {
                     </p>
                     <div className="space-y-3">
                       {reply.comments.sort((a, b) => a.createdAt - b.createdAt).map((comment) => (
-                        <div key={comment.commentId} className={`bg-yellow-100 dark:bg-gray-800 border-3 border-black dark:border-green-600 rounded-xl p-3 text-sm ${resolvedTheme !== 'library' ? 'shadow-[4px_4px_0_rgba(0,0,0,0.8)]' : ''}`}>
+                        <div key={comment.commentId} className={commentBubble({ theme: appTheme })}>
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-black flex items-center gap-2 uppercase text-xs text-black dark:text-green-300">
                               {getDisplayIcon(comment.authorEmail) ? (
@@ -1489,13 +1583,13 @@ export default function TopicPage() {
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => editComment(comment.commentId)}
-                                  className="px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600"
+                                  className="px-3 py-1 bg-blue-500 text-white rounded-sm text-xs hover:bg-blue-600"
                                 >
                                   保存
                                 </button>
                                 <button
                                   onClick={cancelEditingComment}
-                                  className="px-3 py-1 bg-default-300 dark:bg-default-700 text-default-700 dark:text-slate-200 rounded text-xs hover:bg-default-400 dark:hover:bg-default-600"
+                                  className="px-3 py-1 bg-default-300 dark:bg-default-700 text-default-700 dark:text-slate-200 rounded-sm text-xs hover:bg-default-400 dark:hover:bg-default-600"
                                 >
                                   キャンセル
                                 </button>
@@ -1507,7 +1601,7 @@ export default function TopicPage() {
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => toggleCommentLike(comment.commentId)}
-                                  className={`text-xs px-3 py-1 rounded-lg font-black uppercase transition border-2 shadow-[2px_2px_0_rgba(0,0,0,0.8)] hover:translate-y-[-1px] hover:shadow-[3px_3px_0_rgba(0,0,0,0.8)] ${
+                                  className={`text-xs px-3 py-1 rounded-lg font-black uppercase transition border-2 shadow-[2px_2px_0_rgba(0,0,0,0.8)] hover:-translate-y-px hover:shadow-[3px_3px_0_rgba(0,0,0,0.8)] ${
                                     commentLikes[comment.commentId]
                                       ? "bg-pink-400 text-white border-white"
                                       : "bg-white text-black border-black"
@@ -1519,13 +1613,13 @@ export default function TopicPage() {
                                   <>
                                     <button
                                       onClick={() => startEditingComment(comment.commentId, comment.text)}
-                                      className="text-xs px-3 py-1 bg-cyan-400 text-black rounded-lg font-black uppercase border-2 border-black hover:translate-y-[-1px] transition-all shadow-[2px_2px_0_rgba(0,0,0,0.8)]"
+                                      className="text-xs px-3 py-1 bg-cyan-400 text-black rounded-lg font-black uppercase border-2 border-black hover:-translate-y-px transition-all shadow-[2px_2px_0_rgba(0,0,0,0.8)]"
                                     >
                                       編集
                                     </button>
                                     <button
                                       onClick={() => deleteComment(comment.commentId)}
-                                      className="text-xs px-3 py-1 bg-red-400 text-white rounded-lg font-black uppercase border-2 border-white hover:translate-y-[-1px] transition-all shadow-[2px_2px_0_rgba(0,0,0,0.8)]"
+                                      className="text-xs px-3 py-1 bg-red-400 text-white rounded-lg font-black uppercase border-2 border-white hover:-translate-y-px transition-all shadow-[2px_2px_0_rgba(0,0,0,0.8)]"
                                     >
                                       削除
                                     </button>
@@ -1566,21 +1660,19 @@ export default function TopicPage() {
         )}
 
       </div>
-      {isChromeTheme && (
-        <style jsx global>{`
-          .chrome-theme-detail .font-black,
-          .chrome-theme-detail .font-bold,
-          .chrome-theme-detail .font-semibold {
-            font-weight: 400 !important;
-          }
+      <style jsx global>{`
+        .chrome-theme-detail .font-black,
+        .chrome-theme-detail .font-bold,
+        .chrome-theme-detail .font-semibold {
+          font-weight: 400 !important;
+        }
 
-          .chrome-theme-detail h1,
-          .chrome-theme-detail h2,
-          .chrome-theme-detail h3 {
-            font-weight: 500 !important;
-          }
-        `}</style>
-      )}
+        .chrome-theme-detail h1,
+        .chrome-theme-detail h2,
+        .chrome-theme-detail h3 {
+          font-weight: 500 !important;
+        }
+      `}</style>
     </div>
   );
 }

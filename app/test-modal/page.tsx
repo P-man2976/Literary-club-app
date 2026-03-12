@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input } from "@heroui/react";
+import { Button, Input } from "@/app/components/ui";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from "@/app/components/ui/Dialog";
 
 export default function TestModalPage() {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,27 +14,25 @@ export default function TestModalPage() {
         Open Modal
       </Button>
 
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader>Test Modal</ModalHeader>
-              <ModalBody>
-                <Input label="Test Input" placeholder="Type something..." />
-                <p>If you can see this, the modal is working!</p>
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  Close
-                </Button>
-                <Button color="primary" onPress={onClose}>
-                  OK
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Test Modal</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <Input placeholder="Type something..." />
+            <p>If you can see this, the modal is working!</p>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="light" onPress={() => setIsOpen(false)}>
+              Close
+            </Button>
+            <Button color="primary" onPress={() => setIsOpen(false)}>
+              OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

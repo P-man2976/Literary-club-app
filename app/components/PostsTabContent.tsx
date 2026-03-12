@@ -2,12 +2,8 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useTheme } from "next-themes";
-import {
-  Card,
-  CardBody,
-  Chip,
-} from "@heroui/react";
+import { useAppTheme } from "@/app/hooks/useAppTheme";
+import { Card, CardBody, Chip } from "@/app/components/ui";
 import { Save } from "lucide-react";
 import {
   HandDrawnPlusIcon,
@@ -16,6 +12,18 @@ import {
   ChromeMessageIcon,
 } from "@/app/components/HandDrawnIcons";
 import { usePosts } from "@/app/hooks/usePosts";
+import { tv } from "tailwind-variants";
+
+const fab = tv({
+  base: "fixed right-6 bottom-24 z-40 h-14 rounded-full text-base font-black px-6 transition-all flex items-center gap-2 uppercase",
+  variants: {
+    theme: {
+      street: "bg-yellow-400 text-black border-4 border-white shadow-[0_8px_0_rgba(0,0,0,0.9)] hover:shadow-[0_10px_0_rgba(0,0,0,0.9)] hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-[0_6px_0_rgba(0,0,0,0.9)] shake-hover",
+      chrome: "bg-gray-600 text-white border-0 shadow-[0_8px_0_rgba(20,20,20,0.9)] hover:shadow-[0_10px_0_rgba(20,20,20,0.9)] hover:bg-gray-500 hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-[0_6px_0_rgba(20,20,20,0.9)]",
+      library: "bg-[#ECE7DB] text-[#3F3427] border-0 shadow-[4px_4px_8px_rgba(163,141,115,0.15),-4px_-4px_8px_rgba(255,255,255,0.5)] hover:shadow-[5px_5px_10px_rgba(163,141,115,0.18),-5px_-5px_10px_rgba(255,255,255,0.6)]",
+    },
+  },
+});
 
 type PostsTabContentProps = {
   onCreatePost: () => void;
@@ -25,9 +33,7 @@ export function PostsTabContent({
   onCreatePost,
 }: PostsTabContentProps) {
   const { data: session } = useSession();
-  const { resolvedTheme } = useTheme();
-  const isChromeTheme = resolvedTheme === "dark";
-  const isLibraryTheme = resolvedTheme === "library";
+  const { appTheme } = useAppTheme();
   const {
     freePosts,
     topicReplies,
@@ -53,10 +59,8 @@ export function PostsTabContent({
                 <Card 
                   key={post.id}
                   shadow="none"
-                  className={isChromeTheme
-                    ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
-                    : "jsr-card bg-white dark:bg-gray-800 rounded-xl"
-                  }
+                  theme={appTheme}
+                  className={appTheme === "street" ? "bg-white" : ""}
                 >
                   <CardBody className="p-4 gap-3">
                     <div className="flex items-center justify-between">
@@ -74,20 +78,16 @@ export function PostsTabContent({
                         {isTopicReply ? (
                           <Chip
                             size="md"
-                            className={isLibraryTheme
-                              ? "bg-[#E7E0D0] text-[#3F3427] font-bold"
-                              : "bg-purple-400 dark:bg-purple-800 text-white font-bold border-2 border-black dark:border-purple-500"
-                            }
+                            theme={appTheme}
+                            className={appTheme !== "library" ? "bg-purple-400 text-white font-bold border-2 border-black" : ""}
                           >
                             お題
                           </Chip>
                         ) : (
                           <Chip
                             size="md"
-                            className={isLibraryTheme
-                              ? "bg-[#E7E0D0] text-[#3F3427] font-bold"
-                              : "bg-cyan-400 dark:bg-cyan-700 text-black dark:text-cyan-200 font-bold border-2 border-black dark:border-cyan-400"
-                            }
+                            theme={appTheme}
+                            className={appTheme !== "library" ? "bg-cyan-400 text-black font-bold border-2 border-black" : ""}
                           >
                             自由投稿
                           </Chip>
@@ -108,7 +108,7 @@ export function PostsTabContent({
                         <p className="text-orange-600 dark:text-yellow-300 uppercase">→ クリックして詳細表示</p>
                         <div className="flex items-center gap-4 text-[1.08rem] leading-normal pt-0.5 pb-1 pr-1 overflow-visible">
                           <span className="flex items-center gap-2 text-blue-600 dark:text-cyan-400 leading-normal min-w-max">
-                            {isChromeTheme ? <ChromeMessageIcon size={21} /> : <HandDrawnCommentIcon size={21} className="overflow-visible shrink-0" />}
+                            {appTheme === "chrome" ? <ChromeMessageIcon size={21} /> : <HandDrawnCommentIcon size={21} className="overflow-visible shrink-0" />}
                             {post.commentCount || 0}
                           </span>
                           <span className="flex items-center gap-2 text-red-500 dark:text-pink-400 leading-normal min-w-max">
@@ -128,10 +128,7 @@ export function PostsTabContent({
 
       {session && (
         <button
-          className={isChromeTheme
-            ? "fixed right-6 bottom-24 z-40 h-14 rounded-full bg-gray-600 text-white text-base font-black px-6 border-0 shadow-[0_8px_0_rgba(20,20,20,0.9)] hover:shadow-[0_10px_0_rgba(20,20,20,0.9)] hover:bg-gray-500 hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-[0_6px_0_rgba(20,20,20,0.9)] transition-all flex items-center gap-2 uppercase"
-            : "fixed right-6 bottom-24 z-40 h-14 rounded-full bg-yellow-400 text-black text-base font-black px-6 border-4 border-white shadow-[0_8px_0_rgba(0,0,0,0.9)] hover:shadow-[0_10px_0_rgba(0,0,0,0.9)] hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-[0_6px_0_rgba(0,0,0,0.9)] transition-all flex items-center gap-2 uppercase shake-hover"
-          }
+          className={fab({ theme: appTheme })}
           onClick={onCreatePost}
           aria-label="投稿を作成"
         >

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { Button, Card, CardBody } from "@heroui/react";
+import { Button, Card, CardBody } from "@/app/components/ui";
 import { AlertTriangle, Check, ChevronRight } from "lucide-react";
 
 export default function SettingsPage() {
@@ -184,10 +184,12 @@ export default function SettingsPage() {
   return (
     <main className="min-h-screen max-w-3xl mx-auto">
       <header className="sticky top-0 z-30 bg-background border-b border-divider p-4 flex items-center gap-4">
-        <Button as={Link} href="/" isIconOnly variant="light" aria-label="戻る">
+        <Button asChild isIconOnly variant="light" aria-label="戻る">
+          <Link href="/">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="m15 18-6-6 6-6"/>
           </svg>
+          </Link>
         </Button>
         <h1 className="text-xl font-bold">設定</h1>
       </header>
@@ -213,7 +215,7 @@ export default function SettingsPage() {
                   <Button
                     onPress={() => setTheme("dark")}
                     variant="light"
-                    className={`w-full justify-start px-4 py-6 rounded-none ${theme === "dark" ? "bg-primary-50 dark:bg-primary-900/20" : ""}`}
+                    className={`w-full justify-start px-4 py-6 rounded-none ${theme === "dark" ? "bg-primary-50" : ""}`}
                   >
                     <div className="flex items-center gap-3 w-full">
                       <p className={`font-bold ${theme === "dark" ? "text-primary" : ""}`}>CHROME</p>

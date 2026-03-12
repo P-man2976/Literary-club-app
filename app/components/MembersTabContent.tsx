@@ -2,21 +2,38 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
-import { useTheme } from "next-themes";
-import {
-  Card,
-  CardBody,
-  Chip,
-} from "@heroui/react";
+import { useAppTheme } from "@/app/hooks/useAppTheme";
+import { Card, CardBody, Chip } from "@/app/components/ui";
 import { Users } from "lucide-react";
 import { usePosts } from "@/app/hooks/usePosts";
 import { useIconUrlMap } from "@/app/hooks/useIconUrl";
+import { tv } from "tailwind-variants";
+
+const memberSection = tv({
+  base: "",
+  variants: {
+    theme: {
+      street: "rounded-lg bg-white dark:bg-black border-3 border-black dark:border-white p-3",
+      chrome: "pt-3 border-t border-white/20",
+      library: "rounded-xl bg-[#F8F5EE] p-3 shadow-[inset_2px_2px_5px_rgba(163,141,115,0.1),inset_-2px_-2px_5px_rgba(255,255,255,0.4)]",
+    },
+  },
+});
+
+const memberAiSection = tv({
+  base: "",
+  variants: {
+    theme: {
+      street: "rounded-lg bg-pink-200 dark:bg-black border-3 border-black dark:border-white p-3",
+      chrome: "pt-3 border-t border-white/20",
+      library: "rounded-xl bg-[#F8F5EE] p-3 shadow-[inset_2px_2px_5px_rgba(163,141,115,0.1),inset_-2px_-2px_5px_rgba(255,255,255,0.4)]",
+    },
+  },
+});
 
 export function MembersTabContent() {
   const { data: session } = useSession();
-  const { resolvedTheme } = useTheme();
-  const isChromeTheme = resolvedTheme === "dark";
-  const isLibraryTheme = resolvedTheme === "library";
+  const { appTheme } = useAppTheme();
   const { memberProfiles } = usePosts();
 
   const memberIconMap = useMemo(() => {
@@ -42,10 +59,7 @@ export function MembersTabContent() {
   return (
     <div className="p-4 space-y-3">
       {memberProfiles.length === 0 ? (
-        <Card shadow="sm" className={isChromeTheme
-          ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
-          : "border border-default-200 rounded-2xl"
-        }>
+        <Card shadow="sm" theme={appTheme}>
           <CardBody className="p-6 text-center space-y-2">
             <Users size={28} className="mx-auto text-default-400" />
             <p className="text-sm font-semibold text-default-600">部員プロフィールはまだありません</p>
@@ -62,12 +76,9 @@ export function MembersTabContent() {
             : ["#文芸部", "#創作", "#部員紹介"];
 
           return (
-            <Card key={member.email} shadow="none" className={isChromeTheme
-              ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
-              : isLibraryTheme
-                ? "jsr-card bg-[#ECE7DB] rounded-2xl"
-                : "jsr-card bg-gradient-to-br from-cyan-200 to-blue-300 dark:bg-black rounded-2xl"
-            }>
+            <Card key={member.email} shadow="none" theme={appTheme}
+              className={appTheme === "street" ? "bg-gradient-to-br from-cyan-200 to-blue-300" : ""}
+            >
               <CardBody className="p-5 space-y-3">
                 <div className="flex items-center gap-3">
                   {iconUrl ? (
@@ -82,19 +93,13 @@ export function MembersTabContent() {
                   <p className="font-black text-xl uppercase tracking-wide text-black dark:text-white">{displayName}</p>
                 </div>
 
-                <div className={isChromeTheme
-                  ? "pt-3 border-t border-white/20"
-                  : "rounded-lg bg-white dark:bg-black border-3 border-black dark:border-white p-3"
-                }>
+                <div className={memberSection({ theme: appTheme })}>
                   <p className="text-xs font-black uppercase text-black dark:text-white mb-1">自己紹介</p>
                   <p className="text-sm font-semibold text-black dark:text-white">{member.selfIntro || "未設定"}</p>
                 </div>
 
                 {(aiReadingEnabled || member.email !== sessionEmail) && (
-                  <div className={isChromeTheme
-                    ? "pt-3 border-t border-white/20"
-                    : "rounded-lg bg-pink-200 dark:bg-black border-3 border-black dark:border-white p-3"
-                  }>
+                  <div className={memberAiSection({ theme: appTheme })}>
                     <p className="text-xs font-black uppercase text-black dark:text-white mb-1">AI短文分析</p>
                     <p className="text-sm font-semibold text-black dark:text-white">
                       {member.aiSummary || "過去投稿ベースのAI分析は準備中です。"}

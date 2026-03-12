@@ -146,16 +146,16 @@ export default function MyContentPage() {
                       {/* タイプバッジ */}
                       <div className="flex items-center gap-2 mb-2">
                         {post.isTopicPost === 1 ? (
-                          <span className="text-[10px] bg-purple-200 dark:bg-purple-900 px-2 py-0.5 rounded text-purple-700 dark:text-purple-200 font-bold uppercase tracking-wider">お題</span>
+                          <span className="text-[10px] bg-purple-200 dark:bg-purple-900 px-2 py-0.5 rounded-sm text-purple-700 dark:text-purple-200 font-bold uppercase tracking-wider">お題</span>
                         ) : post.parentPostId ? (
-                          <span className="text-[10px] bg-green-200 dark:bg-green-900 px-2 py-0.5 rounded text-green-700 dark:text-green-200 font-bold uppercase tracking-wider">投稿</span>
+                          <span className="text-[10px] bg-green-200 dark:bg-green-900 px-2 py-0.5 rounded-sm text-green-700 dark:text-green-200 font-bold uppercase tracking-wider">投稿</span>
                         ) : (
-                          <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">{post.tag}</span>
+                          <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-sm text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">{post.tag}</span>
                         )}
                       </div>
 
                       {/* タイトル */}
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2 break-words">{post.title}</h3>
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2 wrap-break-word">{post.title}</h3>
 
                       {/* 本文プレビュー */}
                       <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-3">{post.body}</p>
@@ -175,7 +175,7 @@ export default function MyContentPage() {
                         post.isTopicPost === 1 && 
                         allPosts.filter(p => p.parentPostId === post.id).length > 0
                       }
-                      className={`flex-shrink-0 p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100 ${
+                      className={`shrink-0 p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100 ${
                         post.isTopicPost === 1 && 
                         allPosts.filter(p => p.parentPostId === post.id).length > 0
                           ? "text-gray-300 dark:text-slate-600 cursor-not-allowed"
