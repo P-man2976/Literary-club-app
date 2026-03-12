@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import useSWRMutation from "swr/mutation";
-import type { KeyedMutator } from "swr";
 
 // --- fetcher 関数 ---
 
@@ -88,8 +87,6 @@ type UseTopicMutationsParams = {
   session: { user?: { name?: string | null; email?: string | null } } | null;
   penName: string;
   mutateAll: () => void;
-  mutateLikes: KeyedMutator<unknown>;
-  likesData: unknown;
   router: { push: (url: string) => void };
   getAnonymousUserId: () => string;
 };
@@ -99,8 +96,6 @@ export function useTopicMutations({
   session,
   penName,
   mutateAll,
-  mutateLikes,
-  likesData,
   router,
   getAnonymousUserId,
 }: UseTopicMutationsParams) {
@@ -160,39 +155,23 @@ export function useTopicMutations({
   );
 
   const handleLike = useCallback(
-    (postId: string) => {
+    (postId: string, isLiked: boolean) => {
       const userId = session?.user?.email || getAnonymousUserId();
-      const currentUserIds = getLikeUserIds(likesData, postId, topicId);
-      const isLiked = currentUserIds.includes(userId);
       const method = isLiked ? "DELETE" : "POST";
 
-      const optimisticLikesData = buildOptimisticLikesData(
-        likesData,
-        postId,
-        userId,
-        isLiked,
-        topicId
-      );
-
-      mutateLikes(
-        triggerLike({ postId, userId, method }).then(() => undefined),
+      triggerLike(
+        { postId, userId, method },
         {
-          optimisticData: optimisticLikesData,
-          revalidate: true,
-          rollbackOnError: true,
+          onSuccess: () => {
+            mutateAll();
+          },
+          onError: (error) => {
+            console.error("いいね操作エラー:", error);
+          },
         }
       );
     },
-    [session, getAnonymousUserId, likesData, topicId, mutateLikes, triggerLike]
-  );
-
-  const isPostLiked = useCallback(
-    (postId: string) => {
-      const userId = session?.user?.email || getAnonymousUserId();
-      const userIds = getLikeUserIds(likesData, postId, topicId);
-      return userIds.includes(userId);
-    },
-    [session, getAnonymousUserId, likesData, topicId]
+    [session, getAnonymousUserId, triggerLike, mutateAll]
   );
 
   const deletePost = useCallback(
@@ -340,66 +319,10 @@ export function useTopicMutations({
     saveReply,
     isCreatingReply,
     handleLike,
-    isPostLiked,
     deletePost,
     saveEditedPost,
     saveComment,
     editComment,
     deleteComment,
   };
-}
-
-// --- ヘルパー関数 ---
-
-/** likesData (SWR raw) から特定 postId の userIds を取得 */
-function getLikeUserIds(
-  likesData: unknown,
-  postId: string,
-  topicId: string
-): string[] {
-  if (!likesData) return [];
-  const data = likesData as Record<string, unknown>;
-
-  // 単一 postId の場合: { count, userIds }
-  if (data.userIds) {
-    return Array.isArray(data.userIds) ? (data.userIds as string[]) : [];
-  }
-
-  // 複数 postIds の場合: { [postId]: string[] }
-  const entry = data[postId];
-  if (Array.isArray(entry)) return entry as string[];
-
-  return [];
-}
-
-/** 楽観的更新用の likesData を構築 */
-function buildOptimisticLikesData(
-  likesData: unknown,
-  postId: string,
-  userId: string,
-  isLiked: boolean,
-  topicId: string
-): unknown {
-  if (!likesData) return likesData;
-  const data = likesData as Record<string, unknown>;
-
-  // 単一 postId の場合: { count, userIds }
-  if (data.userIds) {
-    const currentUserIds = Array.isArray(data.userIds)
-      ? (data.userIds as string[])
-      : [];
-    const newUserIds = isLiked
-      ? currentUserIds.filter((id) => id !== userId)
-      : [...currentUserIds, userId];
-    return { count: newUserIds.length, userIds: newUserIds };
-  }
-
-  // 複数 postIds の場合: { [postId]: string[] }
-  const currentUserIds = Array.isArray(data[postId])
-    ? (data[postId] as string[])
-    : [];
-  const newUserIds = isLiked
-    ? currentUserIds.filter((id) => id !== userId)
-    : [...currentUserIds, userId];
-  return { ...data, [postId]: newUserIds };
 }

@@ -278,8 +278,5 @@ export function useTopicDetail(topicId: string) {
     // ミューテーション
     mutateAll,
     mutatePosts,
-    mutateLikes,
-    mutateComments,
-    likesData,
   };
 }

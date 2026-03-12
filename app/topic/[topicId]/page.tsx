@@ -168,8 +168,6 @@ export default function TopicPage() {
     analysisResult,
     generateAnalysis,
     mutateAll,
-    mutateLikes,
-    likesData,
   } = useTopicDetail(topicId);
 
   const { penName } = useUserProfile(session);
@@ -192,7 +190,6 @@ export default function TopicPage() {
   const {
     saveReply: triggerSaveReply,
     handleLike,
-    isPostLiked,
     deletePost,
     saveEditedPost: triggerSaveEditedPost,
     saveComment: triggerSaveComment,
@@ -203,8 +200,6 @@ export default function TopicPage() {
     session,
     penName,
     mutateAll,
-    mutateLikes,
-    likesData,
     router,
     getAnonymousUserId,
   });
@@ -590,14 +585,17 @@ export default function TopicPage() {
           {/* いいね・編集・削除 */}
           <div className="flex gap-3 mb-4">
             <button
-              onClick={() => handleLike(topic.id)}
+              onClick={() => {
+                const userId = session?.user?.email || getAnonymousUserId();
+                handleLike(topic.id, topic.likesUserIds?.includes(userId) ?? false);
+              }}
               className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition border-3 shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover ${
-                isPostLiked(topic.id)
+                topic.likesUserIds?.includes(session?.user?.email || getAnonymousUserId())
                   ? "bg-pink-400 text-white border-white"
                   : "bg-gray-200 text-black border-black"
               } flex items-center gap-2`}
             >
-              <HandDrawnHeartIcon size={13} filled={isPostLiked(topic.id)} /> {topic.likes || 0}
+              <HandDrawnHeartIcon size={13} filled={topic.likesUserIds?.includes(session?.user?.email || getAnonymousUserId()) ?? false} /> {topic.likes || 0}
             </button>
             {getLikeParticipants(topic).length > 0 && (
               <div className="flex items-center -space-x-2" title="いいねしたユーザー">
@@ -1042,14 +1040,17 @@ export default function TopicPage() {
                   </div>
                   <div className="flex gap-3">
                     <button
-                      onClick={() => handleLike(reply.id)}
+                      onClick={() => {
+                        const userId = session?.user?.email || getAnonymousUserId();
+                        handleLike(reply.id, reply.likesUserIds?.includes(userId) ?? false);
+                      }}
                       className={`px-3 py-1.5 text-xs rounded-lg font-black uppercase transition border-3 shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover ${
-                        isPostLiked(reply.id)
+                        reply.likesUserIds?.includes(session?.user?.email || getAnonymousUserId())
                           ? "bg-pink-400 text-white border-white"
                           : "bg-gray-200 text-black border-black"
                       } flex items-center gap-2`}
                     >
-                      <HandDrawnHeartIcon size={13} filled={isPostLiked(reply.id)} /> {reply.likes || 0}
+                      <HandDrawnHeartIcon size={13} filled={reply.likesUserIds?.includes(session?.user?.email || getAnonymousUserId()) ?? false} /> {reply.likes || 0}
                     </button>
                     {getLikeParticipants(reply).length > 0 && (
                       <div className="flex items-center -space-x-2" title="いいねしたユーザー">
