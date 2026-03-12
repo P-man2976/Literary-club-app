@@ -90,6 +90,8 @@ type UseTopicMutationsParams = {
   mutateAll: () => void;
   mutateLikes: KeyedMutator<unknown>;
   likesData: unknown;
+  router: { push: (url: string) => void };
+  getAnonymousUserId: () => string;
 };
 
 export function useTopicMutations({
@@ -99,6 +101,8 @@ export function useTopicMutations({
   mutateAll,
   mutateLikes,
   likesData,
+  router,
+  getAnonymousUserId,
 }: UseTopicMutationsParams) {
   // --- 返信投稿 ---
   const { trigger: triggerCreateReply, isMutating: isCreatingReply } =
@@ -123,14 +127,14 @@ export function useTopicMutations({
   const { trigger: triggerLike } = useSWRMutation("/api/likes", likeFetcher);
 
   const saveReply = useCallback(
-    async (newPost: { title?: string; body?: string; tag?: string }) => {
+    (newPost: { title?: string; body?: string; tag?: string }, onSuccess?: () => void) => {
       if (!newPost.title || !newPost.body) {
         alert("タイトルと本文を入力してください");
-        return false;
+        return;
       }
 
-      try {
-        await triggerCreateReply({
+      triggerCreateReply(
+        {
           title: newPost.title,
           body: newPost.body,
           author: penName || session?.user?.name || "匿名部員",
@@ -138,29 +142,30 @@ export function useTopicMutations({
           tag: newPost.tag || "創作",
           parentPostId: topicId,
           isTopicPost: 0,
-        });
-        alert("投稿しました！");
-        mutateAll();
-        return true;
-      } catch (error) {
-        console.error("投稿エラー:", error);
-        alert("投稿に失敗しました");
-        return false;
-      }
+        },
+        {
+          onSuccess: () => {
+            alert("投稿しました！");
+            mutateAll();
+            onSuccess?.();
+          },
+          onError: (error) => {
+            console.error("投稿エラー:", error);
+            alert("投稿に失敗しました");
+          },
+        }
+      );
     },
     [triggerCreateReply, penName, session, topicId, mutateAll]
   );
 
   const handleLike = useCallback(
-    async (postId: string, getAnonymousUserId: () => string) => {
+    (postId: string) => {
       const userId = session?.user?.email || getAnonymousUserId();
-
-      // likesDataから現在のいいね状態を判定
       const currentUserIds = getLikeUserIds(likesData, postId, topicId);
       const isLiked = currentUserIds.includes(userId);
       const method = isLiked ? "DELETE" : "POST";
 
-      // SWR 楽観的更新: likesData を即座に更新
       const optimisticLikesData = buildOptimisticLikesData(
         likesData,
         postId,
@@ -169,150 +174,164 @@ export function useTopicMutations({
         topicId
       );
 
-      try {
-        await mutateLikes(
-          async () => {
-            await triggerLike({ postId, userId, method });
-            // 実際のデータで再検証するため undefined を返す
-            return undefined;
-          },
-          {
-            optimisticData: optimisticLikesData,
-            revalidate: true,
-            rollbackOnError: true,
-          }
-        );
-      } catch (error) {
-        console.error("いいね操作エラー:", error);
-      }
+      mutateLikes(
+        triggerLike({ postId, userId, method }).then(() => undefined),
+        {
+          optimisticData: optimisticLikesData,
+          revalidate: true,
+          rollbackOnError: true,
+        }
+      );
     },
-    [session, likesData, topicId, mutateLikes, triggerLike]
+    [session, getAnonymousUserId, likesData, topicId, mutateLikes, triggerLike]
   );
 
   const isPostLiked = useCallback(
-    (postId: string, getAnonymousUserId: () => string) => {
+    (postId: string) => {
       const userId = session?.user?.email || getAnonymousUserId();
       const userIds = getLikeUserIds(likesData, postId, topicId);
       return userIds.includes(userId);
     },
-    [session, likesData, topicId]
+    [session, getAnonymousUserId, likesData, topicId]
   );
 
   const deletePost = useCallback(
-    async (postId: string, router: { push: (url: string) => void }) => {
+    (postId: string) => {
       if (!confirm("本当に削除しますか？")) return;
 
-      try {
-        await triggerDeletePost({ postId });
-
-        if (postId === topicId) {
-          await new Promise((resolve) => setTimeout(resolve, 300));
-          router.push("/");
-        } else {
-          alert("削除しました！");
-          mutateAll();
+      triggerDeletePost(
+        { postId },
+        {
+          onSuccess: () => {
+            if (postId === topicId) {
+              setTimeout(() => router.push("/"), 300);
+            } else {
+              alert("削除しました！");
+              mutateAll();
+            }
+          },
+          onError: (error) => {
+            console.error("削除エラー:", error);
+          },
         }
-      } catch (error) {
-        console.error("削除エラー:", error);
-      }
+      );
     },
-    [triggerDeletePost, topicId, mutateAll]
+    [triggerDeletePost, topicId, mutateAll, router]
   );
 
   const saveEditedPost = useCallback(
-    async (postId: string, title: string, body: string) => {
+    (postId: string, title: string, body: string, onSuccess?: () => void) => {
       if (!title.trim() || !body.trim()) {
         alert("タイトルと内容は必須です");
-        return false;
+        return;
       }
 
-      try {
-        await triggerEditPost({
+      triggerEditPost(
+        {
           postId,
           title,
           body,
           authorEmail: session?.user?.email,
-        });
-        alert("更新しました！");
-        mutateAll();
-        return true;
-      } catch (error) {
-        console.error("編集エラー:", error);
-        alert(
-          error instanceof Error ? `更新に失敗しました: ${error.message}` : "編集に失敗しました"
-        );
-        return false;
-      }
+        },
+        {
+          onSuccess: () => {
+            alert("更新しました！");
+            mutateAll();
+            onSuccess?.();
+          },
+          onError: (error) => {
+            console.error("編集エラー:", error);
+            alert(
+              error instanceof Error
+                ? `更新に失敗しました: ${error.message}`
+                : "編集に失敗しました"
+            );
+          },
+        }
+      );
     },
     [triggerEditPost, session, mutateAll]
   );
 
   const saveComment = useCallback(
-    async (postId: string, text: string) => {
-      if (!text) return false;
+    (postId: string, text: string, onSuccess?: () => void) => {
+      if (!text) return;
 
-      try {
-        await triggerCreateComment({
+      triggerCreateComment(
+        {
           postId,
           text,
           author: penName || session?.user?.name || "匿名部員",
           authorEmail: session?.user?.email || null,
-        });
-        alert("コメントを送信しました！");
-        mutateAll();
-        return true;
-      } catch (error) {
-        console.error("コメント送信エラー:", error);
-        return false;
-      }
+        },
+        {
+          onSuccess: () => {
+            alert("コメントを送信しました！");
+            mutateAll();
+            onSuccess?.();
+          },
+          onError: (error) => {
+            console.error("コメント送信エラー:", error);
+          },
+        }
+      );
     },
     [triggerCreateComment, penName, session, mutateAll]
   );
 
   const editComment = useCallback(
-    async (commentId: string, text: string) => {
+    (commentId: string, text: string, onSuccess?: () => void) => {
       if (!text.trim()) {
         alert("コメントを入力してください");
-        return false;
+        return;
       }
 
-      try {
-        await triggerEditComment({
+      triggerEditComment(
+        {
           commentId,
           text,
           authorEmail: session?.user?.email || null,
-        });
-        alert("コメントを編集しました！");
-        mutateAll();
-        return true;
-      } catch (error) {
-        console.error("コメント編集エラー:", error);
-        alert(
-          error instanceof Error ? error.message : "編集に失敗しました"
-        );
-        return false;
-      }
+        },
+        {
+          onSuccess: () => {
+            alert("コメントを編集しました！");
+            mutateAll();
+            onSuccess?.();
+          },
+          onError: (error) => {
+            console.error("コメント編集エラー:", error);
+            alert(
+              error instanceof Error ? error.message : "編集に失敗しました"
+            );
+          },
+        }
+      );
     },
     [triggerEditComment, session, mutateAll]
   );
 
   const deleteComment = useCallback(
-    async (commentId: string) => {
+    (commentId: string) => {
       if (!confirm("このコメントを削除しますか？")) return;
 
-      try {
-        await triggerDeleteComment({
+      triggerDeleteComment(
+        {
           commentId,
           authorEmail: session?.user?.email || null,
-        });
-        alert("コメントを削除しました");
-        mutateAll();
-      } catch (error) {
-        console.error("コメント削除エラー:", error);
-        alert(
-          error instanceof Error ? error.message : "削除に失敗しました"
-        );
-      }
+        },
+        {
+          onSuccess: () => {
+            alert("コメントを削除しました");
+            mutateAll();
+          },
+          onError: (error) => {
+            console.error("コメント削除エラー:", error);
+            alert(
+              error instanceof Error ? error.message : "削除に失敗しました"
+            );
+          },
+        }
+      );
     },
     [triggerDeleteComment, session, mutateAll]
   );

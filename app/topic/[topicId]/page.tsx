@@ -174,6 +174,20 @@ export default function TopicPage() {
 
   const { penName } = useUserProfile(session);
 
+  const getAnonymousUserId = () => {
+    const storageKey = "lit-club-anonymous-user-id";
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) return saved;
+
+      const generated = `anon-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      localStorage.setItem(storageKey, generated);
+      return generated;
+    } catch {
+      return `anon-fallback-${Date.now()}`;
+    }
+  };
+
   // --- Mutation フック ---
   const {
     saveReply: triggerSaveReply,
@@ -183,7 +197,7 @@ export default function TopicPage() {
     saveEditedPost: triggerSaveEditedPost,
     saveComment: triggerSaveComment,
     editComment: triggerEditComment,
-    deleteComment: triggerDeleteComment,
+    deleteComment,
   } = useTopicMutations({
     topicId,
     session,
@@ -191,6 +205,8 @@ export default function TopicPage() {
     mutateAll,
     mutateLikes,
     likesData,
+    router,
+    getAnonymousUserId,
   });
 
   // --- ローカル UI state ---
@@ -208,20 +224,6 @@ export default function TopicPage() {
   const [editingPostBody, setEditingPostBody] = useState("");
   const [aiReadingEnabled, setAiReadingEnabled] = useState(true);
   const [iconCacheBust] = useState<number>(Date.now());
-
-  const getAnonymousUserId = () => {
-    const storageKey = "lit-club-anonymous-user-id";
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) return saved;
-
-      const generated = `anon-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-      localStorage.setItem(storageKey, generated);
-      return generated;
-    } catch {
-      return `anon-fallback-${Date.now()}`;
-    }
-  };
 
   const handleBodyScroll = (postId: string) => {
     setScrollingPostId(postId);
@@ -401,15 +403,14 @@ export default function TopicPage() {
     }
   };
 
-  const saveReply = async () => {
+  const saveReply = () => {
     if (topic && isDeadlineExpired(topic.deadline)) {
       alert("このお題の締め切りが過ぎているため、投稿できません");
       return;
     }
-    const ok = await triggerSaveReply(newPost);
-    if (ok) {
+    triggerSaveReply(newPost, () => {
       setNewPost({ title: "", body: "", tag: "創作" });
-    }
+    });
   };
 
   const startEditingPost = (postId: string, title: string, body: string) => {
@@ -424,17 +425,15 @@ export default function TopicPage() {
     setEditingPostBody("");
   };
 
-  const saveEditedPost = async (postId: string) => {
-    const ok = await triggerSaveEditedPost(postId, editingPostTitle, editingPostBody);
-    if (ok) cancelEditingPost();
+  const saveEditedPost = (postId: string) => {
+    triggerSaveEditedPost(postId, editingPostTitle, editingPostBody, cancelEditingPost);
   };
 
-  const saveComment = async (postId: string) => {
+  const saveComment = (postId: string) => {
     const text = commentTexts[postId];
-    const ok = await triggerSaveComment(postId, text);
-    if (ok) {
+    triggerSaveComment(postId, text, () => {
       setCommentTexts({ ...commentTexts, [postId]: "" });
-    }
+    });
   };
 
   const toggleCommentLike = (commentId: string) => {
@@ -451,13 +450,8 @@ export default function TopicPage() {
     setEditingCommentText("");
   };
 
-  const editComment = async (commentId: string) => {
-    const ok = await triggerEditComment(commentId, editingCommentText);
-    if (ok) cancelEditingComment();
-  };
-
-  const deleteComment = async (commentId: string) => {
-    await triggerDeleteComment(commentId);
+  const editComment = (commentId: string) => {
+    triggerEditComment(commentId, editingCommentText, cancelEditingComment);
   };
 
   if (postsLoading) {
@@ -596,14 +590,14 @@ export default function TopicPage() {
           {/* いいね・編集・削除 */}
           <div className="flex gap-3 mb-4">
             <button
-              onClick={() => handleLike(topic.id, getAnonymousUserId)}
+              onClick={() => handleLike(topic.id)}
               className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition border-3 shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover ${
-                isPostLiked(topic.id, getAnonymousUserId)
+                isPostLiked(topic.id)
                   ? "bg-pink-400 text-white border-white"
                   : "bg-gray-200 text-black border-black"
               } flex items-center gap-2`}
             >
-              <HandDrawnHeartIcon size={13} filled={isPostLiked(topic.id, getAnonymousUserId)} /> {topic.likes || 0}
+              <HandDrawnHeartIcon size={13} filled={isPostLiked(topic.id)} /> {topic.likes || 0}
             </button>
             {getLikeParticipants(topic).length > 0 && (
               <div className="flex items-center -space-x-2" title="いいねしたユーザー">
@@ -642,7 +636,7 @@ export default function TopicPage() {
                   編集
                 </button>
                 <button
-                  onClick={() => deletePost(topic.id, router)}
+                  onClick={() => deletePost(topic.id)}
                   disabled={replies.length > 0}
                   className={`px-3 py-1.5 text-xs rounded-lg font-black uppercase border-3 shadow-street-hard transition-all ${
                     replies.length > 0
@@ -1048,14 +1042,14 @@ export default function TopicPage() {
                   </div>
                   <div className="flex gap-3">
                     <button
-                      onClick={() => handleLike(reply.id, getAnonymousUserId)}
+                      onClick={() => handleLike(reply.id)}
                       className={`px-3 py-1.5 text-xs rounded-lg font-black uppercase transition border-3 shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover ${
-                        isPostLiked(reply.id, getAnonymousUserId)
+                        isPostLiked(reply.id)
                           ? "bg-pink-400 text-white border-white"
                           : "bg-gray-200 text-black border-black"
                       } flex items-center gap-2`}
                     >
-                      <HandDrawnHeartIcon size={13} filled={isPostLiked(reply.id, getAnonymousUserId)} /> {reply.likes || 0}
+                      <HandDrawnHeartIcon size={13} filled={isPostLiked(reply.id)} /> {reply.likes || 0}
                     </button>
                     {getLikeParticipants(reply).length > 0 && (
                       <div className="flex items-center -space-x-2" title="いいねしたユーザー">
@@ -1094,7 +1088,7 @@ export default function TopicPage() {
                           編集
                         </button>
                         <button
-                          onClick={() => deletePost(reply.id, router)}
+                          onClick={() => deletePost(reply.id)}
                           className="px-3 py-1.5 text-xs bg-red-400 text-white rounded-lg font-black uppercase border-3 border-white shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover transition-all"
                         >
                           削除
