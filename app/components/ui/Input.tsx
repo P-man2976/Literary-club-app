@@ -15,7 +15,7 @@ const input = tv({
     theme: {
       street: "border-3 border-black",
       chrome: "border border-chrome-border bg-chrome-card-bg text-chrome-text-muted rounded-none placeholder:text-chrome-text-placeholder",
-      library: "rounded-xl border-0 bg-library-surface text-library-text shadow-[inset_2px_2px_5px_rgba(163,141,115,0.15),inset_-2px_-2px_5px_rgba(255,255,255,0.5)]",
+      library: "rounded-xl border-0 bg-library-surface text-library-text shadow-library-neu-inset",
     },
   },
   defaultVariants: {
@@ -54,7 +54,7 @@ const textarea = tv({
     theme: {
       street: "border-3 border-black",
       chrome: "border border-chrome-border bg-chrome-card-bg text-chrome-text-muted rounded-none placeholder:text-chrome-text-placeholder",
-      library: "rounded-xl border-0 bg-library-surface text-library-text shadow-[inset_2px_2px_5px_rgba(163,141,115,0.15),inset_-2px_-2px_5px_rgba(255,255,255,0.5)]",
+      library: "rounded-xl border-0 bg-library-surface text-library-text shadow-library-neu-inset",
     },
   },
 });

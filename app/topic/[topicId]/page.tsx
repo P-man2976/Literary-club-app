@@ -82,7 +82,7 @@ const topicHeader = tv({
     theme: {
       street: "bg-white/20 backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.8)] rounded-2xl",
       chrome: "bg-black border-b border-white/30",
-      library: "bg-library-cream rounded-2xl shadow-[4px_4px_10px_rgba(163,141,115,0.15),-4px_-4px_10px_rgba(255,255,255,0.5)]",
+      library: "bg-library-cream rounded-2xl shadow-library-neu",
     },
   },
 });
@@ -104,7 +104,7 @@ const parentTopicBox = tv({
     theme: {
       street: "bg-blue-50 border-l-4 border-blue-500 rounded-xl",
       chrome: "border-l-2 border-white/40",
-      library: "bg-library-cream border-l-4 border-[#A38D73] rounded-xl shadow-[inset_2px_2px_5px_rgba(163,141,115,0.1),inset_-2px_-2px_5px_rgba(255,255,255,0.4)]",
+      library: "bg-library-surface border-l-4 border-[#A38D73] rounded-xl shadow-library-neu-inset-subtle",
     },
   },
 });
@@ -126,7 +126,7 @@ const aiSection = tv({
     theme: {
       street: "jsr-card bg-linear-to-br from-purple-300 to-pink-300 rounded-2xl",
       chrome: "bg-transparent border-0 border-b border-white/25 rounded-none",
-      library: "jsr-card bg-library-cream rounded-2xl shadow-[4px_4px_10px_rgba(163,141,115,0.15),-4px_-4px_10px_rgba(255,255,255,0.5)]",
+      library: "jsr-card bg-library-cream rounded-2xl shadow-library-neu",
     },
   },
 });
@@ -137,7 +137,7 @@ const postFormSection = tv({
     theme: {
       street: "bg-white rounded-2xl shadow-md",
       chrome: "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none",
-      library: "bg-library-cream rounded-2xl shadow-[4px_4px_10px_rgba(163,141,115,0.15),-4px_-4px_10px_rgba(255,255,255,0.5)]",
+      library: "bg-library-cream rounded-2xl shadow-library-neu",
     },
   },
 });
@@ -159,7 +159,7 @@ const repliesHeader = tv({
     theme: {
       street: "bg-white/20 backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.8)] rounded-2xl",
       chrome: "border-b border-white/30",
-      library: "bg-library-cream rounded-2xl shadow-[4px_4px_10px_rgba(163,141,115,0.15),-4px_-4px_10px_rgba(255,255,255,0.5)]",
+      library: "bg-library-cream rounded-2xl shadow-library-neu",
     },
   },
 });

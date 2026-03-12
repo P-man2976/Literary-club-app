@@ -56,6 +56,13 @@ layer(base);
   --color-library-shadow-dark: rgba(163, 141, 115, 0.2);
   --color-library-shadow-light: rgba(255, 255, 255, 0.6);
 
+  /* === LIBRARY シャドウトークン === */
+  --shadow-library-neu: 4px 4px 10px rgba(163,141,115,0.15), -4px -4px 10px rgba(255,255,255,0.5);
+  --shadow-library-neu-sm: 4px 4px 8px rgba(163,141,115,0.15), -4px -4px 8px rgba(255,255,255,0.5);
+  --shadow-library-neu-hover: 5px 5px 10px rgba(163,141,115,0.18), -5px -5px 10px rgba(255,255,255,0.6);
+  --shadow-library-neu-inset: inset 2px 2px 5px rgba(163,141,115,0.15), inset -2px -2px 5px rgba(255,255,255,0.5);
+  --shadow-library-neu-inset-subtle: inset 2px 2px 5px rgba(163,141,115,0.1), inset -2px -2px 5px rgba(255,255,255,0.4);
+
   --animate-in: fade-in 150ms ease-out;
   --animate-out: fade-out 150ms ease-in;
 
