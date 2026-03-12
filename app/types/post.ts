@@ -4,6 +4,7 @@ export type Comment = {
   author: string;
   authorEmail?: string | null;
   createdAt: number;
+  editedAt?: number | null;
 };
 
 export type Post = {
@@ -11,6 +12,7 @@ export type Post = {
   author: string;
   authorEmail?: string | null;
   title: string;
+  subtitle?: string;
   body: string;
   tag: string;
   createdAt: number;
@@ -20,6 +22,7 @@ export type Post = {
   comments?: Comment[];
   commentCount?: number;
   likes?: number;
+  likesUserIds?: string[];
   children?: Post[];
 };
 

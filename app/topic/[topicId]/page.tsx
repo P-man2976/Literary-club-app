@@ -4,7 +4,9 @@ import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { useAppTheme } from "@/app/hooks/useAppTheme";
-import { useIconUrlMap } from "@/app/hooks/useIconUrl";
+import { useTopicDetail } from "@/app/hooks/useTopicDetail";
+import { useUserProfile } from "@/app/hooks/useUserProfile";
+import type { Post } from "@/app/types/post";
 import {
   ArrowLeft,
   FileCheck2,
@@ -19,51 +21,6 @@ import {
   HandDrawnCommentIcon,
 } from "@/app/components/HandDrawnIcons";
 import { tv } from "tailwind-variants";
-
-type Comment = {
-  commentId: string;
-  text: string;
-  author: string;
-  authorEmail?: string | null;
-  createdAt: number;
-  editedAt?: number | null;
-};
-
-type Post = {
-  authorEmail?: string | null;
-  id: string;
-  author: string;
-  title: string;
-  subtitle?: string;
-  body: string;
-  tag: string;
-  createdAt: number;
-  parentPostId?: string | null;
-  isTopicPost?: number;
-  deadline?: number | null;
-  comments?: Comment[];
-  likes?: number;
-  likesUserIds?: string[];
-};
-
-type TopicAnalysis = {
-  overview: string;
-  strengths: string[];
-  suggestions: string[];
-  authorFeedback: Array<{
-    author: string;
-    praise: string;
-    critique: string;
-    nextStep: string;
-  }>;
-  postFeedback: Array<{
-    postId: string;
-    title: string;
-    praise: string;
-    critique: string;
-    nextStep: string;
-  }>;
-};
 
 const topicScene = tv({
   base: "topic-detail-scene min-h-screen p-4 md:p-6 relative z-10",
@@ -194,25 +151,36 @@ export default function TopicPage() {
   const router = useRouter();
   const topicId = params.topicId as string;
 
-  const [topic, setTopic] = useState<Post | null>(null);
-  const [parentTopic, setParentTopic] = useState<Post | null>(null);
-  const [replies, setReplies] = useState<Post[]>([]);
+  // --- SWR フックでデータ取得 ---
+  const {
+    topic,
+    parentTopic,
+    replies,
+    postsLoading,
+    penNameMap,
+    getDisplayName,
+    getDisplayIcon,
+    getReplyParticipants,
+    getLikeParticipants,
+    analysisLoading,
+    analysisError,
+    analysisResult,
+    generateAnalysis,
+    mutateAll,
+    mutatePosts,
+  } = useTopicDetail(topicId);
+
+  const { penName } = useUserProfile(session);
+
+  // --- ローカル UI state ---
   const [newPost, setNewPost] = useState<Partial<Post>>({ title: "", body: "", tag: "創作" });
   const [likedPosts, setLikedPosts] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
   const [commentTexts, setCommentTexts] = useState<{ [key: string]: string }>({});
   const [commentLikes, setCommentLikes] = useState<{ [key: string]: boolean }>({});
-  const [penName, setPenName] = useState("");
-  const [penNameMap, setPenNameMap] = useState<{ [email: string]: string }>({});
-  const [userIconMap, setUserIconMap] = useState<{ [email: string]: string }>({});
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentText, setEditingCommentText] = useState("");
-  const [analysisLoading, setAnalysisLoading] = useState(false);
-  const [analysisError, setAnalysisError] = useState<string | null>(null);
-  const [analysisResult, setAnalysisResult] = useState<TopicAnalysis | null>(null);
   const [scrollingPostId, setScrollingPostId] = useState<string | null>(null);
 
-  const getDisplayIcon = useIconUrlMap(userIconMap);
   const scrollHideTimerRef = useRef<number | null>(null);
   const [showHorizontalHint, setShowHorizontalHint] = useState(false);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
@@ -282,124 +250,12 @@ export default function TopicPage() {
     }
   }, []);
 
-  // トピック詳細と返信を取得
-  const fetchTopicAndReplies = async () => {
-    try {
-      const res = await fetch("/api/posts");
-      const allPosts: any[] = await res.json();
-
-      // トピックを取得
-      const topicData = allPosts.find(p => p.id === topicId);
-      
-      // 返信を取得（/api/postsで既にcommentCount, likesが含まれている）
-      const repliesData = allPosts.filter(p => p.parentPostId === topicId);
-      
-      if (topicData) {
-        // トピックのコメント詳細のみ取得（件数は既にある）
-        const cRes = await fetch(`/api/comments?postId=${topicData.id}`);
-        const comments = await cRes.json();
-        
-        setTopic({ ...topicData, comments });
-        
-        // 親のお題がある場合は取得
-        if (topicData.parentPostId) {
-          const parentPost = allPosts.find(p => p.id === topicData.parentPostId);
-          if (parentPost) {
-            setParentTopic(parentPost);
-          }
-        }
-      }
-
-      // 返信のコメントを一括取得
-      const replyIds = repliesData.map(r => r.id);
-      let commentsByPostId = new Map<string, any[]>();
-      let likesByPostId = new Map<string, string[]>();
-      
-      if (replyIds.length > 0) {
-        const cRes = await fetch(`/api/comments?postIds=${replyIds.join(",")}`);
-        const commentsData = await cRes.json();
-        commentsByPostId = new Map(Object.entries(commentsData));
-
-        const lRes = await fetch(`/api/likes?postIds=${[topicId, ...replyIds].join(",")}`);
-        if (lRes.ok) {
-          const likesData = await lRes.json();
-          likesByPostId = new Map(Object.entries(likesData));
-        }
-      } else {
-        const lRes = await fetch(`/api/likes?postId=${topicId}`);
-        if (lRes.ok) {
-          const likesData = await lRes.json();
-          likesByPostId.set(topicId, Array.isArray(likesData.userIds) ? likesData.userIds : []);
-        }
-      }
-      
-      const repliesWithDetails = repliesData.map((reply) => ({
-        ...reply,
-        comments: commentsByPostId.get(reply.id) || [],
-        likesUserIds: likesByPostId.get(reply.id) || [],
-      }));
-
-      if (topicData) {
-        setTopic((prev) => {
-          const source = prev || { ...topicData, comments: [] };
-          return {
-            ...source,
-            likesUserIds: likesByPostId.get(topicData.id) || [],
-          };
-        });
-      }
-
-      // すべてのauthorEmailを収集（トピック、返信、コメント）
-      const allEmails = new Set<string>();
-      if (topicData?.authorEmail) allEmails.add(topicData.authorEmail);
-      repliesWithDetails.forEach(reply => {
-        if (reply.authorEmail) allEmails.add(reply.authorEmail);
-        (reply.likesUserIds || []).forEach((userId: string) => {
-          if (userId.includes("@")) allEmails.add(userId);
-        });
-        reply.comments?.forEach((comment: any) => {
-          if (comment.authorEmail) allEmails.add(comment.authorEmail);
-        });
-      });
-      (likesByPostId.get(topicId) || []).forEach((userId: string) => {
-        if (userId.includes("@")) allEmails.add(userId);
-      });
-
-      // ペンネームを一括取得
-      if (allEmails.size > 0) {
-        try {
-          const penNameRes = await fetch("/api/profiles", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ emails: Array.from(allEmails) }),
-          });
-          if (penNameRes.ok) {
-            const { penNameMap: fetchedMap, userIconMap: fetchedIconMap } = await penNameRes.json();
-            setPenNameMap(fetchedMap || {});
-            setUserIconMap(fetchedIconMap || {});
-          }
-        } catch (error) {
-          console.error("ペンネーム取得エラー:", error);
-        }
-      }
-
-      setReplies(repliesWithDetails.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
-      setLoading(false);
-    } catch (error) {
-      console.error("トピック取得エラー:", error);
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchTopicAndReplies();
-    
     // Storageからいいねを読み込む
     const savedLikes = localStorage.getItem("lit-club-liked-ids");
     if (savedLikes) {
       setLikedPosts(JSON.parse(savedLikes));
     }
-    
   }, [topicId]);
 
   useEffect(() => {
@@ -410,63 +266,6 @@ export default function TopicPage() {
       setAiReadingEnabled(true);
     }
   }, []);
-
-  // ペンネーム取得
-  useEffect(() => {
-    const fetchPenName = async () => {
-      try {
-        const res = await fetch("/api/profile");
-        if (res.ok) {
-          const data = await res.json();
-          setPenName(data.penName || "");
-        }
-      } catch (error) {
-        console.error("ペンネーム取得エラー:", error);
-      }
-    };
-
-    if (session) {
-      fetchPenName();
-    }
-  }, [session]);
-
-  // ペンネームまたは通常の名前を返すヘルパー関数
-  const getDisplayName = (authorEmail: string | null | undefined, authorName: string) => {
-    if (authorEmail && penNameMap[authorEmail]) {
-      return penNameMap[authorEmail];
-    }
-    return authorName;
-  };
-
-  const getReplyParticipants = () => {
-    const seen = new Set<string>();
-    const participants: Array<{ key: string; name: string; icon: string | null }> = [];
-
-    replies.forEach((reply) => {
-      const key = reply.authorEmail || `name:${reply.author}`;
-      if (seen.has(key)) return;
-
-      seen.add(key);
-      participants.push({
-        key,
-        name: getDisplayName(reply.authorEmail, reply.author),
-        icon: getDisplayIcon(reply.authorEmail),
-      });
-    });
-
-    return participants;
-  };
-
-  const getLikeParticipants = (post: Post) => {
-    return (post.likesUserIds || []).map((userId) => {
-      const isMember = userId.includes("@");
-      return {
-        key: userId,
-        icon: isMember ? getDisplayIcon(userId) : null,
-        name: isMember ? getDisplayName(userId, "部員") : "ゲスト",
-      };
-    });
-  };
 
   const getDeadlineStatus = (deadline: number | null | undefined) => {
     if (!deadline) return null;
@@ -627,7 +426,7 @@ export default function TopicPage() {
       if (response.ok) {
         alert("投稿しました！");
         setNewPost({ title: "", body: "", tag: "創作" });
-        fetchTopicAndReplies();
+        mutateAll();
       } else {
         console.error("エラー:", text);
         alert("投稿に失敗しました");
@@ -641,67 +440,31 @@ export default function TopicPage() {
   const handleLike = async (postId: string) => {
     const isLiked = likedPosts.includes(postId);
     const userId = session?.user?.email || getAnonymousUserId();
-    const likeDelta = isLiked ? -1 : 1;
-
     const method = isLiked ? "DELETE" : "POST";
 
-    const updateLikeState = (delta: number) => {
-      setTopic((prev) => {
-        if (!prev || prev.id !== postId) return prev;
-        const currentUsers = prev.likesUserIds || [];
-        const nextUsers = delta > 0
-          ? (currentUsers.includes(userId) ? currentUsers : [...currentUsers, userId])
-          : currentUsers.filter((id) => id !== userId);
-        return {
-          ...prev,
-          likes: Math.max((prev.likes || 0) + delta, 0),
-          likesUserIds: nextUsers,
-        };
-      });
-
-      setReplies((prev) =>
-        prev.map((reply) => {
-          if (reply.id !== postId) return reply;
-          const currentUsers = reply.likesUserIds || [];
-          const nextUsers = delta > 0
-            ? (currentUsers.includes(userId) ? currentUsers : [...currentUsers, userId])
-            : currentUsers.filter((id) => id !== userId);
-          return {
-            ...reply,
-            likes: Math.max((reply.likes || 0) + delta, 0),
-            likesUserIds: nextUsers,
-          };
-        })
-      );
-    };
-
     // 先にUIだけ反映して体感レスポンスを上げる
-    updateLikeState(likeDelta);
+    const newLikedPosts = isLiked
+      ? likedPosts.filter((id) => id !== postId)
+      : [...likedPosts, postId];
+    setLikedPosts(newLikedPosts);
 
     try {
       const response = await fetch("/api/likes", {
-        method: method,
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ postId, userId }),
       });
 
       if (response.ok) {
-        let newLikedPosts;
-        if (isLiked) {
-          newLikedPosts = likedPosts.filter(id => id !== postId);
-        } else {
-          newLikedPosts = [...likedPosts, postId];
-        }
-
-        setLikedPosts(newLikedPosts);
         localStorage.setItem("lit-club-liked-ids", JSON.stringify(newLikedPosts));
+        mutateAll();
       } else {
-        // 失敗時はカウントを戻す
-        updateLikeState(-likeDelta);
+        // 失敗時はロールバック
+        setLikedPosts(likedPosts);
       }
     } catch (error) {
       console.error("いいね操作エラー:", error);
-      updateLikeState(-likeDelta);
+      setLikedPosts(likedPosts);
     }
   };
 
@@ -721,7 +484,7 @@ export default function TopicPage() {
         } else {
           // 返信を削除した場合はページを更新
           alert("削除しました！");
-          fetchTopicAndReplies();
+          mutateAll();
         }
       }
     } catch (error) {
@@ -762,7 +525,7 @@ export default function TopicPage() {
       if (response.ok) {
         alert("更新しました！");
         cancelEditingPost();
-        fetchTopicAndReplies();
+        mutateAll();
       } else {
         const error = await response.json();
         alert(`更新に失敗しました: ${error.error}`);
@@ -792,7 +555,7 @@ export default function TopicPage() {
       if (response.ok) {
         setCommentTexts({ ...commentTexts, [postId]: "" });
         alert("コメントを送信しました！");
-        fetchTopicAndReplies();
+        mutateAll();
       }
     } catch (error) {
       console.error("コメント送信エラー:", error);
@@ -833,7 +596,7 @@ export default function TopicPage() {
       if (response.ok) {
         alert("コメントを編集しました！");
         cancelEditingComment();
-        fetchTopicAndReplies();
+        mutateAll();
       } else {
         const error = await response.json();
         alert(error.error || "編集に失敗しました");
@@ -859,7 +622,7 @@ export default function TopicPage() {
 
       if (response.ok) {
         alert("コメントを削除しました");
-        fetchTopicAndReplies();
+        mutateAll();
       } else {
         const error = await response.json();
         alert(error.error || "削除に失敗しました");
@@ -870,34 +633,7 @@ export default function TopicPage() {
     }
   };
 
-  const generateAnalysis = async () => {
-    setAnalysisLoading(true);
-    setAnalysisError(null);
-
-    try {
-      const res = await fetch("/api/analysis/topic", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topicId }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setAnalysisError(data?.error || "分析の生成に失敗しました");
-        return;
-      }
-
-      setAnalysisResult(data as TopicAnalysis);
-    } catch (error) {
-      console.error("analysis error:", error);
-      setAnalysisError("分析の生成に失敗しました");
-    } finally {
-      setAnalysisLoading(false);
-    }
-  };
-
-  if (loading) {
+  if (postsLoading) {
     return <div className="text-center py-10">読み込み中...</div>;
   }
 
@@ -1658,21 +1394,7 @@ export default function TopicPage() {
           )}
         </div>
         )}
-
       </div>
-      <style jsx global>{`
-        .chrome-theme-detail .font-black,
-        .chrome-theme-detail .font-bold,
-        .chrome-theme-detail .font-semibold {
-          font-weight: 400 !important;
-        }
-
-        .chrome-theme-detail h1,
-        .chrome-theme-detail h2,
-        .chrome-theme-detail h3 {
-          font-weight: 500 !important;
-        }
-      `}</style>
     </div>
   );
 }
