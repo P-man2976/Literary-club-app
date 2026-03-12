@@ -20,7 +20,7 @@ const fab = tv({
     theme: {
       street: "bg-yellow-400 text-black border-4 border-white shadow-[0_8px_0_rgba(0,0,0,0.9)] hover:shadow-[0_10px_0_rgba(0,0,0,0.9)] hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-[0_6px_0_rgba(0,0,0,0.9)] shake-hover",
       chrome: "bg-gray-600 text-white border-0 shadow-[0_8px_0_rgba(20,20,20,0.9)] hover:shadow-[0_10px_0_rgba(20,20,20,0.9)] hover:bg-gray-500 hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-[0_6px_0_rgba(20,20,20,0.9)]",
-      library: "bg-[#ECE7DB] text-[#3F3427] border-0 shadow-[4px_4px_8px_rgba(163,141,115,0.15),-4px_-4px_8px_rgba(255,255,255,0.5)] hover:shadow-[5px_5px_10px_rgba(163,141,115,0.18),-5px_-5px_10px_rgba(255,255,255,0.6)]",
+      library: "bg-library-surface text-[#3F3427] border-0 shadow-[4px_4px_8px_rgba(163,141,115,0.15),-4px_-4px_8px_rgba(255,255,255,0.5)] hover:shadow-[5px_5px_10px_rgba(163,141,115,0.18),-5px_-5px_10px_rgba(255,255,255,0.6)]",
     },
   },
 });

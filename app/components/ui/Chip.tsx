@@ -14,7 +14,7 @@ const chip = tv({
     },
     theme: {
       street: "",
-      chrome: "border border-[#bcbcbc] bg-[#0a0a0b] text-white rounded-none",
+      chrome: "border border-chrome-border bg-chrome-card-bg text-white rounded-none",
       library: "bg-[#E7E0D0] text-[#3F3427] font-bold",
     },
   },

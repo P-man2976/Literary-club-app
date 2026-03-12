@@ -32,7 +32,7 @@ const button = tv({
     },
     theme: {
       street: "border-3 border-black",
-      chrome: "border border-[#bcbcbc] bg-[#0d0d0f] text-[#f8f8f8] rounded-none",
+      chrome: "border border-chrome-border bg-chrome-button-bg text-chrome-text-subtle rounded-none",
       library: "rounded-xl",
     },
   },

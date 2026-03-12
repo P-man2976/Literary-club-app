@@ -34,7 +34,7 @@ const header = tv({
     theme: {
       street: "bg-white shadow-[0_4px_0_rgba(0,0,0,0.6)]",
       chrome: "bg-linear-to-b from-black/75 via-black/45 to-transparent backdrop-blur-md shadow-[0_4px_0_rgba(0,0,0,0.6)]",
-      library: "bg-[#F2F0E9]/90 backdrop-blur-md",
+      library: "bg-library-bg/90 backdrop-blur-md",
     },
   },
 });
@@ -45,7 +45,7 @@ const profileImage = tv({
     theme: {
       street: "border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)]",
       chrome: "border-2 border-white shadow-[0_2px_0_rgba(255,255,255,0.4)]",
-      library: "border-2 border-[#8B7355]",
+      library: "border-2 border-library-border",
     },
   },
 });
@@ -56,7 +56,7 @@ const profilePlaceholder = tv({
     theme: {
       street: "bg-yellow-300 border-3 border-black shadow-[0_4px_0_rgba(0,0,0,0.8)]",
       chrome: "bg-gray-700 border-2 border-white",
-      library: "bg-[#ECE7DB] border-2 border-[#8B7355]",
+      library: "bg-library-surface border-2 border-library-border",
     },
   },
 });

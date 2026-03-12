@@ -28,7 +28,7 @@ const tabsList = tv({
     theme: {
       street: "gap-2 px-2 bg-white/20 backdrop-blur-md border border-white/40 shadow-[0_4px_0_rgba(0,0,0,0.6)]",
       chrome: "gap-0 px-0 bg-transparent backdrop-blur-xs border-0 shadow-none",
-      library: "gap-2 px-2 bg-[#ECE7DB]/90 backdrop-blur-md",
+      library: "gap-2 px-2 bg-library-surface/90 backdrop-blur-md",
     },
   },
 });
@@ -53,7 +53,7 @@ const tabsTrigger = tv({
     theme: {
       street: "rounded-none uppercase text-white data-[state=active]:font-black data-[state=active]:text-black data-[state=active]:bg-yellow-400 shake-hover",
       chrome: "rounded-none bg-transparent border-0 uppercase text-white/70 data-[state=active]:font-black data-[state=active]:text-white data-[state=active]:shadow-[0_0_14px_rgba(255,255,255,0.9)] data-[state=active]:drop-shadow-[0_0_8px_rgba(255,255,255,0.9)]",
-      library: "rounded-xl text-[#4A3F30] data-[state=active]:font-black data-[state=active]:text-[#1A1A1A] data-[state=active]:bg-[#ECE7DB]",
+      library: "rounded-xl text-[#4A3F30] data-[state=active]:font-black data-[state=active]:text-library-text data-[state=active]:bg-library-surface",
     },
   },
 });

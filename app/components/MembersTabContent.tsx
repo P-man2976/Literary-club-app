@@ -15,7 +15,7 @@ const memberSection = tv({
     theme: {
       street: "rounded-lg bg-white chrome:bg-black border-3 border-black chrome:border-white p-3",
       chrome: "pt-3 border-t border-white/20",
-      library: "rounded-xl bg-[#F8F5EE] p-3 shadow-[inset_2px_2px_5px_rgba(163,141,115,0.1),inset_-2px_-2px_5px_rgba(255,255,255,0.4)]",
+      library: "rounded-xl bg-library-cream p-3 shadow-[inset_2px_2px_5px_rgba(163,141,115,0.1),inset_-2px_-2px_5px_rgba(255,255,255,0.4)]",
     },
   },
 });
@@ -26,7 +26,7 @@ const memberAiSection = tv({
     theme: {
       street: "rounded-lg bg-pink-200 chrome:bg-black border-3 border-black chrome:border-white p-3",
       chrome: "pt-3 border-t border-white/20",
-      library: "rounded-xl bg-[#F8F5EE] p-3 shadow-[inset_2px_2px_5px_rgba(163,141,115,0.1),inset_-2px_-2px_5px_rgba(255,255,255,0.4)]",
+      library: "rounded-xl bg-library-cream p-3 shadow-[inset_2px_2px_5px_rgba(163,141,115,0.1),inset_-2px_-2px_5px_rgba(255,255,255,0.4)]",
     },
   },
 });
