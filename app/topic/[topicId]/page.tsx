@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { useAppTheme } from "@/app/hooks/useAppTheme";
 import { useTopicDetail } from "@/app/hooks/useTopicDetail";
+import { useTopicMutations } from "@/app/hooks/useTopicMutations";
 import { useUserProfile } from "@/app/hooks/useUserProfile";
 import type { Post } from "@/app/types/post";
 import {
@@ -167,14 +168,33 @@ export default function TopicPage() {
     analysisResult,
     generateAnalysis,
     mutateAll,
-    mutatePosts,
+    mutateLikes,
+    likesData,
   } = useTopicDetail(topicId);
 
   const { penName } = useUserProfile(session);
 
+  // --- Mutation フック ---
+  const {
+    saveReply: triggerSaveReply,
+    handleLike,
+    isPostLiked,
+    deletePost,
+    saveEditedPost: triggerSaveEditedPost,
+    saveComment: triggerSaveComment,
+    editComment: triggerEditComment,
+    deleteComment: triggerDeleteComment,
+  } = useTopicMutations({
+    topicId,
+    session,
+    penName,
+    mutateAll,
+    mutateLikes,
+    likesData,
+  });
+
   // --- ローカル UI state ---
   const [newPost, setNewPost] = useState<Partial<Post>>({ title: "", body: "", tag: "創作" });
-  const [likedPosts, setLikedPosts] = useState<string[]>([]);
   const [commentTexts, setCommentTexts] = useState<{ [key: string]: string }>({});
   const [commentLikes, setCommentLikes] = useState<{ [key: string]: boolean }>({});
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
@@ -249,14 +269,6 @@ export default function TopicPage() {
       setShowHorizontalHint(true);
     }
   }, []);
-
-  useEffect(() => {
-    // Storageからいいねを読み込む
-    const savedLikes = localStorage.getItem("lit-club-liked-ids");
-    if (savedLikes) {
-      setLikedPosts(JSON.parse(savedLikes));
-    }
-  }, [topicId]);
 
   useEffect(() => {
     try {
@@ -390,105 +402,13 @@ export default function TopicPage() {
   };
 
   const saveReply = async () => {
-    if (!newPost.title || !newPost.body) {
-      alert("タイトルと本文を入力してください");
-      return;
-    }
-
-    // 締め切りチェック
     if (topic && isDeadlineExpired(topic.deadline)) {
       alert("このお題の締め切りが過ぎているため、投稿できません");
       return;
     }
-
-    try {
-      const postData = {
-        title: newPost.title,
-        body: newPost.body,
-        author: penName || session?.user?.name || "匿名部員",
-        authorEmail: session?.user?.email || null,
-        tag: newPost.tag || "創作",
-        parentPostId: topicId,
-        isTopicPost: 0,
-      };
-
-      console.log("投稿データ:", postData);
-
-      const response = await fetch("/api/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(postData),
-      });
-
-      const text = await response.text();
-      console.log("レスポンス:", response.status, text);
-
-      if (response.ok) {
-        alert("投稿しました！");
-        setNewPost({ title: "", body: "", tag: "創作" });
-        mutateAll();
-      } else {
-        console.error("エラー:", text);
-        alert("投稿に失敗しました");
-      }
-    } catch (error) {
-      console.error("投稿エラー:", error);
-      alert("投稿に失敗しました");
-    }
-  };
-
-  const handleLike = async (postId: string) => {
-    const isLiked = likedPosts.includes(postId);
-    const userId = session?.user?.email || getAnonymousUserId();
-    const method = isLiked ? "DELETE" : "POST";
-
-    // 先にUIだけ反映して体感レスポンスを上げる
-    const newLikedPosts = isLiked
-      ? likedPosts.filter((id) => id !== postId)
-      : [...likedPosts, postId];
-    setLikedPosts(newLikedPosts);
-
-    try {
-      const response = await fetch("/api/likes", {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId, userId }),
-      });
-
-      if (response.ok) {
-        localStorage.setItem("lit-club-liked-ids", JSON.stringify(newLikedPosts));
-        mutateAll();
-      } else {
-        // 失敗時はロールバック
-        setLikedPosts(likedPosts);
-      }
-    } catch (error) {
-      console.error("いいね操作エラー:", error);
-      setLikedPosts(likedPosts);
-    }
-  };
-
-  const deletePost = async (postId: string) => {
-    if (!confirm("本当に削除しますか？")) return;
-    
-    try {
-      const response = await fetch(`/api/posts?postId=${postId}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        // お題そのものを削除した場合はメインページに遷移
-        if (postId === topicId) {
-          await new Promise(resolve => setTimeout(resolve, 300));
-          router.push("/");
-        } else {
-          // 返信を削除した場合はページを更新
-          alert("削除しました！");
-          mutateAll();
-        }
-      }
-    } catch (error) {
-      console.error("削除エラー:", error);
+    const ok = await triggerSaveReply(newPost);
+    if (ok) {
+      setNewPost({ title: "", body: "", tag: "創作" });
     }
   };
 
@@ -505,60 +425,15 @@ export default function TopicPage() {
   };
 
   const saveEditedPost = async (postId: string) => {
-    if (!editingPostTitle.trim() || !editingPostBody.trim()) {
-      alert("タイトルと内容は必須です");
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/posts", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          postId,
-          title: editingPostTitle,
-          body: editingPostBody,
-          authorEmail: session?.user?.email,
-        }),
-      });
-
-      if (response.ok) {
-        alert("更新しました！");
-        cancelEditingPost();
-        mutateAll();
-      } else {
-        const error = await response.json();
-        alert(`更新に失敗しました: ${error.error}`);
-      }
-    } catch (error) {
-      console.error("編集エラー:", error);
-      alert("編集に失敗しました");
-    }
+    const ok = await triggerSaveEditedPost(postId, editingPostTitle, editingPostBody);
+    if (ok) cancelEditingPost();
   };
 
   const saveComment = async (postId: string) => {
     const text = commentTexts[postId];
-    if (!text) return;
-
-    try {
-      const response = await fetch("/api/comments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          postId: postId,
-          text: text,
-          author: penName || session?.user?.name || "匿名部員",
-          authorEmail: session?.user?.email || null,
-        }),
-      });
-
-      if (response.ok) {
-        setCommentTexts({ ...commentTexts, [postId]: "" });
-        alert("コメントを送信しました！");
-        mutateAll();
-      }
-    } catch (error) {
-      console.error("コメント送信エラー:", error);
+    const ok = await triggerSaveComment(postId, text);
+    if (ok) {
+      setCommentTexts({ ...commentTexts, [postId]: "" });
     }
   };
 
@@ -577,60 +452,12 @@ export default function TopicPage() {
   };
 
   const editComment = async (commentId: string) => {
-    if (!editingCommentText.trim()) {
-      alert("コメントを入力してください");
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/comments", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          commentId: commentId,
-          text: editingCommentText,
-          authorEmail: session?.user?.email || null,
-        }),
-      });
-
-      if (response.ok) {
-        alert("コメントを編集しました！");
-        cancelEditingComment();
-        mutateAll();
-      } else {
-        const error = await response.json();
-        alert(error.error || "編集に失敗しました");
-      }
-    } catch (error) {
-      console.error("コメント編集エラー:", error);
-      alert("編集に失敗しました");
-    }
+    const ok = await triggerEditComment(commentId, editingCommentText);
+    if (ok) cancelEditingComment();
   };
 
   const deleteComment = async (commentId: string) => {
-    if (!confirm("このコメントを削除しますか？")) return;
-
-    try {
-      const response = await fetch("/api/comments", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          commentId,
-          authorEmail: session?.user?.email || null,
-        }),
-      });
-
-      if (response.ok) {
-        alert("コメントを削除しました");
-        mutateAll();
-      } else {
-        const error = await response.json();
-        alert(error.error || "削除に失敗しました");
-      }
-    } catch (error) {
-      console.error("コメント削除エラー:", error);
-      alert("削除に失敗しました");
-    }
+    await triggerDeleteComment(commentId);
   };
 
   if (postsLoading) {
@@ -769,14 +596,14 @@ export default function TopicPage() {
           {/* いいね・編集・削除 */}
           <div className="flex gap-3 mb-4">
             <button
-              onClick={() => handleLike(topic.id)}
+              onClick={() => handleLike(topic.id, getAnonymousUserId)}
               className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition border-3 shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover ${
-                likedPosts.includes(topic.id)
+                isPostLiked(topic.id, getAnonymousUserId)
                   ? "bg-pink-400 text-white border-white"
                   : "bg-gray-200 text-black border-black"
               } flex items-center gap-2`}
             >
-              <HandDrawnHeartIcon size={13} filled={likedPosts.includes(topic.id)} /> {topic.likes || 0}
+              <HandDrawnHeartIcon size={13} filled={isPostLiked(topic.id, getAnonymousUserId)} /> {topic.likes || 0}
             </button>
             {getLikeParticipants(topic).length > 0 && (
               <div className="flex items-center -space-x-2" title="いいねしたユーザー">
@@ -815,7 +642,7 @@ export default function TopicPage() {
                   編集
                 </button>
                 <button
-                  onClick={() => deletePost(topic.id)}
+                  onClick={() => deletePost(topic.id, router)}
                   disabled={replies.length > 0}
                   className={`px-3 py-1.5 text-xs rounded-lg font-black uppercase border-3 shadow-street-hard transition-all ${
                     replies.length > 0
@@ -1221,14 +1048,14 @@ export default function TopicPage() {
                   </div>
                   <div className="flex gap-3">
                     <button
-                      onClick={() => handleLike(reply.id)}
+                      onClick={() => handleLike(reply.id, getAnonymousUserId)}
                       className={`px-3 py-1.5 text-xs rounded-lg font-black uppercase transition border-3 shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover ${
-                        likedPosts.includes(reply.id)
+                        isPostLiked(reply.id, getAnonymousUserId)
                           ? "bg-pink-400 text-white border-white"
                           : "bg-gray-200 text-black border-black"
                       } flex items-center gap-2`}
                     >
-                      <HandDrawnHeartIcon size={13} filled={likedPosts.includes(reply.id)} /> {reply.likes || 0}
+                      <HandDrawnHeartIcon size={13} filled={isPostLiked(reply.id, getAnonymousUserId)} /> {reply.likes || 0}
                     </button>
                     {getLikeParticipants(reply).length > 0 && (
                       <div className="flex items-center -space-x-2" title="いいねしたユーザー">
@@ -1267,7 +1094,7 @@ export default function TopicPage() {
                           編集
                         </button>
                         <button
-                          onClick={() => deletePost(reply.id)}
+                          onClick={() => deletePost(reply.id, router)}
                           className="px-3 py-1.5 text-xs bg-red-400 text-white rounded-lg font-black uppercase border-3 border-white shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover transition-all"
                         >
                           削除
