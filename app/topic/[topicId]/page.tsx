@@ -5,7 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAppTheme } from "@/app/hooks/useAppTheme";
 import { useTopicDetail } from "@/app/hooks/useTopicDetail";
-import { useTopicMutations } from "@/app/hooks/useTopicMutations";
+import { useTopicAnalysis } from "@/app/hooks/useTopicAnalysis";
+import { usePostMutations } from "@/app/hooks/usePostMutations";
 import { useUserProfile } from "@/app/hooks/useUserProfile";
 import type { Post } from "@/app/types/post";
 import {
@@ -14,16 +15,10 @@ import {
 
 import { tv } from "tailwind-variants";
 import {
-  UserIcon,
   ParticipantAvatars,
-  PostActionButtons,
-  CommentSection,
-  CommentInput,
-  EditPostForm,
-  VerticalTextDisplay,
   AIAnalysisSection,
   PostFormSection,
-  ReplyCard,
+  PostCard,
 } from "./components";
 
 const topicScene = tv({
@@ -70,17 +65,6 @@ const parentTopicBox = tv({
   },
 });
 
-const topicCard = tv({
-  base: "p-6 mb-8",
-  variants: {
-    theme: {
-      street: "jsr-card bg-white rounded-2xl",
-      chrome: "bg-transparent border-0 border-b border-white/25 rounded-none",
-      library: "jsr-card bg-white rounded-2xl",
-    },
-  },
-});
-
 const aiSection = tv({
   base: "p-6 mb-8",
   variants: {
@@ -103,17 +87,6 @@ const repliesHeader = tv({
   },
 });
 
-const replyCard = tv({
-  base: "p-6 mb-4",
-  variants: {
-    theme: {
-      street: "jsr-card bg-white rounded-2xl spray-hover",
-      chrome: "bg-transparent border-0 border-b border-white/25 rounded-none",
-      library: "jsr-card bg-white rounded-2xl",
-    },
-  },
-});
-
 export default function TopicPage() {
   const aiReadingSettingKey = "lit-club-ai-reading-enabled";
   const { data: session } = useSession();
@@ -128,55 +101,38 @@ export default function TopicPage() {
     parentTopic,
     replies,
     postsLoading,
-    penNameMap,
     getDisplayName,
     getDisplayIcon,
     getReplyParticipants,
-    getLikeParticipants,
+    mutatePosts,
+    mutateComments,
+    mutateLikes,
+  } = useTopicDetail(topicId);
+
+  const {
     analysisLoading,
     analysisError,
     analysisResult,
     generateAnalysis,
-    mutateAll,
-  } = useTopicDetail(topicId);
+  } = useTopicAnalysis(topicId);
 
   const { penName } = useUserProfile(session);
-
-  const getAnonymousUserId = () => {
-    const storageKey = "lit-club-anonymous-user-id";
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) return saved;
-
-      const generated = `anon-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-      localStorage.setItem(storageKey, generated);
-      return generated;
-    } catch {
-      return `anon-fallback-${Date.now()}`;
-    }
-  };
 
   // --- Mutation フック ---
   const {
     saveReply: triggerSaveReply,
-    handleLike,
-    deletePost,
     saveEditedPost: triggerSaveEditedPost,
-    saveComment: triggerSaveComment,
-    editComment: triggerEditComment,
-    deleteComment,
-  } = useTopicMutations({
+    deletePost,
+  } = usePostMutations({
     topicId,
     session,
     penName,
-    mutateAll,
+    mutatePosts,
     router,
-    getAnonymousUserId,
   });
 
   // --- ローカル UI state ---
   const [newPost, setNewPost] = useState<Partial<Post>>({ title: "", body: "", tag: "創作" });
-  const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [aiReadingEnabled, setAiReadingEnabled] = useState(true);
   const [iconCacheBust] = useState<number>(Date.now());
 
@@ -188,33 +144,6 @@ export default function TopicPage() {
       setAiReadingEnabled(true);
     }
   }, []);
-
-  const getDeadlineStatus = (deadline: number | null | undefined) => {
-    if (!deadline) return null;
-
-    const deadlineText = new Date(deadline).toLocaleString("ja-JP", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    
-    const now = Date.now();
-    const timeLeft = deadline - now;
-    const hoursLeft = timeLeft / (1000 * 60 * 60);
-    const daysLeft = timeLeft / (1000 * 60 * 60 * 24);
-
-    if (timeLeft < 0) {
-      return { status: "expired", label: `締切済 (${deadlineText})`, bgColor: "bg-gray-100", textColor: "text-gray-600" };
-    } else if (hoursLeft < 24) {
-      return { status: "urgent", label: `あと24時間 (締切: ${deadlineText})`, bgColor: "bg-red-100", textColor: "text-red-600" };
-    } else if (daysLeft < 3) {
-      return { status: "soon", label: `まもなく締切 (締切: ${deadlineText})`, bgColor: "bg-orange-100", textColor: "text-orange-600" };
-    } else {
-      return { status: "active", label: `締切: ${deadlineText}`, bgColor: "bg-blue-100", textColor: "text-blue-600" };
-    }
-  };
 
   const isDeadlineExpired = (deadline: number | null | undefined) => {
     if (!deadline) return false;
@@ -321,18 +250,6 @@ export default function TopicPage() {
     });
   };
 
-  const startEditingPost = (postId: string) => {
-    setEditingPostId(postId);
-  };
-
-  const cancelEditingPost = () => {
-    setEditingPostId(null);
-  };
-
-  const saveComment = (postId: string, text: string) => {
-    triggerSaveComment(postId, text, () => {});
-  };
-
   if (postsLoading) {
     return <div className="text-center py-10">読み込み中...</div>;
   }
@@ -376,90 +293,22 @@ export default function TopicPage() {
         )}
 
         {/* トピック表示 */}
-        {editingPostId === topic.id ? (
-          <EditPostForm
-            postId={topic.id}
-            initialTitle={topic.title}
-            initialBody={topic.body}
-            theme={appTheme}
-            onSave={(postId, title, body) => triggerSaveEditedPost(postId, title, body, cancelEditingPost)}
-            onCancel={cancelEditingPost}
-          />
-        ) : (
-        <div className={topicCard({ theme: appTheme })}>
-          {getDeadlineStatus(topic.deadline) && (
-            <div className={`inline-block px-3 py-1 rounded-full text-xs font-black mb-3 border-2 border-black chrome:border-green-500 ${getDeadlineStatus(topic.deadline)!.bgColor} ${getDeadlineStatus(topic.deadline)!.textColor}`}>
-              {getDeadlineStatus(topic.deadline)!.label}
-            </div>
-          )}
-          <div className="mb-2">
-            <h2 className="text-2xl font-black uppercase tracking-wide text-black chrome:text-green-300">{topic.title}</h2>
-          </div>
-          {topic.subtitle && (
-            <p className="text-sm text-gray-600 chrome:text-slate-200 mb-4 italic">{topic.subtitle}</p>
-          )}
-          
-          {/* 本体表示 - お題の場合は通常表示、通常投稿の場合は縦読み形式 */}
-          {topic.isTopicPost === 1 ? (
-            <p className="text-gray-700 chrome:text-green-100 mb-4 whitespace-pre-wrap font-semibold">{topic.body}</p>
-          ) : (
-            <VerticalTextDisplay
-              body={topic.body}
-            />
-          )}
-          
-          <div className="flex items-center justify-between text-sm font-bold mb-4">
-            <span className="flex items-center gap-2">
-              <UserIcon
-                src={getDisplayIcon(topic.authorEmail)}
-                alt="投稿者アイコン"
-                size="sm"
-                cacheBust={iconCacheBust}
-                className="border-black"
-              />
-              <span className="font-black uppercase">{getDisplayName(topic.authorEmail, topic.author)}</span>
-            </span>
-            <span className="text-xs">{new Date(topic.createdAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
-          </div>
-          
-          {/* いいね・編集・削除 */}
-          <PostActionButtons
-            likes={topic.likes}
-            isLiked={topic.likesUserIds?.includes(session?.user?.email || getAnonymousUserId()) ?? false}
-            participants={getLikeParticipants(topic)}
-            isAuthor={session?.user?.email === topic.authorEmail}
-            onLike={() => {
-              const userId = session?.user?.email || getAnonymousUserId();
-              handleLike(topic.id, topic.likesUserIds?.includes(userId) ?? false);
-            }}
-            onEdit={() => startEditingPost(topic.id)}
-            onDelete={() => deletePost(topic.id)}
-            deleteDisabled={replies.length > 0}
-            deleteDisabledReason={replies.length > 0 ? "この投稿に返信があるため削除できません" : undefined}
-          />
-          
-          {/* コメント一覧 */}
-          <CommentSection
-            comments={topic.comments}
-            appTheme={appTheme}
-            sessionEmail={session?.user?.email}
-            iconCacheBust={iconCacheBust}
-            getDisplayIcon={getDisplayIcon}
-            getDisplayName={getDisplayName}
-            onEditSave={triggerEditComment}
-            onDelete={deleteComment}
-          />
-
-          {/* 通常投稿の詳細画面ではコメントをその場で投稿可能にする */}
-          {topic.isTopicPost !== 1 && (
-            <CommentInput
-              theme={appTheme}
-              onSubmit={(text) => saveComment(topic.id, text)}
-            />
-          )}
-          
-        </div>
-        )}
+        <PostCard
+          post={topic}
+          variant="topic"
+          appTheme={appTheme}
+          session={session}
+          penName={penName}
+          onEditSave={(postId, title, body) => triggerSaveEditedPost(postId, title, body)}
+          iconCacheBust={iconCacheBust}
+          getDisplayIcon={getDisplayIcon}
+          getDisplayName={getDisplayName}
+          onDelete={() => deletePost(topic.id)}
+          deleteDisabled={replies.length > 0}
+          deleteDisabledReason={replies.length > 0 ? "この投稿に返信があるため削除できません" : undefined}
+          mutateComments={mutateComments}
+          mutateLikes={mutateLikes}
+        />
 
         {/* AI分析 - お題の場合のみ表示 */}
         {topic.isTopicPost === 1 && (
@@ -507,30 +356,20 @@ export default function TopicPage() {
             <p className="text-center py-8 font-black uppercase text-xl">まだ投稿がありません</p>
           ) : (
             replies.map((reply) => (
-              <ReplyCard
+              <PostCard
                 key={reply.id}
-                reply={reply}
+                post={reply}
+                variant="reply"
                 appTheme={appTheme}
-                cardClassName={replyCard({ theme: appTheme })}
-                isEditing={editingPostId === reply.id}
-                onEditSave={(postId, title, body) => triggerSaveEditedPost(postId, title, body, cancelEditingPost)}
-                onEditCancel={cancelEditingPost}
-                onEditStart={startEditingPost}
+                session={session}
+                penName={penName}
+                onEditSave={(postId, title, body) => triggerSaveEditedPost(postId, title, body)}
                 iconCacheBust={iconCacheBust}
                 getDisplayIcon={getDisplayIcon}
                 getDisplayName={getDisplayName}
-                isLiked={reply.likesUserIds?.includes(session?.user?.email || getAnonymousUserId()) ?? false}
-                likeParticipants={getLikeParticipants(reply)}
-                onLike={() => {
-                  const userId = session?.user?.email || getAnonymousUserId();
-                  handleLike(reply.id, reply.likesUserIds?.includes(userId) ?? false);
-                }}
-                isAuthor={session?.user?.email === reply.authorEmail}
                 onDelete={() => deletePost(reply.id)}
-                sessionEmail={session?.user?.email}
-                onCommentEditSave={triggerEditComment}
-                onCommentDelete={deleteComment}
-                onCommentSubmit={saveComment}
+                mutateComments={mutateComments}
+                mutateLikes={mutateLikes}
               />
             ))
           )}

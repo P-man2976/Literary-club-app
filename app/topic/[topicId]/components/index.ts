@@ -7,4 +7,4 @@ export { EditPostForm } from "./EditPostForm";
 export { VerticalTextDisplay } from "./VerticalTextDisplay";
 export { AIAnalysisSection } from "./AIAnalysisSection";
 export { PostFormSection } from "./PostFormSection";
-export { ReplyCard } from "./ReplyCard";
+export { PostCard } from "./PostCard";
