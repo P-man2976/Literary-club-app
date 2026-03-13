@@ -103,7 +103,7 @@ export default function TopicPage() {
     postsLoading,
     getDisplayName,
     getDisplayIcon,
-    getReplyParticipants,
+    replyParticipants,
     mutatePosts,
     mutateComments,
     mutateLikes,
@@ -341,11 +341,11 @@ export default function TopicPage() {
         <div>
           <div className={repliesHeader({ theme: appTheme })}>
             <h3 className="text-xl font-black uppercase tracking-wide">このお題への投稿 ({replies.length})</h3>
-            {getReplyParticipants().length > 0 && (
+            {replyParticipants.length > 0 && (
               <div className="flex items-center gap-2">
                 <span className="text-xs font-black uppercase">参加者</span>
                 <ParticipantAvatars
-                  participants={getReplyParticipants()}
+                  participants={replyParticipants}
                   maxDisplay={8}
                   size="md"
                 />

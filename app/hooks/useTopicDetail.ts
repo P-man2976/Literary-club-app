@@ -47,11 +47,10 @@ export function useTopicDetail(topicId: string) {
   }, [allPosts, topicId]);
 
   // postIds 一覧 (topic + replies) — コメント・いいね一括取得用
-  const allPostIds = useMemo(() => {
-    const ids = rawReplies.map((r) => r.id);
-    if (topicId) ids.unshift(topicId);
-    return ids;
-  }, [topicId, rawReplies]);
+  const allPostIds = useMemo(
+    () => [topicId, ...rawReplies.map((r) => r.id)],
+    [topicId, rawReplies]
+  );
 
   // コメント一括取得
   const commentsKey = useMemo(() => {
@@ -80,27 +79,27 @@ export function useTopicDetail(topicId: string) {
   );
 
   // コメントをpostIdでマッピング
-  const commentsByPostId = useMemo(() => {
-    if (!commentsData) return new Map<string, Comment[]>();
+  const commentsByPostId = useMemo((): Record<string, Comment[]> => {
+    if (!commentsData) return {};
     // 単一postId の場合は配列が直接返る
     if (Array.isArray(commentsData)) {
-      return new Map<string, Comment[]>([[topicId, commentsData]]);
+      return { [topicId]: commentsData };
     }
     // 複数postIds の場合は { postId: Comment[] } のオブジェクト
-    return new Map<string, Comment[]>(Object.entries(commentsData));
+    return commentsData;
   }, [commentsData, topicId]);
 
   // いいねをpostIdでマッピング
-  const likesByPostId = useMemo(() => {
-    if (!likesData) return new Map<string, string[]>();
+  const likesByPostId = useMemo((): Record<string, string[]> => {
+    if (!likesData) return {};
     // 単一postId の場合は { count, userIds } が返る
     if (likesData.userIds) {
-      return new Map<string, string[]>([
-        [topicId, Array.isArray(likesData.userIds) ? likesData.userIds : []],
-      ]);
+      return {
+        [topicId]: Array.isArray(likesData.userIds) ? likesData.userIds : [],
+      };
     }
     // 複数postIds の場合は { postId: string[] }
-    return new Map<string, string[]>(Object.entries(likesData));
+    return likesData;
   }, [likesData, topicId]);
 
   // topic + comments + likes をマージ
@@ -108,8 +107,8 @@ export function useTopicDetail(topicId: string) {
     if (!topic) return null;
     return {
       ...topic,
-      comments: commentsByPostId.get(topic.id) || [],
-      likesUserIds: likesByPostId.get(topic.id) || [],
+      comments: commentsByPostId[topic.id] || [],
+      likesUserIds: likesByPostId[topic.id] || [],
     };
   }, [topic, commentsByPostId, likesByPostId]);
 
@@ -118,32 +117,27 @@ export function useTopicDetail(topicId: string) {
     () =>
       rawReplies.map((reply) => ({
         ...reply,
-        comments: commentsByPostId.get(reply.id) || [],
-        likesUserIds: likesByPostId.get(reply.id) || [],
+        comments: commentsByPostId[reply.id] || [],
+        likesUserIds: likesByPostId[reply.id] || [],
       })),
     [rawReplies, commentsByPostId, likesByPostId]
   );
 
   // --- ペンネーム・アイコン ---
   const emailsFromTopic = useMemo(() => {
-    const emails = new Set<string>();
-    if (topic?.authorEmail) emails.add(topic.authorEmail);
-    rawReplies.forEach((reply) => {
-      if (reply.authorEmail) emails.add(reply.authorEmail);
-    });
-    // コメントの著者
-    commentsByPostId.forEach((comments) => {
-      comments.forEach((c) => {
-        if (c.authorEmail) emails.add(c.authorEmail);
-      });
-    });
-    // いいねのユーザー
-    likesByPostId.forEach((userIds) => {
-      userIds.forEach((id) => {
-        if (id.includes("@")) emails.add(id);
-      });
-    });
-    return Array.from(emails).sort();
+    const topicEmails = topic?.authorEmail ? [topic.authorEmail] : [];
+    const replyEmails = rawReplies
+      .map((r) => r.authorEmail)
+      .filter((e): e is string => !!e);
+    const commentEmails = Object.values(commentsByPostId)
+      .flat()
+      .map((c) => c.authorEmail)
+      .filter((e): e is string => !!e);
+    const likeEmails = Object.values(likesByPostId)
+      .flat()
+      .filter((id) => id.includes("@"));
+
+    return [...new Set([...topicEmails, ...replyEmails, ...commentEmails, ...likeEmails])].sort();
   }, [topic, rawReplies, commentsByPostId, likesByPostId]);
 
   const { data: penNameData } = useSWR(
@@ -166,35 +160,23 @@ export function useTopicDetail(topicId: string) {
   const getDisplayIcon = useIconUrlMap(userIconMap);
 
   // --- 参加者 ---
-  const getReplyParticipants = useCallback(() => {
+  const replyParticipants = useMemo(() => {
     const seen = new Set<string>();
-    const participants: Array<{ key: string; name: string; icon: string | null }> = [];
-
-    replies.forEach((reply) => {
-      const key = reply.authorEmail || `name:${reply.author}`;
-      if (seen.has(key)) return;
-      seen.add(key);
-      participants.push({
-        key,
-        name: getDisplayName(reply.authorEmail, reply.author),
-        icon: getDisplayIcon(reply.authorEmail),
-      });
-    });
-    return participants;
+    return replies.reduce<Array<{ key: string; name: string; icon: string | null }>>(
+      (acc, reply) => {
+        const key = reply.authorEmail || `name:${reply.author}`;
+        if (seen.has(key)) return acc;
+        seen.add(key);
+        acc.push({
+          key,
+          name: getDisplayName(reply.authorEmail, reply.author),
+          icon: getDisplayIcon(reply.authorEmail),
+        });
+        return acc;
+      },
+      []
+    );
   }, [replies, getDisplayName, getDisplayIcon]);
-
-  const getLikeParticipants = useCallback(
-    (post: Post) =>
-      (post.likesUserIds || []).map((userId) => {
-        const isMember = userId.includes("@");
-        return {
-          key: userId,
-          icon: isMember ? getDisplayIcon(userId) : null,
-          name: isMember ? getDisplayName(userId, "部員") : "ゲスト",
-        };
-      }),
-    [getDisplayName, getDisplayIcon]
-  );
 
   // --- ミューテーション ---
   const mutateAll = useCallback(() => {
@@ -218,8 +200,7 @@ export function useTopicDetail(topicId: string) {
     getDisplayIcon,
 
     // 参加者
-    getReplyParticipants,
-    getLikeParticipants,
+    replyParticipants,
 
     // ミューテーション
     mutateAll,
