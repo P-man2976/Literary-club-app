@@ -3,106 +3,116 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useMemo, useCallback } from "react";
 import { Heart, MessageCircle } from "lucide-react";
-
-type Post = {
-  id: string;
-  author: string;
-  authorEmail?: string | null;
-  title: string;
-  body: string;
-  tag: string;
-  createdAt: number;
-  parentPostId?: string | null;
-  isTopicPost?: number;
-  likes?: number;
-  comments?: Array<{ commentId: string; text: string; author: string; createdAt: number }>;
-};
+import useSWR from "swr";
+import type { Comment } from "@/app/types/post";
+import { fetcher } from "@/app/lib/fetchers";
+import { usePosts } from "@/app/hooks/usePosts";
+import { usePostMutations } from "@/app/hooks/usePostMutations";
+import { useUserProfile } from "@/app/hooks/useUserProfile";
 
 export default function MyContentPage() {
   const { data: session } = useSession();
   const router = useRouter();
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [allPosts, setAllPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  const email = session?.user?.email;
+
+  const { allPosts, postsLoading, mutatePosts } = usePosts();
+  const { penName } = useUserProfile(session);
+  const { deletePost: triggerDelete } = usePostMutations({
+    session,
+    penName,
+    mutatePosts,
+  });
+
+  // 自分の投稿をフィルタ
+  const myPosts = useMemo(
+    () =>
+      allPosts
+        .filter((p) => p.authorEmail === email)
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)),
+    [allPosts, email]
+  );
+
+  const myPostIds = useMemo(() => myPosts.map((p) => p.id), [myPosts]);
+
+  // コメント一括取得
+  const commentsKey = useMemo(() => {
+    if (myPostIds.length === 0) return null;
+    return `/api/comments?postIds=${myPostIds.join(",")}`;
+  }, [myPostIds]);
+
+  const { data: commentsData } = useSWR(commentsKey, fetcher, {
+    revalidateOnFocus: false,
+  });
+
+  const commentsByPostId = useMemo((): Record<string, Comment[]> => {
+    if (!commentsData) return {};
+    if (Array.isArray(commentsData)) {
+      return myPostIds.length === 1 ? { [myPostIds[0]]: commentsData } : {};
+    }
+    return commentsData;
+  }, [commentsData, myPostIds]);
+
+  // いいね一括取得
+  const likesKey = useMemo(() => {
+    if (myPostIds.length === 0) return null;
+    return `/api/likes?postIds=${myPostIds.join(",")}`;
+  }, [myPostIds]);
+
+  const { data: likesData } = useSWR(likesKey, fetcher, {
+    revalidateOnFocus: false,
+  });
+
+  const likeCountByPostId = useMemo((): Record<string, number> => {
+    if (!likesData) return {};
+    // 単一postIdの場合
+    if (likesData.count !== undefined) {
+      return myPostIds.length === 1 ? { [myPostIds[0]]: likesData.count } : {};
+    }
+    // 複数postIdsの場合: { postId: string[] }
+    const result: Record<string, number> = {};
+    for (const [id, userIds] of Object.entries(likesData)) {
+      result[id] = Array.isArray(userIds) ? userIds.length : 0;
+    }
+    return result;
+  }, [likesData, myPostIds]);
+
+  // 投稿にコメント数・いいね数をマージ
+  const posts = useMemo(
+    () =>
+      myPosts.map((post) => ({
+        ...post,
+        comments: commentsByPostId[post.id] || [],
+        likes: likeCountByPostId[post.id] || 0,
+      })),
+    [myPosts, commentsByPostId, likeCountByPostId]
+  );
+
+  // 子投稿がある場合は削除不可チェック → usePostMutations の deletePost を呼ぶ
+  const deletePost = useCallback(
+    (postId: string) => {
+      const post = myPosts.find((p) => p.id === postId);
+
+      if (post?.isTopicPost === 1) {
+        const childCount = allPosts.filter(
+          (p) => p.parentPostId === postId
+        ).length;
+        if (childCount > 0) {
+          alert("このお題には投稿があるため削除できません");
+          return;
+        }
+      }
+
+      triggerDelete(postId, () => alert("削除しました！"));
+    },
+    [myPosts, allPosts, triggerDelete]
+  );
 
   // ログインしていない場合はリダイレクト
-  useEffect(() => {
-    if (!session) {
-      router.push("/");
-    }
-  }, [session, router]);
-
-  // 自分の投稿を取得
-  useEffect(() => {
-    const fetchMyPosts = async () => {
-      try {
-        const res = await fetch("/api/posts");
-        const allPostsData: Post[] = await res.json();
-        setAllPosts(allPostsData); // 全投稿を保存（子投稿カウント用）
-        
-        // 自分の投稿のみをフィルタ（メールアドレスで照合）
-        const myPosts = allPostsData.filter(post => post.authorEmail === session?.user?.email);
-        
-        // 各投稿のコメントといいね情報を取得
-        const postsWithDetails = await Promise.all(myPosts.map(async (post) => {
-          const [cRes, lRes] = await Promise.all([
-            fetch(`/api/comments?postId=${post.id}`),
-            fetch(`/api/likes?postId=${post.id}`)
-          ]);
-          const comments = await cRes.json();
-          const likesData = await lRes.json();
-          
-          return { ...post, comments, likes: likesData.count };
-        }));
-        
-        setPosts(postsWithDetails.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
-        setLoading(false);
-      } catch (error) {
-        console.error("投稿取得エラー:", error);
-        setLoading(false);
-      }
-    };
-
-    if (session?.user?.email) {
-      fetchMyPosts();
-    }
-  }, [session?.user?.email]);
-
-  // 投稿を削除
-  const deletePost = async (postId: string) => {
-    const post = posts.find(p => p.id === postId);
-    
-    // お題で投稿がある場合は削除不可
-    if (post?.isTopicPost === 1) {
-      const childCount = allPosts.filter(p => p.parentPostId === postId).length;
-      if (childCount > 0) {
-        alert("このお題には投稿があるため削除できません");
-        return;
-      }
-    }
-    
-    if (!confirm("本当に削除しますか？")) return;
-    
-    try {
-      const response = await fetch(`/api/posts?postId=${postId}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        alert("削除しました！");
-        setPosts(posts.filter(p => p.id !== postId));
-      } else {
-        alert("削除に失敗しました");
-      }
-    } catch (error) {
-      console.error("削除エラー:", error);
-      alert("削除に失敗しました");
-    }
-  };
-
   if (!session) {
+    router.push("/");
     return <div className="p-10 text-center">ログインが必要です</div>;
   }
 
@@ -123,7 +133,7 @@ export default function MyContentPage() {
       </header>
 
       <div className="p-4 space-y-4">
-        {loading ? (
+        {postsLoading ? (
           <div className="text-center py-10 text-slate-400 chrome:text-slate-500">読み込み中...</div>
         ) : posts.length === 0 ? (
           <div className="text-center py-10">

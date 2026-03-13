@@ -124,11 +124,9 @@ export default function TopicPage() {
     saveEditedPost: triggerSaveEditedPost,
     deletePost,
   } = usePostMutations({
-    topicId,
     session,
     penName,
     mutatePosts,
-    router,
   });
 
   // --- ローカル UI state ---
@@ -245,7 +243,7 @@ export default function TopicPage() {
       alert("このお題の締め切りが過ぎているため、投稿できません");
       return;
     }
-    triggerSaveReply(newPost, () => {
+    triggerSaveReply(topicId, newPost, () => {
       setNewPost({ title: "", body: "", tag: "創作" });
     });
   };
@@ -303,7 +301,7 @@ export default function TopicPage() {
           iconCacheBust={iconCacheBust}
           getDisplayIcon={getDisplayIcon}
           getDisplayName={getDisplayName}
-          onDelete={() => deletePost(topic.id)}
+          onDelete={() => deletePost(topic.id, () => setTimeout(() => router.push("/"), 300))}
           deleteDisabled={replies.length > 0}
           deleteDisabledReason={replies.length > 0 ? "この投稿に返信があるため削除できません" : undefined}
           mutateComments={mutateComments}
@@ -367,7 +365,7 @@ export default function TopicPage() {
                 iconCacheBust={iconCacheBust}
                 getDisplayIcon={getDisplayIcon}
                 getDisplayName={getDisplayName}
-                onDelete={() => deletePost(reply.id)}
+                onDelete={() => deletePost(reply.id, () => alert("削除しました！"))}
                 mutateComments={mutateComments}
                 mutateLikes={mutateLikes}
               />

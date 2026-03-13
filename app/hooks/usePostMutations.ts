@@ -38,19 +38,15 @@ async function deletePostFetcher(url: string, { arg }: { arg: { postId: string }
 }
 
 type UsePostMutationsParams = {
-  topicId: string;
   session: { user?: { name?: string | null; email?: string | null } } | null;
   penName: string;
   mutatePosts: () => void;
-  router: { push: (url: string) => void };
 };
 
 export function usePostMutations({
-  topicId,
   session,
   penName,
   mutatePosts,
-  router,
 }: UsePostMutationsParams) {
   const { trigger: triggerCreateReply, isMutating: isCreatingReply } =
     useSWRMutation("/api/posts", postFetcher);
@@ -58,7 +54,11 @@ export function usePostMutations({
   const { trigger: triggerDeletePost } = useSWRMutation("/api/posts", deletePostFetcher);
 
   const saveReply = useCallback(
-    (newPost: { title?: string; body?: string; tag?: string }, onSuccess?: () => void) => {
+    (
+      parentPostId: string,
+      newPost: { title?: string; body?: string; tag?: string },
+      onSuccess?: () => void,
+    ) => {
       if (!newPost.title || !newPost.body) {
         alert("タイトルと本文を入力してください");
         return;
@@ -71,7 +71,7 @@ export function usePostMutations({
           author: penName || session?.user?.name || "匿名部員",
           authorEmail: session?.user?.email || null,
           tag: newPost.tag || "創作",
-          parentPostId: topicId,
+          parentPostId,
           isTopicPost: 0,
         },
         {
@@ -87,7 +87,7 @@ export function usePostMutations({
         }
       );
     },
-    [triggerCreateReply, penName, session, topicId, mutatePosts]
+    [triggerCreateReply, penName, session, mutatePosts]
   );
 
   const saveEditedPost = useCallback(
@@ -124,19 +124,15 @@ export function usePostMutations({
   );
 
   const deletePost = useCallback(
-    (postId: string) => {
+    (postId: string, onSuccess?: () => void) => {
       if (!confirm("本当に削除しますか？")) return;
 
       triggerDeletePost(
         { postId },
         {
           onSuccess: () => {
-            if (postId === topicId) {
-              setTimeout(() => router.push("/"), 300);
-            } else {
-              alert("削除しました！");
-              mutatePosts();
-            }
+            mutatePosts();
+            onSuccess?.();
           },
           onError: (error) => {
             console.error("削除エラー:", error);
@@ -144,7 +140,7 @@ export function usePostMutations({
         }
       );
     },
-    [triggerDeletePost, topicId, mutatePosts, router]
+    [triggerDeletePost, mutatePosts]
   );
 
   return {
