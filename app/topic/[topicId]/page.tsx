@@ -23,6 +23,7 @@ import {
   VerticalTextDisplay,
   AIAnalysisSection,
   PostFormSection,
+  ReplyCard,
 } from "./components";
 
 const topicScene = tv({
@@ -632,93 +633,48 @@ export default function TopicPage() {
             <p className="text-center py-8 font-black uppercase text-xl">まだ投稿がありません</p>
           ) : (
             replies.map((reply) => (
-              <div
+              <ReplyCard
                 key={reply.id}
-                className={replyCard({ theme: appTheme })}
-              >
-                {/* 編集フォーム */}
-                {editingPostId === reply.id ? (
-                  <EditPostForm
-                    postId={reply.id}
-                    title={editingPostTitle}
-                    body={editingPostBody}
-                    onTitleChange={setEditingPostTitle}
-                    onBodyChange={setEditingPostBody}
-                    onSave={saveEditedPost}
-                    onCancel={cancelEditingPost}
-                  />
-                ) : (
-                  <>
-                {/* 投稿本体 */}
-                <div className="mb-4">
-                  <h4 className="text-xl font-black uppercase tracking-wide text-black chrome:text-green-300 mb-3">{reply.title}</h4>
-                  <VerticalTextDisplay
-                    postId={reply.id}
-                    body={reply.body}
-                    scrollingPostId={scrollingPostId}
-                    showHorizontalHint={showHorizontalHint}
-                    onScroll={handleBodyScroll}
-                    onDismissHint={dismissHorizontalHint}
-                    className="mb-4 overflow-x-auto border-3 border-black chrome:border-green-700 rounded-xl p-4 bg-cyan-50 chrome:bg-gray-950 relative group"
-                    textClassName="text-black chrome:text-green-200 whitespace-pre-wrap font-semibold"
-                    hintClassName="hidden group-hover:flex absolute top-2 left-2 bg-cyan-600 chrome:bg-green-600 text-white chrome:text-black text-xs px-3 py-2 rounded-lg font-black uppercase pointer-events-none z-10 border-2 border-black chrome:border-green-500"
-                  />
-                  <div className="flex items-center justify-between text-sm font-bold mb-4">
-                    <span className="flex items-center gap-2">
-                      <UserIcon
-                        src={getDisplayIcon(reply.authorEmail)}
-                        alt="投稿者アイコン"
-                        size="sm"
-                        cacheBust={iconCacheBust}
-                      />
-                      <span className="uppercase font-black text-black chrome:text-green-300">{getDisplayName(reply.authorEmail, reply.author)}</span>
-                    </span>
-                    <span className="text-xs">{new Date(reply.createdAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                  <PostActionButtons
-                    postId={reply.id}
-                    likes={reply.likes}
-                    isLiked={reply.likesUserIds?.includes(session?.user?.email || getAnonymousUserId()) ?? false}
-                    participants={getLikeParticipants(reply)}
-                    isAuthor={session?.user?.email === reply.authorEmail}
-                    onLike={() => {
-                      const userId = session?.user?.email || getAnonymousUserId();
-                      handleLike(reply.id, reply.likesUserIds?.includes(userId) ?? false);
-                    }}
-                    onEdit={() => startEditingPost(reply.id, reply.title, reply.body)}
-                    onDelete={() => deletePost(reply.id)}
-                  />
-                </div>
-                </>
-                )}
-
-                {/* コメント一覧 */}
-                <CommentSection
-                  comments={reply.comments}
-                  appTheme={appTheme}
-                  editingCommentId={editingCommentId}
-                  editingCommentText={editingCommentText}
-                  commentLikes={commentLikes}
-                  sessionEmail={session?.user?.email}
-                  iconCacheBust={iconCacheBust}
-                  getDisplayIcon={getDisplayIcon}
-                  getDisplayName={getDisplayName}
-                  onEditTextChange={setEditingCommentText}
-                  onEditSave={editComment}
-                  onEditCancel={cancelEditingComment}
-                  onEditStart={startEditingComment}
-                  onToggleLike={toggleCommentLike}
-                  onDelete={deleteComment}
-                />
-
-                {/* コメント入力フォーム */}
-                <CommentInput
-                  postId={reply.id}
-                  value={commentTexts[reply.id] || ""}
-                  onChange={(postId, value) => setCommentTexts({ ...commentTexts, [postId]: value })}
-                  onSubmit={saveComment}
-                />
-              </div>
+                reply={reply}
+                appTheme={appTheme}
+                cardClassName={replyCard({ theme: appTheme })}
+                isEditing={editingPostId === reply.id}
+                editingTitle={editingPostTitle}
+                editingBody={editingPostBody}
+                onEditTitleChange={setEditingPostTitle}
+                onEditBodyChange={setEditingPostBody}
+                onEditSave={saveEditedPost}
+                onEditCancel={cancelEditingPost}
+                onEditStart={startEditingPost}
+                scrollingPostId={scrollingPostId}
+                showHorizontalHint={showHorizontalHint}
+                onBodyScroll={handleBodyScroll}
+                onDismissHint={dismissHorizontalHint}
+                iconCacheBust={iconCacheBust}
+                getDisplayIcon={getDisplayIcon}
+                getDisplayName={getDisplayName}
+                isLiked={reply.likesUserIds?.includes(session?.user?.email || getAnonymousUserId()) ?? false}
+                likeParticipants={getLikeParticipants(reply)}
+                onLike={() => {
+                  const userId = session?.user?.email || getAnonymousUserId();
+                  handleLike(reply.id, reply.likesUserIds?.includes(userId) ?? false);
+                }}
+                isAuthor={session?.user?.email === reply.authorEmail}
+                onDelete={() => deletePost(reply.id)}
+                editingCommentId={editingCommentId}
+                editingCommentText={editingCommentText}
+                commentLikes={commentLikes}
+                sessionEmail={session?.user?.email}
+                onCommentEditTextChange={setEditingCommentText}
+                onCommentEditSave={editComment}
+                onCommentEditCancel={cancelEditingComment}
+                onCommentEditStart={startEditingComment}
+                onCommentToggleLike={toggleCommentLike}
+                onCommentDelete={deleteComment}
+                commentText={commentTexts[reply.id] || ""}
+                onCommentTextChange={(postId, value) => setCommentTexts({ ...commentTexts, [postId]: value })}
+                onCommentSubmit={saveComment}
+              />
             ))
           )}
         </div>
