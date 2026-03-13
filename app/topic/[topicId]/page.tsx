@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAppTheme } from "@/app/hooks/useAppTheme";
 import { useTopicDetail } from "@/app/hooks/useTopicDetail";
 import { useTopicMutations } from "@/app/hooks/useTopicMutations";
@@ -92,28 +92,6 @@ const aiSection = tv({
   },
 });
 
-const postFormSection = tv({
-  base: "p-6 mb-8",
-  variants: {
-    theme: {
-      street: "bg-white rounded-2xl shadow-md",
-      chrome: "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none",
-      library: "bg-white rounded-2xl shadow-library-neu",
-    },
-  },
-});
-
-const postFormTitle = tv({
-  base: "mb-4 flex items-center gap-2",
-  variants: {
-    theme: {
-      street: "text-lg font-bold",
-      chrome: "text-base font-medium text-white",
-      library: "text-lg font-serif font-bold text-[#3F3427]",
-    },
-  },
-});
-
 const repliesHeader = tv({
   base: "flex items-center justify-between mb-4 p-4",
   variants: {
@@ -198,66 +176,9 @@ export default function TopicPage() {
 
   // --- ローカル UI state ---
   const [newPost, setNewPost] = useState<Partial<Post>>({ title: "", body: "", tag: "創作" });
-  const [commentTexts, setCommentTexts] = useState<{ [key: string]: string }>({});
-  const [commentLikes, setCommentLikes] = useState<{ [key: string]: boolean }>({});
-  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
-  const [editingCommentText, setEditingCommentText] = useState("");
-  const [scrollingPostId, setScrollingPostId] = useState<string | null>(null);
-
-  const scrollHideTimerRef = useRef<number | null>(null);
-  const [showHorizontalHint, setShowHorizontalHint] = useState(false);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
-  const [editingPostTitle, setEditingPostTitle] = useState("");
-  const [editingPostBody, setEditingPostBody] = useState("");
   const [aiReadingEnabled, setAiReadingEnabled] = useState(true);
   const [iconCacheBust] = useState<number>(Date.now());
-
-  const handleBodyScroll = (postId: string) => {
-    setScrollingPostId(postId);
-    if (scrollHideTimerRef.current) {
-      window.clearTimeout(scrollHideTimerRef.current);
-    }
-    scrollHideTimerRef.current = window.setTimeout(() => {
-      setScrollingPostId((current) => (current === postId ? null : current));
-    }, 200);
-  };
-
-  const dismissHorizontalHint = () => {
-    setShowHorizontalHint(false);
-    try {
-      localStorage.setItem("lit-club-horizontal-hint-dismissed", "1");
-    } catch {
-      // Ignore storage errors on restricted browsers.
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      if (scrollHideTimerRef.current) {
-        window.clearTimeout(scrollHideTimerRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    // タッチデバイス（スマホ・タブレット）ではヒントを表示しない
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    if (isTouchDevice) {
-      setShowHorizontalHint(false);
-      return;
-    }
-
-    // PC環境のみ：localStorageで非表示設定を確認
-    try {
-      const dismissed = localStorage.getItem("lit-club-horizontal-hint-dismissed") === "1";
-      if (!dismissed) {
-        setShowHorizontalHint(true);
-      }
-    } catch {
-      // Ignore storage errors on restricted browsers.
-      setShowHorizontalHint(true);
-    }
-  }, []);
 
   useEffect(() => {
     try {
@@ -400,45 +321,16 @@ export default function TopicPage() {
     });
   };
 
-  const startEditingPost = (postId: string, title: string, body: string) => {
+  const startEditingPost = (postId: string) => {
     setEditingPostId(postId);
-    setEditingPostTitle(title);
-    setEditingPostBody(body);
   };
 
   const cancelEditingPost = () => {
     setEditingPostId(null);
-    setEditingPostTitle("");
-    setEditingPostBody("");
   };
 
-  const saveEditedPost = (postId: string) => {
-    triggerSaveEditedPost(postId, editingPostTitle, editingPostBody, cancelEditingPost);
-  };
-
-  const saveComment = (postId: string) => {
-    const text = commentTexts[postId];
-    triggerSaveComment(postId, text, () => {
-      setCommentTexts({ ...commentTexts, [postId]: "" });
-    });
-  };
-
-  const toggleCommentLike = (commentId: string) => {
-    setCommentLikes({ ...commentLikes, [commentId]: !commentLikes[commentId] });
-  };
-
-  const startEditingComment = (commentId: string, currentText: string) => {
-    setEditingCommentId(commentId);
-    setEditingCommentText(currentText);
-  };
-
-  const cancelEditingComment = () => {
-    setEditingCommentId(null);
-    setEditingCommentText("");
-  };
-
-  const editComment = (commentId: string) => {
-    triggerEditComment(commentId, editingCommentText, cancelEditingComment);
+  const saveComment = (postId: string, text: string) => {
+    triggerSaveComment(postId, text, () => {});
   };
 
   if (postsLoading) {
@@ -487,11 +379,10 @@ export default function TopicPage() {
         {editingPostId === topic.id ? (
           <EditPostForm
             postId={topic.id}
-            title={editingPostTitle}
-            body={editingPostBody}
-            onTitleChange={setEditingPostTitle}
-            onBodyChange={setEditingPostBody}
-            onSave={saveEditedPost}
+            initialTitle={topic.title}
+            initialBody={topic.body}
+            theme={appTheme}
+            onSave={(postId, title, body) => triggerSaveEditedPost(postId, title, body, cancelEditingPost)}
             onCancel={cancelEditingPost}
           />
         ) : (
@@ -513,12 +404,7 @@ export default function TopicPage() {
             <p className="text-gray-700 chrome:text-green-100 mb-4 whitespace-pre-wrap font-semibold">{topic.body}</p>
           ) : (
             <VerticalTextDisplay
-              postId={topic.id}
               body={topic.body}
-              scrollingPostId={scrollingPostId}
-              showHorizontalHint={showHorizontalHint}
-              onScroll={handleBodyScroll}
-              onDismissHint={dismissHorizontalHint}
             />
           )}
           
@@ -538,7 +424,6 @@ export default function TopicPage() {
           
           {/* いいね・編集・削除 */}
           <PostActionButtons
-            postId={topic.id}
             likes={topic.likes}
             isLiked={topic.likesUserIds?.includes(session?.user?.email || getAnonymousUserId()) ?? false}
             participants={getLikeParticipants(topic)}
@@ -547,7 +432,7 @@ export default function TopicPage() {
               const userId = session?.user?.email || getAnonymousUserId();
               handleLike(topic.id, topic.likesUserIds?.includes(userId) ?? false);
             }}
-            onEdit={() => startEditingPost(topic.id, topic.title, topic.body)}
+            onEdit={() => startEditingPost(topic.id)}
             onDelete={() => deletePost(topic.id)}
             deleteDisabled={replies.length > 0}
             deleteDisabledReason={replies.length > 0 ? "この投稿に返信があるため削除できません" : undefined}
@@ -557,28 +442,19 @@ export default function TopicPage() {
           <CommentSection
             comments={topic.comments}
             appTheme={appTheme}
-            editingCommentId={editingCommentId}
-            editingCommentText={editingCommentText}
-            commentLikes={commentLikes}
             sessionEmail={session?.user?.email}
             iconCacheBust={iconCacheBust}
             getDisplayIcon={getDisplayIcon}
             getDisplayName={getDisplayName}
-            onEditTextChange={setEditingCommentText}
-            onEditSave={editComment}
-            onEditCancel={cancelEditingComment}
-            onEditStart={startEditingComment}
-            onToggleLike={toggleCommentLike}
+            onEditSave={triggerEditComment}
             onDelete={deleteComment}
           />
 
           {/* 通常投稿の詳細画面ではコメントをその場で投稿可能にする */}
           {topic.isTopicPost !== 1 && (
             <CommentInput
-              postId={topic.id}
-              value={commentTexts[topic.id] || ""}
-              onChange={(postId, value) => setCommentTexts({ ...commentTexts, [postId]: value })}
-              onSubmit={saveComment}
+              theme={appTheme}
+              onSubmit={(text) => saveComment(topic.id, text)}
             />
           )}
           
@@ -602,9 +478,7 @@ export default function TopicPage() {
         {/* 投稿フォーム（ファイルインポート専用） - お題の場合のみ表示 */}
         {session && topic.isTopicPost === 1 && (
           <PostFormSection
-            appTheme={appTheme}
-            sectionClassName={postFormSection({ theme: appTheme })}
-            titleClassName={postFormTitle({ theme: appTheme })}
+            theme={appTheme}
             isDeadlineExpired={isDeadlineExpired(topic.deadline)}
             newPost={newPost}
             onFileChange={handleFileChange}
@@ -639,17 +513,9 @@ export default function TopicPage() {
                 appTheme={appTheme}
                 cardClassName={replyCard({ theme: appTheme })}
                 isEditing={editingPostId === reply.id}
-                editingTitle={editingPostTitle}
-                editingBody={editingPostBody}
-                onEditTitleChange={setEditingPostTitle}
-                onEditBodyChange={setEditingPostBody}
-                onEditSave={saveEditedPost}
+                onEditSave={(postId, title, body) => triggerSaveEditedPost(postId, title, body, cancelEditingPost)}
                 onEditCancel={cancelEditingPost}
                 onEditStart={startEditingPost}
-                scrollingPostId={scrollingPostId}
-                showHorizontalHint={showHorizontalHint}
-                onBodyScroll={handleBodyScroll}
-                onDismissHint={dismissHorizontalHint}
                 iconCacheBust={iconCacheBust}
                 getDisplayIcon={getDisplayIcon}
                 getDisplayName={getDisplayName}
@@ -661,18 +527,9 @@ export default function TopicPage() {
                 }}
                 isAuthor={session?.user?.email === reply.authorEmail}
                 onDelete={() => deletePost(reply.id)}
-                editingCommentId={editingCommentId}
-                editingCommentText={editingCommentText}
-                commentLikes={commentLikes}
                 sessionEmail={session?.user?.email}
-                onCommentEditTextChange={setEditingCommentText}
-                onCommentEditSave={editComment}
-                onCommentEditCancel={cancelEditingComment}
-                onCommentEditStart={startEditingComment}
-                onCommentToggleLike={toggleCommentLike}
+                onCommentEditSave={triggerEditComment}
                 onCommentDelete={deleteComment}
-                commentText={commentTexts[reply.id] || ""}
-                onCommentTextChange={(postId, value) => setCommentTexts({ ...commentTexts, [postId]: value })}
                 onCommentSubmit={saveComment}
               />
             ))

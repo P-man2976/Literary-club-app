@@ -10,7 +10,6 @@ interface Participant {
 }
 
 interface PostActionButtonsProps {
-  postId: string;
   likes: number | undefined;
   isLiked: boolean;
   participants: Participant[];

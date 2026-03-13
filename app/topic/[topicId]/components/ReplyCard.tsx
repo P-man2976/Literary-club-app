@@ -20,18 +20,9 @@ interface ReplyCardProps {
   cardClassName: string;
   // Edit state
   isEditing: boolean;
-  editingTitle: string;
-  editingBody: string;
-  onEditTitleChange: (title: string) => void;
-  onEditBodyChange: (body: string) => void;
-  onEditSave: (postId: string) => void;
+  onEditSave: (postId: string, title: string, body: string) => void;
   onEditCancel: () => void;
-  onEditStart: (postId: string, title: string, body: string) => void;
-  // Vertical text
-  scrollingPostId: string | null;
-  showHorizontalHint: boolean;
-  onBodyScroll: (postId: string) => void;
-  onDismissHint: () => void;
+  onEditStart: (postId: string) => void;
   // User display
   iconCacheBust: number;
   getDisplayIcon: (email: string | null | undefined) => string | null | undefined;
@@ -44,20 +35,11 @@ interface ReplyCardProps {
   isAuthor: boolean;
   onDelete: () => void;
   // Comment state
-  editingCommentId: string | null;
-  editingCommentText: string;
-  commentLikes: { [key: string]: boolean };
   sessionEmail: string | null | undefined;
-  onCommentEditTextChange: (text: string) => void;
-  onCommentEditSave: (commentId: string) => void;
-  onCommentEditCancel: () => void;
-  onCommentEditStart: (commentId: string, currentText: string) => void;
-  onCommentToggleLike: (commentId: string) => void;
+  onCommentEditSave: (commentId: string, text: string) => void;
   onCommentDelete: (commentId: string) => void;
   // Comment input
-  commentText: string;
-  onCommentTextChange: (postId: string, value: string) => void;
-  onCommentSubmit: (postId: string) => void;
+  onCommentSubmit: (postId: string, text: string) => void;
 }
 
 export function ReplyCard({
@@ -65,17 +47,9 @@ export function ReplyCard({
   cardClassName,
   appTheme,
   isEditing,
-  editingTitle,
-  editingBody,
-  onEditTitleChange,
-  onEditBodyChange,
   onEditSave,
   onEditCancel,
   onEditStart,
-  scrollingPostId,
-  showHorizontalHint,
-  onBodyScroll,
-  onDismissHint,
   iconCacheBust,
   getDisplayIcon,
   getDisplayName,
@@ -84,18 +58,9 @@ export function ReplyCard({
   onLike,
   isAuthor,
   onDelete,
-  editingCommentId,
-  editingCommentText,
-  commentLikes,
   sessionEmail,
-  onCommentEditTextChange,
   onCommentEditSave,
-  onCommentEditCancel,
-  onCommentEditStart,
-  onCommentToggleLike,
   onCommentDelete,
-  commentText,
-  onCommentTextChange,
   onCommentSubmit,
 }: ReplyCardProps) {
   return (
@@ -104,10 +69,9 @@ export function ReplyCard({
       {isEditing ? (
         <EditPostForm
           postId={reply.id}
-          title={editingTitle}
-          body={editingBody}
-          onTitleChange={onEditTitleChange}
-          onBodyChange={onEditBodyChange}
+          initialTitle={reply.title}
+          initialBody={reply.body}
+          theme={appTheme}
           onSave={onEditSave}
           onCancel={onEditCancel}
         />
@@ -119,12 +83,7 @@ export function ReplyCard({
               {reply.title}
             </h4>
             <VerticalTextDisplay
-              postId={reply.id}
               body={reply.body}
-              scrollingPostId={scrollingPostId}
-              showHorizontalHint={showHorizontalHint}
-              onScroll={onBodyScroll}
-              onDismissHint={onDismissHint}
               className="mb-4 overflow-x-auto border-3 border-black chrome:border-green-700 rounded-xl p-4 bg-cyan-50 chrome:bg-gray-950 relative group"
               textClassName="text-black chrome:text-green-200 whitespace-pre-wrap font-semibold"
               hintClassName="hidden group-hover:flex absolute top-2 left-2 bg-cyan-600 chrome:bg-green-600 text-white chrome:text-black text-xs px-3 py-2 rounded-lg font-black uppercase pointer-events-none z-10 border-2 border-black chrome:border-green-500"
@@ -152,13 +111,12 @@ export function ReplyCard({
               </span>
             </div>
             <PostActionButtons
-              postId={reply.id}
               likes={reply.likes}
               isLiked={isLiked}
               participants={likeParticipants}
               isAuthor={isAuthor}
               onLike={onLike}
-              onEdit={() => onEditStart(reply.id, reply.title, reply.body)}
+              onEdit={() => onEditStart(reply.id)}
               onDelete={onDelete}
             />
           </div>
@@ -169,27 +127,18 @@ export function ReplyCard({
       <CommentSection
         comments={reply.comments ?? []}
         appTheme={appTheme}
-        editingCommentId={editingCommentId}
-        editingCommentText={editingCommentText}
-        commentLikes={commentLikes}
         sessionEmail={sessionEmail}
         iconCacheBust={iconCacheBust}
         getDisplayIcon={getDisplayIcon}
         getDisplayName={getDisplayName}
-        onEditTextChange={onCommentEditTextChange}
         onEditSave={onCommentEditSave}
-        onEditCancel={onCommentEditCancel}
-        onEditStart={onCommentEditStart}
-        onToggleLike={onCommentToggleLike}
         onDelete={onCommentDelete}
       />
 
       {/* コメント入力フォーム */}
       <CommentInput
-        postId={reply.id}
-        value={commentText}
-        onChange={onCommentTextChange}
-        onSubmit={onCommentSubmit}
+        theme={appTheme}
+        onSubmit={(text) => onCommentSubmit(reply.id, text)}
       />
     </div>
   );

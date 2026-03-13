@@ -2,11 +2,32 @@
 
 import type { Post } from "@/app/types/post";
 import { FileCheck2, PenLine, Send, TriangleAlert } from "lucide-react";
+import { tv } from "tailwind-variants";
+
+const sectionStyle = tv({
+  base: "p-6 mb-8",
+  variants: {
+    theme: {
+      street: "bg-white rounded-2xl shadow-md",
+      chrome: "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none",
+      library: "bg-white rounded-2xl shadow-library-neu",
+    },
+  },
+});
+
+const titleStyle = tv({
+  base: "mb-4 flex items-center gap-2",
+  variants: {
+    theme: {
+      street: "text-lg font-bold",
+      chrome: "text-base font-medium text-white",
+      library: "text-lg font-serif font-bold text-[#3F3427]",
+    },
+  },
+});
 
 interface PostFormSectionProps {
-  appTheme: "street" | "chrome" | "library";
-  sectionClassName: string;
-  titleClassName: string;
+  theme: "street" | "chrome" | "library";
   isDeadlineExpired: boolean;
   newPost: Partial<Post>;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -15,9 +36,7 @@ interface PostFormSectionProps {
 }
 
 export function PostFormSection({
-  appTheme,
-  sectionClassName,
-  titleClassName,
+  theme,
   isDeadlineExpired,
   newPost,
   onFileChange,
@@ -25,8 +44,8 @@ export function PostFormSection({
   onSubmit,
 }: PostFormSectionProps) {
   return (
-    <div className={sectionClassName}>
-      <h3 className={titleClassName}>
+    <div className={sectionStyle({ theme })}>
+      <h3 className={titleStyle({ theme })}>
         <PenLine size={18} />
         このお題に投稿する
       </h3>
