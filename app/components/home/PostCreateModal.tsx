@@ -34,7 +34,13 @@ export function PostCreateModal({ isOpen, onClose }: PostCreateModalProps) {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    await parseFile(file, setNewPost);
+    try {
+      const result = await parseFile(file);
+      setNewPost((prev) => ({ ...prev, title: result.title, body: result.body }));
+    } catch (error) {
+      console.error("ファイル解析エラー:", error);
+      alert("ファイルの解析に失敗しました");
+    }
   };
 
   const handleSubmit = () => {
