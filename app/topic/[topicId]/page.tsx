@@ -10,10 +10,6 @@ import { useUserProfile } from "@/app/hooks/useUserProfile";
 import type { Post } from "@/app/types/post";
 import {
   ArrowLeft,
-  FileCheck2,
-  PenLine,
-  Send,
-  TriangleAlert,
 } from "lucide-react";
 
 import { tv } from "tailwind-variants";
@@ -24,6 +20,9 @@ import {
   CommentSection,
   CommentInput,
   EditPostForm,
+  VerticalTextDisplay,
+  AIAnalysisSection,
+  PostFormSection,
 } from "./components";
 
 const topicScene = tv({
@@ -512,23 +511,14 @@ export default function TopicPage() {
           {topic.isTopicPost === 1 ? (
             <p className="text-gray-700 chrome:text-green-100 mb-4 whitespace-pre-wrap font-semibold">{topic.body}</p>
           ) : (
-            <div 
-              className="mb-4 overflow-x-auto border border-gray-200 chrome:border-green-700 rounded-lg p-4 bg-slate-50 chrome:bg-gray-950 relative group"
-              onScroll={() => handleBodyScroll(topic.id)}
-              onWheel={(event) => {
-                if (event.shiftKey && showHorizontalHint) {
-                  dismissHorizontalHint();
-                }
-              }}
-              style={{ direction: 'rtl' }}
-            >
-              {showHorizontalHint && scrollingPostId !== topic.id && (
-                <div className="hidden group-hover:flex absolute top-2 left-2 bg-blue-600 chrome:bg-green-600 text-white chrome:text-black text-xs px-3 py-1 rounded-md pointer-events-none z-10 font-black uppercase">
-                  Shift + スクロールで横スクロールできます
-                </div>
-              )}
-              <p className="text-default-900 chrome:text-green-200 whitespace-pre-wrap font-semibold" style={{ writingMode: 'vertical-rl', height: '400px', minWidth: 'fit-content', direction: 'ltr' }}>{topic.body}</p>
-            </div>
+            <VerticalTextDisplay
+              postId={topic.id}
+              body={topic.body}
+              scrollingPostId={scrollingPostId}
+              showHorizontalHint={showHorizontalHint}
+              onScroll={handleBodyScroll}
+              onDismissHint={dismissHorizontalHint}
+            />
           )}
           
           <div className="flex items-center justify-between text-sm font-bold mb-4">
@@ -597,152 +587,29 @@ export default function TopicPage() {
         {/* AI分析 - お題の場合のみ表示 */}
         {topic.isTopicPost === 1 && (
         <div className={aiSection({ theme: appTheme })}>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-            <h3 className="text-2xl font-black uppercase tracking-wide text-black chrome:text-purple-300">AI講評</h3>
-            <button
-              onClick={generateAnalysis}
-              disabled={analysisLoading || replies.length === 0}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {analysisLoading ? "生成中..." : "分析を生成"}
-            </button>
-          </div>
-
-          {!aiReadingEnabled && (
-            <p className="text-sm text-slate-500 chrome:text-slate-200 mb-3">あなたの設定はOFFのため、あなたの投稿は講評対象から除外されます。</p>
-          )}
-
-          {replies.length === 0 && (
-            <p className="text-sm text-slate-500 chrome:text-slate-200">投稿が集まると分析できます。</p>
-          )}
-
-          {analysisError && (
-            <p className="text-sm text-red-600 chrome:text-red-400 mb-3">{analysisError}</p>
-          )}
-
-          {analysisResult && (
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-semibold text-slate-700 chrome:text-slate-100 mb-1">総評</p>
-                <p className="text-sm text-slate-600 chrome:text-slate-100 whitespace-pre-wrap">{analysisResult.overview}</p>
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-slate-700 chrome:text-slate-100 mb-1">良かった点</p>
-                <ul className="list-disc pl-5 text-sm text-slate-600 chrome:text-slate-100 space-y-1">
-                  {analysisResult.strengths?.map((item, idx) => (
-                    <li key={`strength-${idx}`}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-slate-700 chrome:text-slate-100 mb-1">改善提案</p>
-                <ul className="list-disc pl-5 text-sm text-slate-600 chrome:text-slate-100 space-y-1">
-                  {analysisResult.suggestions?.map((item, idx) => (
-                    <li key={`suggestion-${idx}`}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-slate-700 chrome:text-slate-100 mb-2">投稿者ごとの講評</p>
-                <div className="space-y-2">
-                  {analysisResult.authorFeedback?.map((item, idx) => (
-                    <div key={`author-${idx}`} className="rounded-lg border border-slate-200 chrome:border-slate-700 p-3">
-                      <p className="text-sm font-bold text-slate-800 chrome:text-slate-100">{item.author}</p>
-                      <p className="text-sm text-slate-600 chrome:text-slate-100 mt-1">ほめる: {item.praise}</p>
-                      <p className="text-sm text-slate-600 chrome:text-slate-100 mt-1">批評: {item.critique}</p>
-                      <p className="text-sm text-slate-600 chrome:text-slate-100 mt-1">次の一歩: {item.nextStep}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-slate-700 chrome:text-slate-100 mb-2">投稿ごとの講評</p>
-                <div className="space-y-2">
-                  {analysisResult.postFeedback?.map((item, idx) => (
-                    <div key={`post-${item.postId || idx}`} className="rounded-lg border border-slate-200 chrome:border-slate-700 p-3">
-                      <p className="text-sm font-bold text-slate-800 chrome:text-slate-100">{item.title}</p>
-                      <p className="text-sm text-slate-600 chrome:text-slate-100 mt-1">ほめる: {item.praise}</p>
-                      <p className="text-sm text-slate-600 chrome:text-slate-100 mt-1">批評: {item.critique}</p>
-                      <p className="text-sm text-slate-600 chrome:text-slate-100 mt-1">次の一歩: {item.nextStep}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+          <AIAnalysisSection
+            repliesCount={replies.length}
+            aiReadingEnabled={aiReadingEnabled}
+            analysisLoading={analysisLoading}
+            analysisError={analysisError}
+            analysisResult={analysisResult}
+            onGenerate={generateAnalysis}
+          />
         </div>
         )}
 
         {/* 投稿フォーム（ファイルインポート専用） - お題の場合のみ表示 */}
         {session && topic.isTopicPost === 1 && (
-          <div className={postFormSection({ theme: appTheme })}>
-            <h3 className={postFormTitle({ theme: appTheme })}>
-              <PenLine size={18} />
-              このお題に投稿する
-            </h3>
-            
-            {isDeadlineExpired(topic.deadline) ? (
-              <div className="bg-red-50 chrome:bg-red-950/20 border border-red-200 chrome:border-red-800 rounded-lg p-4">
-                <p className="text-red-600 chrome:text-red-400 font-semibold flex items-center gap-2">
-                  <TriangleAlert size={16} />
-                  このお題の締め切りが過ぎているため、投稿できません
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="mb-4">
-                  <input
-                    type="file"
-                    accept=".txt,.pdf,.docx"
-                    onChange={handleFileChange}
-                    className="w-full px-4 py-2 border border-gray-300 chrome:border-slate-700 bg-white chrome:bg-slate-800 text-slate-900 chrome:text-slate-100 rounded-sm cursor-pointer"
-                  />
-                  <p className="text-xs text-gray-500 chrome:text-slate-200 mt-2">対応形式: テキスト (.txt), PDF, Word (.docx)</p>
-                  <p className="text-xs text-gray-400 chrome:text-slate-300 mt-1">ファイルのタイトルと内容から自動で投稿が作成されます</p>
-                </div>
-
-                {newPost.title && (
-                  <>
-                    <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <p className="text-xs text-blue-500 font-bold mb-2 flex items-center gap-1">
-                        <FileCheck2 size={14} />
-                        ファイル解析済み
-                      </p>
-                      <p className="text-sm font-bold text-blue-900 truncate">{newPost.title}</p>
-                      <p className="text-xs text-blue-700 mt-2 line-clamp-3">{newPost.body}</p>
-                    </div>
-
-                    <div className="mb-4">
-                      <label className="block text-sm font-semibold mb-2">タグ</label>
-                      <select
-                        value={newPost.tag || "創作"}
-                        onChange={(e) => setNewPost({ ...newPost, tag: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option>創作</option>
-                        <option>随筆</option>
-                        <option>詩</option>
-                        <option>感想</option>
-                        <option>その他</option>
-                      </select>
-                    </div>
-
-                    <button
-                      onClick={saveReply}
-                      className="w-full px-4 py-3 bg-yellow-400 text-black font-black uppercase rounded-lg border-3 border-black shadow-street-hard-hover hover:translate-y-[-2px] hover:shadow-street-hard-lg transition-all flex items-center justify-center gap-2"
-                    >
-                      <Send size={18} strokeWidth={3} />
-                      投稿
-                    </button>
-                  </>
-                )}
-              </>
-            )}
-          </div>
+          <PostFormSection
+            appTheme={appTheme}
+            sectionClassName={postFormSection({ theme: appTheme })}
+            titleClassName={postFormTitle({ theme: appTheme })}
+            isDeadlineExpired={isDeadlineExpired(topic.deadline)}
+            newPost={newPost}
+            onFileChange={handleFileChange}
+            onTagChange={(tag) => setNewPost({ ...newPost, tag })}
+            onSubmit={saveReply}
+          />
         )}
 
         {/* 投稿一覧 - お題の場合のみ表示 */}
@@ -785,23 +652,17 @@ export default function TopicPage() {
                 {/* 投稿本体 */}
                 <div className="mb-4">
                   <h4 className="text-xl font-black uppercase tracking-wide text-black chrome:text-green-300 mb-3">{reply.title}</h4>
-                  <div 
-                      className="mb-4 overflow-x-auto border-3 border-black chrome:border-green-700 rounded-xl p-4 bg-cyan-50 chrome:bg-gray-950 relative group" 
-                      onScroll={() => handleBodyScroll(reply.id)}
-                      onWheel={(event) => {
-                        if (event.shiftKey && showHorizontalHint) {
-                          dismissHorizontalHint();
-                        }
-                      }}
-                    style={{ direction: 'rtl' }}
-                  >
-                      {showHorizontalHint && scrollingPostId !== reply.id && (
-                        <div className="hidden group-hover:flex absolute top-2 left-2 bg-cyan-600 chrome:bg-green-600 text-white chrome:text-black text-xs px-3 py-2 rounded-lg font-black uppercase pointer-events-none z-10 border-2 border-black chrome:border-green-500">
-                          Shift + スクロールで横スクロールできます
-                        </div>
-                      )}
-                      <p className="text-black chrome:text-green-200 whitespace-pre-wrap font-semibold" style={{ writingMode: 'vertical-rl', height: '400px', minWidth: 'fit-content', direction: 'ltr' }}>{reply.body}</p>
-                  </div>
+                  <VerticalTextDisplay
+                    postId={reply.id}
+                    body={reply.body}
+                    scrollingPostId={scrollingPostId}
+                    showHorizontalHint={showHorizontalHint}
+                    onScroll={handleBodyScroll}
+                    onDismissHint={dismissHorizontalHint}
+                    className="mb-4 overflow-x-auto border-3 border-black chrome:border-green-700 rounded-xl p-4 bg-cyan-50 chrome:bg-gray-950 relative group"
+                    textClassName="text-black chrome:text-green-200 whitespace-pre-wrap font-semibold"
+                    hintClassName="hidden group-hover:flex absolute top-2 left-2 bg-cyan-600 chrome:bg-green-600 text-white chrome:text-black text-xs px-3 py-2 rounded-lg font-black uppercase pointer-events-none z-10 border-2 border-black chrome:border-green-500"
+                  />
                   <div className="flex items-center justify-between text-sm font-bold mb-4">
                     <span className="flex items-center gap-2">
                       <UserIcon
