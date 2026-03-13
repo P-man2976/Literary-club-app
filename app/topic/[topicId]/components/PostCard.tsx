@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Post } from "@/app/types/post";
 import { tv } from "tailwind-variants";
+import { formatDateTime } from "@/app/lib/formatUtils";
 import { useCommentMutations } from "@/app/hooks/useCommentMutations";
 import { useLikeMutations } from "@/app/hooks/useLikeMutations";
 import { UserIcon } from "./UserIcon";
@@ -66,13 +67,7 @@ function getAnonymousUserId(): string {
 function getDeadlineStatus(deadline: number | null | undefined) {
   if (!deadline) return null;
 
-  const deadlineText = new Date(deadline).toLocaleString("ja-JP", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const deadlineText = formatDateTime(deadline);
 
   const now = Date.now();
   const timeLeft = deadline - now;
@@ -195,13 +190,7 @@ export function PostCard({
                 </span>
               </span>
               <span className="text-xs">
-                {new Date(post.createdAt).toLocaleString("ja-JP", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                {formatDateTime(post.createdAt)}
               </span>
             </div>
 

@@ -7,6 +7,7 @@ import { Button } from "@/app/components/ui/Button";
 import { Textarea } from "@/app/components/ui/Input";
 import type { Comment } from "@/app/types/post";
 import { tv } from "tailwind-variants";
+import { formatDateTime } from "@/app/lib/formatUtils";
 
 const commentBubble = tv({
   base: "p-4 rounded-xl",
@@ -86,7 +87,7 @@ export function CommentSection({
                   <span className="text-xs">(編集済み)</span>
                 )}
               </span>
-              <span className="text-xs font-bold">{new Date(comment.createdAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+              <span className="text-xs font-bold">{formatDateTime(comment.createdAt)}</span>
             </div>
 
             {editingCommentId === comment.commentId ? (

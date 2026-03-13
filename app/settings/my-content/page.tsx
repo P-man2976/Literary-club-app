@@ -8,6 +8,7 @@ import { Heart, MessageCircle } from "lucide-react";
 import useSWR from "swr";
 import type { Comment } from "@/app/types/post";
 import { fetcher } from "@/app/lib/fetchers";
+import { formatDateTime } from "@/app/lib/formatUtils";
 import { usePosts } from "@/app/hooks/usePosts";
 import { usePostMutations } from "@/app/hooks/usePostMutations";
 import { useUserProfile } from "@/app/hooks/useUserProfile";
@@ -172,7 +173,7 @@ export default function MyContentPage() {
 
                       {/* メタ情報 */}
                       <div className="flex items-center gap-4 text-xs text-slate-500 chrome:text-slate-400 mb-3">
-                        <span className="text-xs">{new Date(post.createdAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className="text-xs">{formatDateTime(post.createdAt)}</span>
                         <span className="flex items-center gap-1"><Heart size={14} /> {post.likes || 0}</span>
                         <span className="flex items-center gap-1"><MessageCircle size={14} /> {post.comments?.length || 0}</span>
                       </div>

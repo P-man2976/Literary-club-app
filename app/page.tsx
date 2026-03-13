@@ -18,12 +18,12 @@ import {
   LiquidMetalPeopleIcon,
   ChromeSettingsIcon,
 } from "@/app/components/HandDrawnIcons";
-import { PostsTabContent } from "@/app/components/PostsTabContent";
-import { TopicsTabContent } from "@/app/components/TopicsTabContent";
-import { MembersTabContent } from "@/app/components/MembersTabContent";
-import { TopicDecisionModal } from "@/app/components/TopicDecisionModal";
-import { ProposalModal } from "@/app/components/ProposalModal";
-import { PostCreateModal } from "@/app/components/PostCreateModal";
+import { PostsTabContent } from "@/app/components/home/PostsTabContent";
+import { TopicsTabContent } from "@/app/components/home/TopicsTabContent";
+import { MembersTabContent } from "@/app/components/home/MembersTabContent";
+import { TopicDecisionModal } from "@/app/components/home/TopicDecisionModal";
+import { ProposalModal } from "@/app/components/home/ProposalModal";
+import { PostCreateModal } from "@/app/components/home/PostCreateModal";
 import { usePosts } from "@/app/hooks/usePosts";
 import { useUserProfile } from "@/app/hooks/useUserProfile";
 import { tv } from "tailwind-variants";
