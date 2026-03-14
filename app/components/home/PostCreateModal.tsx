@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import useSWRMutation from "swr/mutation";
+import { Loader2 } from "lucide-react";
 import { HandDrawnPostIcon } from "@/app/components/HandDrawnIcons";
 import { usePosts } from "@/app/hooks/usePosts";
 import { useUserProfile } from "@/app/hooks/useUserProfile";
@@ -19,6 +21,10 @@ export function PostCreateModal({ isOpen, onClose }: PostCreateModalProps) {
   const { penName } = useUserProfile(session ?? null);
   const { topicPosts } = usePosts();
   const { trigger, isMutating } = useCreatePost();
+  const { trigger: triggerParseFile, isMutating: isParsing } = useSWRMutation(
+    "parseFile",
+    (_key: string, { arg }: { arg: File }) => parseFile(arg),
+  );
 
   const [newPost, setNewPost] = useState<Partial<Post>>({ title: "", body: "", tag: "創作" });
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
@@ -31,16 +37,19 @@ export function PostCreateModal({ isOpen, onClose }: PostCreateModalProps) {
     onClose();
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    try {
-      const result = await parseFile(file);
-      setNewPost((prev) => ({ ...prev, title: result.title, body: result.body }));
-    } catch (error) {
-      console.error("ファイル解析エラー:", error);
-      alert("ファイルの解析に失敗しました");
-    }
+    triggerParseFile(file, {
+      throwOnError: false,
+      onSuccess: (result) => {
+        setNewPost((prev) => ({ ...prev, title: result.title, body: result.body }));
+      },
+      onError: (error) => {
+        console.error("ファイル解析エラー:", error);
+        alert("ファイルの解析に失敗しました");
+      },
+    });
   };
 
   const handleSubmit = () => {
@@ -119,9 +128,16 @@ export function PostCreateModal({ isOpen, onClose }: PostCreateModalProps) {
               type="file"
               accept=".txt,.pdf,.docx"
               onChange={handleFileChange}
-              className="w-full"
+              disabled={isParsing}
+              className="w-full disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <p className="text-xs text-gray-500 chrome:text-gray-400 mt-2">対応形式: テキスト (.txt), PDF, Word (.docx)</p>
+            {isParsing && (
+              <div className="mt-2 flex items-center gap-2 text-amber-600">
+                <Loader2 size={14} className="animate-spin" />
+                <p className="text-xs font-bold">ファイルを解析中...</p>
+              </div>
+            )}
           </div>
 
           <div>

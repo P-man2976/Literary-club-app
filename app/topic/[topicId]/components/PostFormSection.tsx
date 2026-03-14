@@ -1,7 +1,7 @@
 "use client";
 
 import type { Post } from "@/app/types/post";
-import { FileCheck2, PenLine, Send, TriangleAlert } from "lucide-react";
+import { FileCheck2, Loader2, PenLine, Send, TriangleAlert } from "lucide-react";
 import { tv } from "tailwind-variants";
 
 const sectionStyle = tv({
@@ -30,6 +30,7 @@ interface PostFormSectionProps {
   theme: "street" | "chrome" | "library";
   isDeadlineExpired: boolean;
   newPost: Partial<Post>;
+  isParsing: boolean;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onTagChange: (tag: string) => void;
   onSubmit: () => void;
@@ -39,6 +40,7 @@ export function PostFormSection({
   theme,
   isDeadlineExpired,
   newPost,
+  isParsing,
   onFileChange,
   onTagChange,
   onSubmit,
@@ -64,7 +66,8 @@ export function PostFormSection({
               type="file"
               accept=".txt,.pdf,.docx"
               onChange={onFileChange}
-              className="w-full px-4 py-2 border border-gray-300 chrome:border-slate-700 bg-white chrome:bg-slate-800 text-slate-900 chrome:text-slate-100 rounded-sm cursor-pointer"
+              disabled={isParsing}
+              className="w-full px-4 py-2 border border-gray-300 chrome:border-slate-700 bg-white chrome:bg-slate-800 text-slate-900 chrome:text-slate-100 rounded-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <p className="text-xs text-gray-500 chrome:text-slate-200 mt-2">
               対応形式: テキスト (.txt), PDF, Word (.docx)
@@ -74,7 +77,14 @@ export function PostFormSection({
             </p>
           </div>
 
-          {newPost.title && (
+          {isParsing && (
+            <div className="mb-4 p-4 bg-amber-50 rounded-lg border border-amber-200 flex items-center gap-2">
+              <Loader2 size={16} className="animate-spin text-amber-600" />
+              <p className="text-sm font-bold text-amber-700">ファイルを解析中...</p>
+            </div>
+          )}
+
+          {!isParsing && newPost.title && (
             <>
               <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <p className="text-xs text-blue-500 font-bold mb-2 flex items-center gap-1">

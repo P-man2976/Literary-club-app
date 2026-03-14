@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import useSWRMutation from "swr/mutation";
 import { useAppTheme } from "@/app/hooks/useAppTheme";
 import { useTopicDetail } from "@/app/hooks/useTopicDetail";
 import { useTopicAnalysis } from "@/app/hooks/useTopicAnalysis";
@@ -149,16 +150,24 @@ export default function TopicPage() {
     return Date.now() > deadline;
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { trigger: triggerParseFile, isMutating: isParsing } = useSWRMutation(
+    "parseFile",
+    (_key: string, { arg }: { arg: File }) => parseFile(arg),
+  );
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    try {
-      const result = await parseFile(file);
-      setNewPost((prev) => ({ ...prev, title: result.title, body: result.body }));
-    } catch (error) {
-      console.error("ファイル解析エラー:", error);
-      alert("ファイルの解析に失敗しました");
-    }
+    triggerParseFile(file, {
+      throwOnError: false,
+      onSuccess: (result) => {
+        setNewPost((prev) => ({ ...prev, title: result.title, body: result.body }));
+      },
+      onError: (error) => {
+        console.error("ファイル解析エラー:", error);
+        alert("ファイルの解析に失敗しました");
+      },
+    });
   };
 
   const saveReply = () => {
@@ -251,6 +260,7 @@ export default function TopicPage() {
             theme={appTheme}
             isDeadlineExpired={isDeadlineExpired(topic.deadline)}
             newPost={newPost}
+            isParsing={isParsing}
             onFileChange={handleFileChange}
             onTagChange={(tag) => setNewPost({ ...newPost, tag })}
             onSubmit={saveReply}
