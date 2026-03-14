@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Avatar, Button, Card, CardBody, Input } from "@heroui/react";
+import { Avatar, Button, Card, CardBody, Input } from "@/app/components/ui";
 import { ChevronRight } from "lucide-react";
 import { useIconUrl } from "@/app/hooks/useIconUrl";
 
@@ -160,10 +160,12 @@ export default function ProfileSettingsPage() {
   return (
     <main className="min-h-screen max-w-3xl mx-auto">
       <header className="sticky top-0 z-30 bg-background border-b border-divider p-4 flex items-center gap-4">
-        <Button as={Link} href="/" isIconOnly variant="light" aria-label="戻る">
+        <Button asChild isIconOnly variant="light" aria-label="戻る">
+          <Link href="/">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="m15 18-6-6 6-6"/>
           </svg>
+          </Link>
         </Button>
         <h1 className="text-xl font-bold">アカウント設定</h1>
       </header>

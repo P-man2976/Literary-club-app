@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { Button, Card, CardBody } from "@heroui/react";
+import { Button, Card, CardBody } from "@/app/components/ui";
 import { AlertTriangle, Check, ChevronRight } from "lucide-react";
 
 export default function SettingsPage() {
@@ -184,10 +184,12 @@ export default function SettingsPage() {
   return (
     <main className="min-h-screen max-w-3xl mx-auto">
       <header className="sticky top-0 z-30 bg-background border-b border-divider p-4 flex items-center gap-4">
-        <Button as={Link} href="/" isIconOnly variant="light" aria-label="戻る">
+        <Button asChild isIconOnly variant="light" aria-label="戻る">
+          <Link href="/">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="m15 18-6-6 6-6"/>
           </svg>
+          </Link>
         </Button>
         <h1 className="text-xl font-bold">設定</h1>
       </header>
@@ -211,24 +213,24 @@ export default function SettingsPage() {
                   </Button>
                   <div className="border-t border-divider" />
                   <Button
-                    onPress={() => setTheme("dark")}
+                    onPress={() => setTheme("chrome")}
                     variant="light"
-                    className={`w-full justify-start px-4 py-6 rounded-none ${theme === "dark" ? "bg-primary-50 dark:bg-primary-900/20" : ""}`}
+                    className={`w-full justify-start px-4 py-6 rounded-none ${theme === "chrome" ? "bg-primary-50" : ""}`}
                   >
                     <div className="flex items-center gap-3 w-full">
-                      <p className={`font-bold ${theme === "dark" ? "text-primary" : ""}`}>CHROME</p>
-                      {theme === "dark" && <Check size={16} className="text-primary" />}
+                      <p className={`font-bold ${theme === "chrome" ? "text-primary" : ""}`}>CHROME</p>
+                      {theme === "chrome" && <Check size={16} className="text-primary" />}
                     </div>
                   </Button>
                   <div className="border-t border-divider" />
                   <Button
-                    onPress={() => setTheme("light")}
+                    onPress={() => setTheme("street")}
                     variant="light"
-                    className={`w-full justify-start px-4 py-6 rounded-none ${theme === "light" ? "bg-primary-50" : ""}`}
+                    className={`w-full justify-start px-4 py-6 rounded-none ${theme === "street" ? "bg-primary-50" : ""}`}
                   >
                     <div className="flex items-center gap-3 w-full">
-                      <p className={`font-bold ${theme === "light" ? "text-primary" : ""}`}>STREET</p>
-                      {theme === "light" && <Check size={16} className="text-primary" />}
+                      <p className={`font-bold ${theme === "street" ? "text-primary" : ""}`}>STREET</p>
+                      {theme === "street" && <Check size={16} className="text-primary" />}
                     </div>
                   </Button>
                 </>
@@ -253,7 +255,7 @@ export default function SettingsPage() {
                         <button
                           onClick={toggleNotifications}
                           disabled={notificationPermission === "denied"}
-                          className={`chrome-toggle relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                          className={`chrome-toggle relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-hidden focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                             notificationEnabled ? "bg-primary" : "bg-gray-300"
                           } ${notificationEnabled ? "chrome-toggle-on" : "chrome-toggle-off"} ${notificationPermission === "denied" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                         >
@@ -294,7 +296,7 @@ export default function SettingsPage() {
                     </div>
                     <button
                       onClick={toggleAiReading}
-                      className={`chrome-toggle relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                      className={`chrome-toggle relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-hidden focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                         aiReadingEnabled ? "bg-primary" : "bg-gray-300"
                       } ${aiReadingEnabled ? "chrome-toggle-on" : "chrome-toggle-off"}`}
                     >
@@ -306,8 +308,8 @@ export default function SettingsPage() {
                     </button>
                   </div>
 
-                  <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
-                    <p className="text-xs text-slate-600 dark:text-slate-200">
+                  <div className="bg-slate-50 chrome:bg-slate-800 border border-slate-200 chrome:border-slate-700 rounded-lg p-3">
+                    <p className="text-xs text-slate-600 chrome:text-slate-200">
                       注意: AI講評をONにした場合、講評生成のために入力内容が外部AI APIへ送信されます。通常は学習用途で再利用されない前提ですが、最終的には利用中のAI提供元のポリシーに従います。
                     </p>
                   </div>

@@ -2,21 +2,38 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
-import { useTheme } from "next-themes";
-import {
-  Card,
-  CardBody,
-  Chip,
-} from "@heroui/react";
+import { useAppTheme } from "@/app/hooks/useAppTheme";
+import { Card, CardBody, Chip } from "@/app/components/ui";
 import { Users } from "lucide-react";
 import { usePosts } from "@/app/hooks/usePosts";
 import { useIconUrlMap } from "@/app/hooks/useIconUrl";
+import { tv } from "tailwind-variants";
+
+const memberSection = tv({
+  base: "",
+  variants: {
+    theme: {
+      street: "rounded-lg bg-white chrome:bg-black border-3 border-black chrome:border-white p-3",
+      chrome: "pt-3 border-t border-white/20",
+      library: "rounded-xl bg-library-cream p-3 shadow-library-neu-inset-subtle",
+    },
+  },
+});
+
+const memberAiSection = tv({
+  base: "",
+  variants: {
+    theme: {
+      street: "rounded-lg bg-pink-200 chrome:bg-black border-3 border-black chrome:border-white p-3",
+      chrome: "pt-3 border-t border-white/20",
+      library: "rounded-xl bg-library-cream p-3 shadow-library-neu-inset-subtle",
+    },
+  },
+});
 
 export function MembersTabContent() {
   const { data: session } = useSession();
-  const { resolvedTheme } = useTheme();
-  const isChromeTheme = resolvedTheme === "dark";
-  const isLibraryTheme = resolvedTheme === "library";
+  const { appTheme } = useAppTheme();
   const { memberProfiles } = usePosts();
 
   const memberIconMap = useMemo(() => {
@@ -42,10 +59,7 @@ export function MembersTabContent() {
   return (
     <div className="p-4 space-y-3">
       {memberProfiles.length === 0 ? (
-        <Card shadow="sm" className={isChromeTheme
-          ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
-          : "border border-default-200 rounded-2xl"
-        }>
+        <Card shadow="sm" theme={appTheme}>
           <CardBody className="p-6 text-center space-y-2">
             <Users size={28} className="mx-auto text-default-400" />
             <p className="text-sm font-semibold text-default-600">部員プロフィールはまだありません</p>
@@ -62,41 +76,32 @@ export function MembersTabContent() {
             : ["#文芸部", "#創作", "#部員紹介"];
 
           return (
-            <Card key={member.email} shadow="none" className={isChromeTheme
-              ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
-              : isLibraryTheme
-                ? "jsr-card bg-[#ECE7DB] rounded-2xl"
-                : "jsr-card bg-gradient-to-br from-cyan-200 to-blue-300 dark:bg-black rounded-2xl"
-            }>
+            <Card key={member.email} shadow="none" theme={appTheme}
+              className={appTheme === "street" ? "bg-linear-to-br from-cyan-200 to-blue-300" : ""}
+            >
               <CardBody className="p-5 space-y-3">
                 <div className="flex items-center gap-3">
                   {iconUrl ? (
                     <img
                       src={iconUrl}
                       alt={`${displayName}のアイコン`}
-                      className="w-20 h-20 rounded-full object-cover border-2 border-black dark:border-white shadow-[0_3px_0_rgba(0,0,0,0.8)]"
+                      className="w-20 h-20 rounded-full object-cover border-2 border-black chrome:border-white shadow-street-hard-xs"
                     />
                   ) : (
-                    <div className="w-20 h-20 rounded-full bg-yellow-300 border-2 border-black dark:border-white shadow-[0_3px_0_rgba(0,0,0,0.8)]" />
+                    <div className="w-20 h-20 rounded-full bg-yellow-300 border-2 border-black chrome:border-white shadow-street-hard-xs" />
                   )}
-                  <p className="font-black text-xl uppercase tracking-wide text-black dark:text-white">{displayName}</p>
+                  <p className="font-black text-xl uppercase tracking-wide text-black chrome:text-white">{displayName}</p>
                 </div>
 
-                <div className={isChromeTheme
-                  ? "pt-3 border-t border-white/20"
-                  : "rounded-lg bg-white dark:bg-black border-3 border-black dark:border-white p-3"
-                }>
-                  <p className="text-xs font-black uppercase text-black dark:text-white mb-1">自己紹介</p>
-                  <p className="text-sm font-semibold text-black dark:text-white">{member.selfIntro || "未設定"}</p>
+                <div className={memberSection({ theme: appTheme })}>
+                  <p className="text-xs font-black uppercase text-black chrome:text-white mb-1">自己紹介</p>
+                  <p className="text-sm font-semibold text-black chrome:text-white">{member.selfIntro || "未設定"}</p>
                 </div>
 
                 {(aiReadingEnabled || member.email !== sessionEmail) && (
-                  <div className={isChromeTheme
-                    ? "pt-3 border-t border-white/20"
-                    : "rounded-lg bg-pink-200 dark:bg-black border-3 border-black dark:border-white p-3"
-                  }>
-                    <p className="text-xs font-black uppercase text-black dark:text-white mb-1">AI短文分析</p>
-                    <p className="text-sm font-semibold text-black dark:text-white">
+                  <div className={memberAiSection({ theme: appTheme })}>
+                    <p className="text-xs font-black uppercase text-black chrome:text-white mb-1">AI短文分析</p>
+                    <p className="text-sm font-semibold text-black chrome:text-white">
                       {member.aiSummary || "過去投稿ベースのAI分析は準備中です。"}
                     </p>
                   </div>
@@ -104,7 +109,7 @@ export function MembersTabContent() {
 
                 <div className="flex flex-wrap gap-2">
                   {displayTags.map((tag, index) => (
-                    <Chip key={`${member.email}-${tag}-${index}`} size="md" className="bg-yellow-300 dark:bg-black text-black dark:text-white font-bold border-2 border-black dark:border-white">
+                    <Chip key={`${member.email}-${tag}-${index}`} size="md" className="bg-yellow-300 chrome:bg-black text-black chrome:text-white font-bold border-2 border-black chrome:border-white">
                       {tag}
                     </Chip>
                   ))}

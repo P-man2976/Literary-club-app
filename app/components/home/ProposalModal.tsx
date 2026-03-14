@@ -61,18 +61,18 @@ export function ProposalModal({ isOpen, onClose }: ProposalModalProps) {
       onClick={handleClose}
     >
       <div
-        className="bg-white rounded-2xl border-4 border-white shadow-[0_10px_0_rgba(0,0,0,0.9)] max-w-2xl w-full"
+        className="bg-white rounded-2xl border-4 border-white shadow-street-hard-lg-hover max-w-2xl w-full"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
-        <div className="flex justify-between items-center border-b-4 border-black p-6 bg-gradient-to-r from-yellow-300 to-orange-400">
+        <div className="flex justify-between items-center border-b-4 border-black p-6 bg-linear-to-r from-yellow-300 to-orange-400">
           <h2 className="text-2xl font-black uppercase flex items-center gap-2">
             <Lightbulb size={24} strokeWidth={3} />
             お題案を投稿
           </h2>
           <button
             onClick={handleClose}
-            className="text-2xl text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="text-2xl text-gray-500 hover:text-gray-700 chrome:text-gray-400 chrome:hover:text-gray-200"
           >
             ×
           </button>
@@ -87,7 +87,7 @@ export function ProposalModal({ isOpen, onClose }: ProposalModalProps) {
               placeholder="例：夏祭りの思い出"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+              className="w-full border border-gray-300 chrome:border-slate-600 rounded-lg px-3 py-2 bg-white chrome:bg-slate-800 text-slate-900 chrome:text-slate-100"
             />
           </div>
           <div>
@@ -97,7 +97,7 @@ export function ProposalModal({ isOpen, onClose }: ProposalModalProps) {
               value={body}
               onChange={(e) => setBody(e.target.value)}
               rows={4}
-              className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+              className="w-full border border-gray-300 chrome:border-slate-600 rounded-lg px-3 py-2 bg-white chrome:bg-slate-800 text-slate-900 chrome:text-slate-100"
             />
           </div>
         </div>
@@ -106,14 +106,14 @@ export function ProposalModal({ isOpen, onClose }: ProposalModalProps) {
         <div className="flex justify-end gap-3 border-t-4 border-black p-6 bg-gray-50">
           <button
             onClick={handleClose}
-            className="px-6 py-3 text-black font-black uppercase bg-gray-300 border-3 border-black rounded-lg shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
+            className="px-6 py-3 text-black font-black uppercase bg-gray-300 border-3 border-black rounded-lg shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover transition-all"
           >
             キャンセル
           </button>
           <button
             onClick={handleSubmit}
             disabled={!title || !body || isMutating}
-            className="px-6 py-3 bg-orange-500 text-white rounded-lg font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="px-6 py-3 bg-orange-500 text-white rounded-lg font-black uppercase border-3 border-white shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isMutating ? "投稿中..." : "投稿"}
           </button>

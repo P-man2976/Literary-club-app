@@ -1,0 +1,87 @@
+"use client";
+
+import * as React from "react";
+import { tv, type VariantProps } from "tailwind-variants";
+import { cn } from "@/app/lib/cn";
+
+const input = tv({
+  base: "w-full rounded-lg border bg-white px-3 py-2 text-sm transition-colors focus:outline-hidden focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50",
+  variants: {
+    size: {
+      sm: "h-8 text-sm",
+      md: "h-10 text-base",
+      lg: "h-12 text-lg",
+    },
+    theme: {
+      street: "border-3 border-black",
+      chrome: "border border-chrome-border bg-chrome-card-bg text-chrome-text-muted rounded-none placeholder:text-chrome-text-placeholder",
+      library: "rounded-xl border-0 bg-library-surface text-library-text shadow-library-neu-inset",
+    },
+  },
+  defaultVariants: {
+    size: "md",
+  },
+});
+
+type InputVariantProps = VariantProps<typeof input>;
+
+interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size">, InputVariantProps {
+  onValueChange?: (value: string) => void;
+}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, size, theme, onValueChange, onChange, ...props }, ref) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      onChange?.(e);
+      onValueChange?.(e.target.value);
+    };
+
+    return (
+      <input
+        className={cn(input({ size, theme }), className)}
+        ref={ref}
+        onChange={handleChange}
+        {...props}
+      />
+    );
+  },
+);
+Input.displayName = "Input";
+
+const textarea = tv({
+  base: "w-full rounded-lg border bg-white px-3 py-2 text-sm transition-colors focus:outline-hidden focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50",
+  variants: {
+    theme: {
+      street: "border-3 border-black",
+      chrome: "border border-chrome-border bg-chrome-card-bg text-chrome-text-muted rounded-none placeholder:text-chrome-text-placeholder",
+      library: "rounded-xl border-0 bg-library-surface text-library-text shadow-library-neu-inset",
+    },
+  },
+});
+
+type TextareaVariantProps = VariantProps<typeof textarea>;
+
+interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement>, TextareaVariantProps {
+  onValueChange?: (value: string) => void;
+}
+
+const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
+  ({ className, theme, onValueChange, onChange, ...props }, ref) => {
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      onChange?.(e);
+      onValueChange?.(e.target.value);
+    };
+
+    return (
+      <textarea
+        className={cn(textarea({ theme }), className)}
+        ref={ref}
+        onChange={handleChange}
+        {...props}
+      />
+    );
+  },
+);
+Textarea.displayName = "Textarea";
+
+export { Input, Textarea, input, textarea };

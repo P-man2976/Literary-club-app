@@ -80,7 +80,7 @@ export function PullToRefresh() {
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 top-0 z-[60] flex justify-center"
+      className="pointer-events-none fixed inset-x-0 top-0 z-60 flex justify-center"
       aria-hidden
       style={{
         transform: `translateY(${isRefreshing ? 18 : Math.min(pullDistance - 44, 24)}px)`,
@@ -88,7 +88,7 @@ export function PullToRefresh() {
         transition: visible ? "none" : "opacity 120ms ease, transform 120ms ease",
       }}
     >
-      <div className="rounded-full border border-gray-300 bg-background/95 px-3 py-1 text-xs font-bold text-gray-700 shadow-sm backdrop-blur flex items-center gap-2">
+      <div className="rounded-full border border-gray-300 bg-background/95 px-3 py-1 text-xs font-bold text-gray-700 shadow-xs backdrop-blur-sm flex items-center gap-2">
         {isRefreshing && (
           <span className="inline-block h-3.5 w-3.5 rounded-full border-2 border-gray-400 border-t-transparent animate-spin" />
         )}

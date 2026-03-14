@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getD1Client } from "@/app/lib/db";
+import { formatDateTime } from "@/app/lib/formatUtils";
 import webpush from "web-push";
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
@@ -167,15 +168,6 @@ export async function GET() {
 
     // 通知を送信する処理
     const notifications: Array<{ userEmail: string; title: string; body: string; url: string }> = [];
-
-    const formatDateTime = (timestamp: number) =>
-      new Date(timestamp).toLocaleString("ja-JP", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
 
     // 3日前の通知
     for (const topic of threeDaysBeforeTopics) {

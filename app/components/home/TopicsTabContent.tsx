@@ -2,12 +2,8 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useTheme } from "next-themes";
-import {
-  Card,
-  CardBody,
-  Chip,
-} from "@heroui/react";
+import { useAppTheme } from "@/app/hooks/useAppTheme";
+import { Card, CardBody, Chip } from "@/app/components/ui";
 import { Lightbulb, Pin } from "lucide-react";
 import type { Post } from "@/app/types/post";
 import { formatDateTime } from "@/app/lib/formatUtils";
@@ -23,9 +19,7 @@ export function TopicsTabContent({
   onCreateProposal,
 }: TopicsTabContentProps) {
   const { data: session } = useSession();
-  const { resolvedTheme } = useTheme();
-  const isChromeTheme = resolvedTheme === "dark";
-  const isLibraryTheme = resolvedTheme === "library";
+  const { appTheme } = useAppTheme();
   const {
     topicPosts,
     topicProposals,
@@ -53,15 +47,11 @@ export function TopicsTabContent({
             {/* 今週のお題 */}
             {activeTopic ? (
               <div className="space-y-2">
-                <h2 className="text-2xl font-black px-2 uppercase tracking-wide text-black dark:text-green-300">今週のお題</h2>
+                <h2 className="text-2xl font-black px-2 uppercase tracking-wide text-black chrome:text-green-300">今週のお題</h2>
                 <Card 
                   shadow="none"
-                  className={isChromeTheme
-                    ? "bg-transparent border-0 border-b border-white/35 rounded-none shadow-none"
-                    : isLibraryTheme
-                      ? "jsr-card bg-[#ECE7DB] rounded-2xl"
-                      : "jsr-card bg-gradient-to-br from-pink-300 to-purple-400 dark:from-green-900 dark:to-cyan-900 rounded-2xl"
-                  }
+                  theme={appTheme}
+                  className={appTheme === "street" ? "bg-linear-to-br from-pink-300 to-purple-400" : ""}
                 >
                   <CardBody className="p-5 gap-3">
                     <div className="flex items-center">
@@ -75,8 +65,8 @@ export function TopicsTabContent({
                         ) : (
                           <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-yellow-300 border-2 border-black" />
                         )}
-                        <span className="font-black text-base uppercase text-black dark:text-white">{getDisplayName(activeTopic.authorEmail, activeTopic.author)}</span>
-                        <Chip size="md" className="bg-black text-white font-black border-2 border-white dark:bg-green-500 dark:text-black dark:border-green-300">
+                        <span className="font-black text-base uppercase text-black chrome:text-white">{getDisplayName(activeTopic.authorEmail, activeTopic.author)}</span>
+                        <Chip size="md" className="bg-black text-white font-black border-2 border-white chrome:bg-green-500 chrome:text-black chrome:border-green-300">
                           <span className="text-lg leading-none">🔥</span> HOT
                         </Chip>
                       </div>
@@ -85,19 +75,19 @@ export function TopicsTabContent({
                       href={`/topic/${activeTopic.id}`}
                       className="block"
                     >
-                      <h2 className="text-lg font-bold text-black dark:text-white">{activeTopic.title}</h2>
+                      <h2 className="text-lg font-bold text-black chrome:text-white">{activeTopic.title}</h2>
                       {activeTopic.deadline && (
-                        <p className="text-xs font-semibold text-blue-700 dark:text-cyan-300 mt-1">
+                        <p className="text-xs font-semibold text-blue-700 chrome:text-cyan-300 mt-1">
                           締切: {formatDateTime(activeTopic.deadline)}
                         </p>
                       )}
-                      <p className="text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{activeTopic.body}</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-300">クリックして詳細ページを表示...</p>
+                      <p className="text-sm text-gray-800 chrome:text-gray-200 line-clamp-2">{activeTopic.body}</p>
+                      <p className="text-xs text-gray-600 chrome:text-gray-300">クリックして詳細ページを表示...</p>
                     </Link>
                     {getTopicParticipants(activeTopic).length > 0 && (
                       <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-black dark:text-white">参加者:</span>
+                          <span className="text-xs font-bold text-black chrome:text-white">参加者:</span>
                           <div className="flex items-center -space-x-2">
                           {getTopicParticipants(activeTopic)
                             .slice(0, 6)
@@ -134,17 +124,15 @@ export function TopicsTabContent({
               </div>
             ) : (
               <div className="space-y-2">
-                <h2 className="text-2xl font-black px-2 uppercase tracking-wide text-black dark:text-green-300">今週のお題</h2>
+                <h2 className="text-2xl font-black px-2 uppercase tracking-wide text-black chrome:text-green-300">今週のお題</h2>
                 <Card
                   shadow="none"
-                  className={isChromeTheme
-                    ? "bg-transparent border-0 border-b border-white/35 rounded-none shadow-none"
-                    : "jsr-card bg-white dark:bg-gray-900 rounded-2xl"
-                  }
+                  theme={appTheme}
+                  className={appTheme !== "chrome" ? "bg-white" : ""}
                 >
                   <CardBody className="p-5">
-                    <p className="text-sm font-black uppercase text-gray-700 dark:text-gray-200">今週のお題はありません</p>
-                    <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mt-1">次のお題が設定されるまでお待ちください。</p>
+                    <p className="text-sm font-black uppercase text-gray-700 chrome:text-gray-200">今週のお題はありません</p>
+                    <p className="text-xs font-bold text-gray-500 chrome:text-gray-400 mt-1">次のお題が設定されるまでお待ちください。</p>
                   </CardBody>
                 </Card>
               </div>
@@ -152,15 +140,14 @@ export function TopicsTabContent({
 
             {/* お題決定ボタン */}
             {session && (
-              <Card shadow="sm" className={isChromeTheme
-                ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
-                : "jsr-card border border-blue-300 dark:border-green-600 rounded-2xl bg-blue-50/80 dark:bg-green-950/10"
-              }>
+              <Card shadow="sm" theme={appTheme}
+                className={appTheme === "street" ? "border border-blue-300 bg-blue-50/80" : ""}
+              >
                 <CardBody className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-black italic text-base text-black dark:text-green-300 uppercase">新しいお題を決定</p>
-                      <p className="text-xs font-bold text-black/70 dark:text-green-200/70">お題案からランダム選択、または手動で選んでお題化できます</p>
+                      <p className="font-black italic text-base text-black chrome:text-green-300 uppercase">新しいお題を決定</p>
+                      <p className="text-xs font-bold text-black/70 chrome:text-green-200/70">お題案からランダム選択、または手動で選んでお題化できます</p>
                     </div>
                     <button
                       onClick={() => {
@@ -170,7 +157,7 @@ export function TopicsTabContent({
                         }
                         onOpenTopicDecision();
                       }}
-                      className="px-6 py-3 bg-pink-500 text-white rounded-lg font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] active:translate-y-[2px] active:shadow-[0_2px_0_rgba(0,0,0,0.8)] transition-all text-sm whitespace-nowrap shake-hover"
+                      className="px-6 py-3 bg-pink-500 text-white rounded-lg font-black uppercase border-3 border-white shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover active:translate-y-[2px] active:shadow-street-hard-active transition-all text-sm whitespace-nowrap shake-hover"
                     >
                       お題決定
                     </button>
@@ -182,15 +169,13 @@ export function TopicsTabContent({
             {/* 過去のお題 */}
             {pastTopicsForDisplay.length > 0 && (
               <div className="space-y-3">
-                <h3 className="text-xl font-black px-2 mt-6 uppercase tracking-wide text-black dark:text-yellow-300">過去のお題</h3>
+                <h3 className="text-xl font-black px-2 mt-6 uppercase tracking-wide text-black chrome:text-yellow-300">過去のお題</h3>
                 {pastTopicsForDisplay.map((topic) => (
                   <Card 
                     key={topic.id}
                     shadow="none"
-                    className={isChromeTheme
-                      ? "bg-transparent border-0 border-b border-white/25 rounded-none shadow-none"
-                      : "jsr-card bg-white dark:bg-gray-900 rounded-xl"
-                    }
+                    theme={appTheme}
+                    className={appTheme === "street" ? "bg-white" : ""}
                   >
                     <CardBody className="p-4 gap-2">
                       <div className="flex items-center">
@@ -199,32 +184,32 @@ export function TopicsTabContent({
                             <img
                               src={getDisplayIcon(topic.authorEmail) || ""}
                               alt="投稿者アイコン"
-                              className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full object-cover border-2 border-black dark:border-white"
+                              className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full object-cover border-2 border-black chrome:border-white"
                             />
                           ) : (
-                            <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-yellow-300 border-2 border-black dark:border-white" />
+                            <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 rounded-full bg-yellow-300 border-2 border-black chrome:border-white" />
                           )}
-                          <span className="font-black text-base uppercase text-black dark:text-green-300">{getDisplayName(topic.authorEmail, topic.author)}</span>
-                          <Chip size="md" className="bg-gray-300 dark:bg-gray-700 text-black dark:text-yellow-300 font-bold border-2 border-black dark:border-green-600">過去</Chip>
+                          <span className="font-black text-base uppercase text-black chrome:text-green-300">{getDisplayName(topic.authorEmail, topic.author)}</span>
+                          <Chip size="md" className="bg-gray-300 chrome:bg-gray-700 text-black chrome:text-yellow-300 font-bold border-2 border-black chrome:border-green-600">過去</Chip>
                         </div>
                       </div>
                       <Link 
                         href={`/topic/${topic.id}`}
                         className="block"
                       >
-                        <h2 className="text-lg font-bold text-black dark:text-green-200">{topic.title}</h2>
+                        <h2 className="text-lg font-bold text-black chrome:text-green-200">{topic.title}</h2>
                         {topic.deadline && (
-                          <p className="text-xs font-semibold text-blue-700 dark:text-yellow-300 mt-1">
+                          <p className="text-xs font-semibold text-blue-700 chrome:text-yellow-300 mt-1">
                             締切: {formatDateTime(topic.deadline)}
                           </p>
                         )}
-                        <p className="text-sm text-gray-800 dark:text-green-100 line-clamp-2">{topic.body}</p>
-                        <p className="text-xs text-gray-600 dark:text-green-200">クリックして詳細ページを表示...</p>
+                        <p className="text-sm text-gray-800 chrome:text-green-100 line-clamp-2">{topic.body}</p>
+                        <p className="text-xs text-gray-600 chrome:text-green-200">クリックして詳細ページを表示...</p>
                       </Link>
                       {getTopicParticipants(topic).length > 0 && (
                         <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-gray-700 dark:text-gray-200">参加者:</span>
+                            <span className="text-xs font-bold text-gray-700 chrome:text-gray-200">参加者:</span>
                             <div className="flex items-center -space-x-2">
                             {getTopicParticipants(topic)
                               .slice(0, 6)
@@ -268,7 +253,7 @@ export function TopicsTabContent({
       {/* お題案登録フロートボタン */}
       {session && (
         <button
-          className="fixed right-6 bottom-24 z-40 h-14 rounded-full bg-orange-500 text-white text-base font-black px-6 border-4 border-white shadow-[0_8px_0_rgba(0,0,0,0.9)] hover:shadow-[0_10px_0_rgba(0,0,0,0.9)] hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-[0_6px_0_rgba(0,0,0,0.9)] transition-all flex items-center gap-2 uppercase shake-hover"
+          className="fixed right-6 bottom-24 z-40 h-14 rounded-full bg-orange-500 text-white text-base font-black px-6 border-4 border-white shadow-street-hard-lg hover:shadow-street-hard-lg-hover hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-street-hard-lg-active transition-all flex items-center gap-2 uppercase shake-hover"
           onClick={onCreateProposal}
           aria-label="お題案を投稿"
         >

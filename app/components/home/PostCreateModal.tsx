@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import useSWRMutation from "swr/mutation";
+import { Loader2 } from "lucide-react";
 import { HandDrawnPostIcon } from "@/app/components/HandDrawnIcons";
 import { usePosts } from "@/app/hooks/usePosts";
 import { useUserProfile } from "@/app/hooks/useUserProfile";
@@ -19,6 +21,10 @@ export function PostCreateModal({ isOpen, onClose }: PostCreateModalProps) {
   const { penName } = useUserProfile(session ?? null);
   const { topicPosts } = usePosts();
   const { trigger, isMutating } = useCreatePost();
+  const { trigger: triggerParseFile, isMutating: isParsing } = useSWRMutation(
+    "parseFile",
+    (_key: string, { arg }: { arg: File }) => parseFile(arg),
+  );
 
   const [newPost, setNewPost] = useState<Partial<Post>>({ title: "", body: "", tag: "創作" });
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
@@ -31,10 +37,19 @@ export function PostCreateModal({ isOpen, onClose }: PostCreateModalProps) {
     onClose();
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    await parseFile(file, setNewPost);
+    triggerParseFile(file, {
+      throwOnError: false,
+      onSuccess: (result) => {
+        setNewPost((prev) => ({ ...prev, title: result.title, body: result.body }));
+      },
+      onError: (error) => {
+        console.error("ファイル解析エラー:", error);
+        alert("ファイルの解析に失敗しました");
+      },
+    });
   };
 
   const handleSubmit = () => {
@@ -72,18 +87,18 @@ export function PostCreateModal({ isOpen, onClose }: PostCreateModalProps) {
       onClick={handleClose}
     >
       <div
-        className="bg-white rounded-2xl border-4 border-white shadow-[0_10px_0_rgba(0,0,0,0.9)] max-w-2xl w-full"
+        className="bg-white rounded-2xl border-4 border-white shadow-street-hard-lg-hover max-w-2xl w-full"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
-        <div className="flex justify-between items-center border-b-4 border-black p-6 bg-gradient-to-r from-purple-300 to-pink-400">
+        <div className="flex justify-between items-center border-b-4 border-black p-6 bg-linear-to-r from-purple-300 to-pink-400">
           <h2 className="text-2xl font-black uppercase flex items-center gap-2">
             <HandDrawnPostIcon size={24} />
             投稿を作成
           </h2>
           <button
             onClick={handleClose}
-            className="text-2xl text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="text-2xl text-gray-500 hover:text-gray-700 chrome:text-gray-400 chrome:hover:text-gray-200"
           >
             ×
           </button>
@@ -96,7 +111,7 @@ export function PostCreateModal({ isOpen, onClose }: PostCreateModalProps) {
             <select
               value={selectedTopicId || "free"}
               onChange={(e) => setSelectedTopicId(e.target.value === "free" ? null : e.target.value)}
-              className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+              className="w-full border border-gray-300 chrome:border-slate-600 rounded-lg px-3 py-2 bg-white chrome:bg-slate-800 text-slate-900 chrome:text-slate-100"
             >
               <option value="free">自由投稿</option>
               {topicPosts.map((topic) => (
@@ -113,9 +128,16 @@ export function PostCreateModal({ isOpen, onClose }: PostCreateModalProps) {
               type="file"
               accept=".txt,.pdf,.docx"
               onChange={handleFileChange}
-              className="w-full"
+              disabled={isParsing}
+              className="w-full disabled:opacity-50 disabled:cursor-not-allowed"
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">対応形式: テキスト (.txt), PDF, Word (.docx)</p>
+            <p className="text-xs text-gray-500 chrome:text-gray-400 mt-2">対応形式: テキスト (.txt), PDF, Word (.docx)</p>
+            {isParsing && (
+              <div className="mt-2 flex items-center gap-2 text-amber-600">
+                <Loader2 size={14} className="animate-spin" />
+                <p className="text-xs font-bold">ファイルを解析中...</p>
+              </div>
+            )}
           </div>
 
           <div>
@@ -125,7 +147,7 @@ export function PostCreateModal({ isOpen, onClose }: PostCreateModalProps) {
               placeholder="投稿のタイトル"
               value={newPost.title || ""}
               onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-              className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+              className="w-full border border-gray-300 chrome:border-slate-600 rounded-lg px-3 py-2 bg-white chrome:bg-slate-800 text-slate-900 chrome:text-slate-100"
             />
           </div>
 
@@ -136,7 +158,7 @@ export function PostCreateModal({ isOpen, onClose }: PostCreateModalProps) {
               value={newPost.body || ""}
               onChange={(e) => setNewPost({ ...newPost, body: e.target.value })}
               rows={8}
-              className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+              className="w-full border border-gray-300 chrome:border-slate-600 rounded-lg px-3 py-2 bg-white chrome:bg-slate-800 text-slate-900 chrome:text-slate-100"
             />
           </div>
         </div>
@@ -145,14 +167,14 @@ export function PostCreateModal({ isOpen, onClose }: PostCreateModalProps) {
         <div className="flex justify-end gap-3 border-t-4 border-black p-6 bg-gray-50">
           <button
             onClick={handleClose}
-            className="px-6 py-3 text-black font-black uppercase bg-gray-300 border-3 border-black rounded-lg shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] transition-all"
+            className="px-6 py-3 text-black font-black uppercase bg-gray-300 border-3 border-black rounded-lg shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover transition-all"
           >
             キャンセル
           </button>
           <button
             onClick={handleSubmit}
             disabled={!newPost.title || !newPost.body || isMutating}
-            className="px-6 py-3 bg-yellow-400 text-black rounded-lg font-black uppercase border-3 border-white shadow-[0_4px_0_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.8)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="px-6 py-3 bg-yellow-400 text-black rounded-lg font-black uppercase border-3 border-white shadow-street-hard hover:translate-y-[-2px] hover:shadow-street-hard-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isMutating ? "投稿中..." : "投稿"}
           </button>
